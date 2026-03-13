@@ -102,6 +102,18 @@ void ParseInstruction(std::stringstream& ss, Chunk* chunk)
 	{
 		chunk->code.push_back(static_cast<uint8_t>(OpCode::OP_SUB));
 	}
+	else if (op == "multi")
+	{
+		chunk->code.push_back(static_cast<uint8_t>(OpCode::OP_MULTI));
+	}
+	else if (op == "div")
+	{
+		chunk->code.push_back(static_cast<uint8_t>(OpCode::OP_DIV));
+	}
+	else if (op == "mod")
+	{
+		chunk->code.push_back(static_cast<uint8_t>(OpCode::OP_MOD));
+	}
 	else if (op == "neg")
 	{
 		chunk->code.push_back(static_cast<uint8_t>(OpCode::OP_NEG));

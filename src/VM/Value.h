@@ -65,6 +65,90 @@ inline Value operator-(const Value& lhs, const Value& rhs)
 		lhs, rhs);
 }
 
+// OP_MULTI
+inline Value operator*(const Value& lhs, const Value& rhs)
+{
+	return std::visit([&]<typename T0, typename T1>(T0&& l, T1&& r) -> Value {
+		using LType = std::decay_t<T0>;
+		using RType = std::decay_t<T1>;
+
+		if constexpr (std::is_same_v<LType, bool> || std::is_same_v<RType, bool>)
+		{
+			throw std::invalid_argument("Cannot multiply bool values");
+		}
+		else if constexpr (std::is_integral_v<LType> && std::is_integral_v<RType>)
+		{
+			using CommonInt = std::conditional_t<std::is_same_v<LType, int64_t> || std::is_same_v<RType, int64_t>, int64_t, char>;
+			return static_cast<CommonInt>(l) * static_cast<CommonInt>(r);
+		}
+		else if constexpr (std::is_same_v<LType, double> || std::is_same_v<RType, double>)
+		{
+			return static_cast<double>(l) * static_cast<double>(r);
+		}
+		else
+		{
+			throw std::invalid_argument("Unsupported combination");
+		}
+	},
+		lhs, rhs);
+}
+
+// OP_DIV
+inline Value operator/(const Value& lhs, const Value& rhs)
+{
+	return std::visit([&]<typename T0, typename T1>(T0&& l, T1&& r) -> Value {
+		using LType = std::decay_t<T0>;
+		using RType = std::decay_t<T1>;
+
+		if constexpr (std::is_same_v<LType, bool> || std::is_same_v<RType, bool>)
+		{
+			throw std::invalid_argument("Cannot div bool values");
+		}
+		else if constexpr (std::is_integral_v<LType> && std::is_integral_v<RType>)
+		{
+			using CommonInt = std::conditional_t<std::is_same_v<LType, int64_t> || std::is_same_v<RType, int64_t>, int64_t, char>;
+			return static_cast<CommonInt>(l) / static_cast<CommonInt>(r);
+		}
+		else if constexpr (std::is_same_v<LType, double> || std::is_same_v<RType, double>)
+		{
+			return static_cast<double>(l) / static_cast<double>(r);
+		}
+		else
+		{
+			throw std::invalid_argument("Unsupported combination");
+		}
+	},
+		lhs, rhs);
+}
+
+// OP_MOD
+inline Value operator%(const Value& lhs, const Value& rhs)
+{
+	return std::visit([&]<typename T0, typename T1>(T0&& l, T1&& r) -> Value {
+		using LType = std::decay_t<T0>;
+		using RType = std::decay_t<T1>;
+
+		if constexpr (std::is_same_v<LType, bool> || std::is_same_v<RType, bool>)
+		{
+			throw std::invalid_argument("Cannot mod bool values");
+		}
+		else if constexpr (std::is_integral_v<LType> && std::is_integral_v<RType>)
+		{
+			using CommonInt = std::conditional_t<std::is_same_v<LType, int64_t> || std::is_same_v<RType, int64_t>, int64_t, char>;
+			return static_cast<CommonInt>(l) % static_cast<CommonInt>(r);
+		}
+		else if constexpr (std::is_same_v<LType, double> || std::is_same_v<RType, double>)
+		{
+			throw std::invalid_argument("Cannot mod non-integers");
+		}
+		else
+		{
+			throw std::invalid_argument("Unsupported combination");
+		}
+	},
+		lhs, rhs);
+}
+
 // OP_NEG
 inline Value operator-(const Value& value)
 {

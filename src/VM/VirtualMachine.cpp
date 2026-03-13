@@ -1,5 +1,4 @@
 #include "VirtualMachine.h"
-
 #include "OpCode.h"
 
 #include <iostream>
@@ -15,18 +14,12 @@ void VirtualMachine::Run()
 {
 	while (m_iPointer < m_currentChunk->code.size())
 	{
-		const auto opCode = static_cast<OpCode>(ReadByte());
-		switch (opCode)
+		switch (const auto opCode = static_cast<OpCode>(ReadByte()))
 		{
-		case OpCode::OP_CONSTANT: {
+		case OpCode::OP_CONSTANT:
 			OpConstant();
 			break;
-		}
 		case OpCode::OP_RETURN:
-			if (m_stack.empty())
-			{
-				return;
-			}
 			OpReturn();
 			return;
 		case OpCode::OP_ADD:
@@ -34,6 +27,15 @@ void VirtualMachine::Run()
 			break;
 		case OpCode::OP_SUB:
 			OpSub();
+			break;
+		case OpCode::OP_MULTI:
+			OpMulti();
+			break;
+		case OpCode::OP_DIV:
+			OpDiv();
+			break;
+		case OpCode::OP_MOD:
+			OpMod();
 			break;
 		case OpCode::OP_NEG:
 			OpNeg();
@@ -57,20 +59,52 @@ void VirtualMachine::OpConstant()
 
 void VirtualMachine::OpReturn()
 {
+	if (m_constLiterals.empty())
+	{
+		return;
+	}
 	std::cout << "\nOn return: ";
-	PrintValue(m_stack.top());
+	PrintValue(m_constLiterals.top());
 }
 
 void VirtualMachine::OpAdd()
 {
-	const auto res = Pop() + Pop();
-	Push(res);
+	const auto first = Pop();
+	const auto second = Pop();
+
+	Push(first + second);
 }
 
 void VirtualMachine::OpSub()
 {
-	const auto res = Pop() - Pop();
-	Push(res);
+	const auto first = Pop();
+	const auto second = Pop();
+
+	Push(first - second);
+}
+
+void VirtualMachine::OpMulti()
+{
+	const auto first = Pop();
+	const auto second = Pop();
+
+	Push(first * second);
+}
+
+void VirtualMachine::OpDiv()
+{
+	const auto first = Pop();
+	const auto second = Pop();
+
+	Push(first / second);
+}
+
+void VirtualMachine::OpMod()
+{
+	const auto first = Pop();
+	const auto second = Pop();
+
+	Push(first % second);
 }
 
 void VirtualMachine::OpNeg()
@@ -80,17 +114,17 @@ void VirtualMachine::OpNeg()
 
 void VirtualMachine::Push(const Value& value)
 {
-	m_stack.push(value);
+	m_constLiterals.push(value);
 }
 
 Value VirtualMachine::Pop()
 {
-	if (m_stack.empty())
+	if (m_constLiterals.empty())
 	{
 		return {};
 	}
-	const auto top = m_stack.top();
-	m_stack.pop();
+	const auto top = m_constLiterals.top();
+	m_constLiterals.pop();
 	return top;
 }
 

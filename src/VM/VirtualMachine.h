@@ -32,6 +32,12 @@ private:
 
 	void OpSub();
 
+	void OpMulti();
+
+	void OpDiv();
+
+	void OpMod();
+
 	void OpNeg();
 
 	void Push(const Value& value);
@@ -43,5 +49,6 @@ private:
 private:
 	std::unique_ptr<Chunk> m_currentChunk;
 	size_t m_iPointer = 0;
-	std::stack<Value> m_stack;
+	std::stack<Value> m_constLiterals;
+	std::stack<Value> m_localVars;
 };
