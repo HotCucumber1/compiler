@@ -1,4 +1,4 @@
-#include "BytecodeParser.h"
+#include "Parser/BytecodeParser.h"
 #include "VirtualMachine.h"
 
 #include <fstream>

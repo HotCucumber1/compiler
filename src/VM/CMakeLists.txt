@@ -1,4 +1,5 @@
 add_executable(VM
-        BytecodeParser.cpp
+        StringPool.cpp
+        Parser/BytecodeParser.cpp
         VirtualMachine.cpp
         main.cpp)

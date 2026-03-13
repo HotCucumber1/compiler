@@ -1,4 +1,6 @@
 #pragma once
+#include "Type/Object.h"
+
 #include <iostream>
 #include <stdexcept>
 #include <variant>
@@ -7,10 +9,49 @@ using Value = std::variant<
 	int64_t,
 	double,
 	bool,
-	char>;
+	char,
+	HeapObjectPtr>;
+
+inline Value MakeString(std::string str)
+{
+	return {
+		std::make_shared<String>(std::move(str))
+	};
+}
+
+inline bool IsString(const Value& value)
+{
+	return std::visit([]<typename T0>(T0&& arg) {
+		using T = std::decay_t<T0>;
+		if constexpr (std::is_same_v<T, HeapObjectPtr>)
+		{
+			return arg->type == ObjectType::STRING;
+		}
+		return false;
+	},
+		value);
+}
+
+inline std::string AsString(const Value& value)
+{
+	if (!IsString(value))
+	{
+		throw std::invalid_argument("Value is not a string");
+	}
+
+	return std::visit([]<typename T0>(const T0& arg) -> std::string {
+		using T = std::decay_t<T0>;
+		if constexpr (std::is_same_v<T, HeapObjectPtr>)
+		{
+			return static_cast<String*>(arg.get())->str;
+		}
+		return {};
+	},
+		value);
+}
 
 // OP_ADD
-inline Value operator+(const Value& lhs, const Value& rhs)
+inline Value operator+(const Value& lhs, const Value& rhs) // TODO добавить поддержку сложения char и str
 {
 	return std::visit([&]<typename T0, typename T1>(T0&& l, T1&& r) -> Value {
 		using LType = std::decay_t<T0>;
@@ -19,6 +60,15 @@ inline Value operator+(const Value& lhs, const Value& rhs)
 		if constexpr (std::is_same_v<LType, bool> || std::is_same_v<RType, bool>)
 		{
 			throw std::invalid_argument("Cannot add bool values");
+		}
+		else if constexpr (std::is_same_v<LType, HeapObjectPtr> || std::is_same_v<RType, HeapObjectPtr>)
+		{
+			if (IsString(l) && IsString(r))
+			{
+				const auto& lStr = AsString(l);
+				const auto& rStr = AsString(r);
+				return MakeString(lStr + rStr);
+			}
 		}
 		else if constexpr (std::is_integral_v<LType> && std::is_integral_v<RType>)
 		{
@@ -48,6 +98,13 @@ inline Value operator-(const Value& lhs, const Value& rhs)
 		{
 			throw std::invalid_argument("Cannot sub bool values");
 		}
+		else if constexpr (std::is_same_v<LType, HeapObjectPtr> || std::is_same_v<RType, HeapObjectPtr>)
+		{
+			if (IsString(l) || IsString(r))
+			{
+				throw std::invalid_argument("Cannot sub strings values");
+			}
+		}
 		else if constexpr (std::is_integral_v<LType> && std::is_integral_v<RType>)
 		{
 			using CommonInt = std::conditional_t<std::is_same_v<LType, int64_t> || std::is_same_v<RType, int64_t>, int64_t, char>;
@@ -75,6 +132,13 @@ inline Value operator*(const Value& lhs, const Value& rhs)
 		if constexpr (std::is_same_v<LType, bool> || std::is_same_v<RType, bool>)
 		{
 			throw std::invalid_argument("Cannot multiply bool values");
+		}
+		else if constexpr (std::is_same_v<LType, HeapObjectPtr> || std::is_same_v<RType, HeapObjectPtr>)
+		{
+			if (IsString(l) || IsString(r))
+			{
+				throw std::invalid_argument("Cannot multiply strings values");
+			}
 		}
 		else if constexpr (std::is_integral_v<LType> && std::is_integral_v<RType>)
 		{
@@ -104,6 +168,13 @@ inline Value operator/(const Value& lhs, const Value& rhs)
 		{
 			throw std::invalid_argument("Cannot div bool values");
 		}
+		else if constexpr (std::is_same_v<LType, HeapObjectPtr> || std::is_same_v<RType, HeapObjectPtr>)
+		{
+			if (IsString(l) || IsString(r))
+			{
+				throw std::invalid_argument("Cannot div strings values");
+			}
+		}
 		else if constexpr (std::is_integral_v<LType> && std::is_integral_v<RType>)
 		{
 			using CommonInt = std::conditional_t<std::is_same_v<LType, int64_t> || std::is_same_v<RType, int64_t>, int64_t, char>;
@@ -132,6 +203,13 @@ inline Value operator%(const Value& lhs, const Value& rhs)
 		{
 			throw std::invalid_argument("Cannot mod bool values");
 		}
+		else if constexpr (std::is_same_v<LType, HeapObjectPtr> || std::is_same_v<RType, HeapObjectPtr>)
+		{
+			if (IsString(l) || IsString(r))
+			{
+				throw std::invalid_argument("Cannot mod strings values");
+			}
+		}
 		else if constexpr (std::is_integral_v<LType> && std::is_integral_v<RType>)
 		{
 			using CommonInt = std::conditional_t<std::is_same_v<LType, int64_t> || std::is_same_v<RType, int64_t>, int64_t, char>;
@@ -159,6 +237,13 @@ inline Value operator-(const Value& value)
 		{
 			throw std::invalid_argument("Cannot apply unary minus to bool");
 		}
+		else if constexpr (std::is_same_v<Type, HeapObjectPtr>)
+		{
+			if (IsString(v))
+			{
+				throw std::invalid_argument("Cannot apply unary minus to string values");
+			}
+		}
 		else if constexpr (std::is_same_v<Type, char>)
 		{
 			return -static_cast<int64_t>(v);
@@ -180,7 +265,15 @@ inline void PrintValue(const Value& value)
 	try
 	{
 		std::visit([](auto&& arg) {
-			std::cout << arg;
+			if (IsString(arg))
+			{
+				const auto& str = AsString(arg);
+				std::cout << str;
+			}
+			else
+			{
+				std::cout << arg;
+			}
 		},
 			value);
 		std::cout << std::endl;

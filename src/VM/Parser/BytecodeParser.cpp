@@ -1,6 +1,7 @@
 #include "BytecodeParser.h"
-#include "OpCode.h"
+#include "../OpCode.h"
 
+#include <iomanip>
 #include <sstream>
 
 void ParseConstant(std::stringstream& ss, Chunk* chunk);
@@ -70,6 +71,12 @@ void ParseConstant(std::stringstream& ss, Chunk* chunk)
 		std::string val;
 		ss >> val;
 		chunk->constants.emplace_back(val == "true");
+	}
+	else if (type == "string")
+	{
+		std::string val;
+		ss >> std::quoted(val);
+		chunk->constants.emplace_back(MakeString(val));
 	}
 }
 

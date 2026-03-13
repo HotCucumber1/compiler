@@ -1,5 +1,6 @@
 #pragma once
 
+#include "StringPool.h"
 #include "Value.h"
 
 #include <memory>
@@ -47,6 +48,7 @@ private:
 	uint8_t ReadByte();
 
 private:
+	StringPool m_stringPool; // TODO применить стринг пул
 	std::unique_ptr<Chunk> m_currentChunk;
 	size_t m_iPointer = 0;
 	std::stack<Value> m_constLiterals;
