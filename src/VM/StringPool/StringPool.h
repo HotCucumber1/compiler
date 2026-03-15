@@ -1,5 +1,5 @@
 #pragma once
-#include "Type/Object.h"
+#include "../Type/Object.h"
 
 #include <unordered_map>
 

@@ -17,6 +17,16 @@ void VirtualMachine::Interpret(std::unique_ptr<Chunk> chunk)
 	Run();
 }
 
+Value VirtualMachine::GetStackTop() const
+{
+	return m_constLiterals.top();
+}
+
+Value VirtualMachine::GetLocal(const size_t index) const
+{
+	return m_localVars[index];
+}
+
 void VirtualMachine::Run()
 {
 	while (m_iPointer < m_currentChunk->code.size())
@@ -146,7 +156,7 @@ Value VirtualMachine::Pop()
 {
 	if (m_constLiterals.empty())
 	{
-		return {};
+		throw std::runtime_error("Const stack is empty");
 	}
 	const auto top = m_constLiterals.top();
 	m_constLiterals.pop();

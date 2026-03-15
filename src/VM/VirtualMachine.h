@@ -1,7 +1,7 @@
 #pragma once
 
-#include "StringPool.h"
-#include "Value.h"
+#include "StringPool/StringPool.h"
+#include "Type/Value.h"
 
 #include <memory>
 #include <stack>
@@ -52,7 +52,13 @@ private:
 
 	uint8_t ReadByte();
 
+	Value GetStackTop() const;
+
+	Value GetLocal(size_t index) const;
+
 private:
+	friend struct VMAccessor;
+
 	size_t m_iPointer = 0;
 	StringPool m_stringPool; // TODO применить стринг пул
 	std::unique_ptr<Chunk> m_currentChunk;

@@ -23,7 +23,15 @@ std::unique_ptr<Chunk> BytecodeParser::Parse(const std::string& source)
 
 	while (std::getline(ss, line))
 	{
-		if (line.empty() || line[0] == ';')
+		auto first = line.find_first_not_of(" \t\r");
+		if (first == std::string::npos)
+		{
+			continue;
+		}
+		auto last = line.find_last_not_of(" \t\r");
+		line = line.substr(first, (last - first + 1));
+
+		if (line[0] == ';')
 		{
 			continue;
 		}
@@ -152,7 +160,7 @@ void LocalsOp(std::stringstream& ss, Chunk* chunk, OpCode code)
 	ss >> index;
 	if (index >= chunk->localsCount)
 	{
-		throw std::invalid_argument(
+		throw std::runtime_error(
 			"Wrong local variable index: " + std::to_string(index)
 			+ "\nMax: " + std::to_string(chunk->localsCount));
 	}

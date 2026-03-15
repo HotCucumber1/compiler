@@ -1,5 +1,5 @@
 #pragma once
-#include "Type/Object.h"
+#include "Object.h"
 
 #include <iostream>
 #include <stdexcept>
@@ -36,7 +36,7 @@ inline std::string AsString(const Value& value)
 {
 	if (!IsString(value))
 	{
-		throw std::invalid_argument("Value is not a string");
+		throw std::runtime_error("Value is not a string");
 	}
 
 	return std::visit([]<typename T0>(const T0& arg) -> std::string {
@@ -50,6 +50,45 @@ inline std::string AsString(const Value& value)
 		value);
 }
 
+inline int AsInt(const Value& value)
+{
+	return std::visit([]<typename T0>(T0&& arg) -> int {
+		using T = std::decay_t<T0>;
+		if constexpr (std::is_same_v<T, int64_t>)
+		{
+			return static_cast<int64_t>(arg);
+		}
+		throw std::runtime_error("VM Type Error: Expected Int");
+	},
+		value);
+}
+
+inline double AsDouble(const Value& value)
+{
+	return std::visit([]<typename T0>(T0&& arg) -> double {
+		using T = std::decay_t<T0>;
+		if constexpr (std::is_same_v<T, double>)
+		{
+			return static_cast<double>(arg);
+		}
+		throw std::runtime_error("VM Type Error: Expected Double");
+	},
+		value);
+}
+
+inline bool AsBool(const Value& value)
+{
+	return std::visit([]<typename T0>(T0&& arg) -> bool {
+		using T = std::decay_t<T0>;
+		if constexpr (std::is_same_v<T, bool>)
+		{
+			return static_cast<bool>(arg);
+		}
+		throw std::runtime_error("VM Type Error: Expected bool");
+	},
+		value);
+}
+
 // OP_ADD
 inline Value operator+(const Value& lhs, const Value& rhs) // TODO добавить поддержку сложения char и str
 {
@@ -59,7 +98,7 @@ inline Value operator+(const Value& lhs, const Value& rhs) // TODO добави�
 
 		if constexpr (std::is_same_v<LType, bool> || std::is_same_v<RType, bool>)
 		{
-			throw std::invalid_argument("Cannot add bool values");
+			throw std::runtime_error("Cannot add bool values");
 		}
 		else if constexpr (std::is_same_v<LType, HeapObjectPtr> || std::is_same_v<RType, HeapObjectPtr>)
 		{
@@ -81,7 +120,7 @@ inline Value operator+(const Value& lhs, const Value& rhs) // TODO добави�
 		}
 		else
 		{
-			throw std::invalid_argument("Unsupported combination");
+			throw std::runtime_error("Unsupported combination");
 		}
 	},
 		lhs, rhs);
@@ -96,13 +135,13 @@ inline Value operator-(const Value& lhs, const Value& rhs)
 
 		if constexpr (std::is_same_v<LType, bool> || std::is_same_v<RType, bool>)
 		{
-			throw std::invalid_argument("Cannot sub bool values");
+			throw std::runtime_error("Cannot sub bool values");
 		}
 		else if constexpr (std::is_same_v<LType, HeapObjectPtr> || std::is_same_v<RType, HeapObjectPtr>)
 		{
 			if (IsString(l) || IsString(r))
 			{
-				throw std::invalid_argument("Cannot sub strings values");
+				throw std::runtime_error("Cannot sub strings values");
 			}
 		}
 		else if constexpr (std::is_integral_v<LType> && std::is_integral_v<RType>)
@@ -116,7 +155,7 @@ inline Value operator-(const Value& lhs, const Value& rhs)
 		}
 		else
 		{
-			throw std::invalid_argument("Unsupported combination");
+			throw std::runtime_error("Unsupported combination");
 		}
 	},
 		lhs, rhs);
@@ -131,13 +170,13 @@ inline Value operator*(const Value& lhs, const Value& rhs)
 
 		if constexpr (std::is_same_v<LType, bool> || std::is_same_v<RType, bool>)
 		{
-			throw std::invalid_argument("Cannot multiply bool values");
+			throw std::runtime_error("Cannot multiply bool values");
 		}
 		else if constexpr (std::is_same_v<LType, HeapObjectPtr> || std::is_same_v<RType, HeapObjectPtr>)
 		{
 			if (IsString(l) || IsString(r))
 			{
-				throw std::invalid_argument("Cannot multiply strings values");
+				throw std::runtime_error("Cannot multiply strings values");
 			}
 		}
 		else if constexpr (std::is_integral_v<LType> && std::is_integral_v<RType>)
@@ -151,7 +190,7 @@ inline Value operator*(const Value& lhs, const Value& rhs)
 		}
 		else
 		{
-			throw std::invalid_argument("Unsupported combination");
+			throw std::runtime_error("Unsupported combination");
 		}
 	},
 		lhs, rhs);
@@ -166,18 +205,22 @@ inline Value operator/(const Value& lhs, const Value& rhs)
 
 		if constexpr (std::is_same_v<LType, bool> || std::is_same_v<RType, bool>)
 		{
-			throw std::invalid_argument("Cannot div bool values");
+			throw std::runtime_error("Cannot div bool values");
 		}
 		else if constexpr (std::is_same_v<LType, HeapObjectPtr> || std::is_same_v<RType, HeapObjectPtr>)
 		{
 			if (IsString(l) || IsString(r))
 			{
-				throw std::invalid_argument("Cannot div strings values");
+				throw std::runtime_error("Cannot div strings values");
 			}
 		}
 		else if constexpr (std::is_integral_v<LType> && std::is_integral_v<RType>)
 		{
 			using CommonInt = std::conditional_t<std::is_same_v<LType, int64_t> || std::is_same_v<RType, int64_t>, int64_t, char>;
+			if (r == 0)
+			{
+				throw std::runtime_error("Division by zero");
+			}
 			return static_cast<CommonInt>(l) / static_cast<CommonInt>(r);
 		}
 		else if constexpr (std::is_same_v<LType, double> || std::is_same_v<RType, double>)
@@ -186,7 +229,7 @@ inline Value operator/(const Value& lhs, const Value& rhs)
 		}
 		else
 		{
-			throw std::invalid_argument("Unsupported combination");
+			throw std::runtime_error("Unsupported combination");
 		}
 	},
 		lhs, rhs);
@@ -201,13 +244,13 @@ inline Value operator%(const Value& lhs, const Value& rhs)
 
 		if constexpr (std::is_same_v<LType, bool> || std::is_same_v<RType, bool>)
 		{
-			throw std::invalid_argument("Cannot mod bool values");
+			throw std::runtime_error("Cannot mod bool values");
 		}
 		else if constexpr (std::is_same_v<LType, HeapObjectPtr> || std::is_same_v<RType, HeapObjectPtr>)
 		{
 			if (IsString(l) || IsString(r))
 			{
-				throw std::invalid_argument("Cannot mod strings values");
+				throw std::runtime_error("Cannot mod strings values");
 			}
 		}
 		else if constexpr (std::is_integral_v<LType> && std::is_integral_v<RType>)
@@ -217,11 +260,11 @@ inline Value operator%(const Value& lhs, const Value& rhs)
 		}
 		else if constexpr (std::is_same_v<LType, double> || std::is_same_v<RType, double>)
 		{
-			throw std::invalid_argument("Cannot mod non-integers");
+			throw std::runtime_error("Cannot mod non-integers");
 		}
 		else
 		{
-			throw std::invalid_argument("Unsupported combination");
+			throw std::runtime_error("Unsupported combination");
 		}
 	},
 		lhs, rhs);
@@ -235,13 +278,13 @@ inline Value operator-(const Value& value)
 
 		if constexpr (std::is_same_v<Type, bool>)
 		{
-			throw std::invalid_argument("Cannot apply unary minus to bool");
+			throw std::runtime_error("Cannot apply unary minus to bool");
 		}
 		else if constexpr (std::is_same_v<Type, HeapObjectPtr>)
 		{
 			if (IsString(v))
 			{
-				throw std::invalid_argument("Cannot apply unary minus to string values");
+				throw std::runtime_error("Cannot apply unary minus to string values");
 			}
 		}
 		else if constexpr (std::is_same_v<Type, char>)
@@ -254,7 +297,7 @@ inline Value operator-(const Value& value)
 		}
 		else
 		{
-			throw std::invalid_argument("Unsupported type for unary minus");
+			throw std::runtime_error("Unsupported type for unary minus");
 		}
 	},
 		value);
