@@ -1,12 +1,12 @@
-include(FetchContent)
-FetchContent_Declare(
-        Catch2
-        GIT_REPOSITORY https://github.com/catchorg/Catch2.git
-        GIT_TAG v3.5.0
+add_library(VM STATIC
+        StringPool/StringPool.cpp
+        Parser/BytecodeParser.cpp
+        VirtualMachine.cpp
 )
-FetchContent_MakeAvailable(Catch2)
+target_include_directories(VM PUBLIC .)
 
-add_executable(VM
+
+add_executable(VM_exe
         StringPool/StringPool.cpp
         Parser/BytecodeParser.cpp
         VirtualMachine.cpp
