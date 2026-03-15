@@ -4,8 +4,14 @@
 #include <iomanip>
 #include <sstream>
 
+const std::string LOCALS = ".locals";
+const std::string CONST = ".const";
+const std::string CODE = ".code";
+
 void ParseConstant(std::stringstream& ss, Chunk* chunk);
 void ParseInstruction(std::stringstream& ss, Chunk* chunk);
+
+void LocalsOp(std::stringstream& ss, Chunk* chunk, OpCode code);
 
 std::unique_ptr<Chunk> BytecodeParser::Parse(const std::string& source)
 {
@@ -21,14 +27,19 @@ std::unique_ptr<Chunk> BytecodeParser::Parse(const std::string& source)
 		{
 			continue;
 		}
+		if (line.starts_with(LOCALS))
+		{
+			chunk->localsCount = std::stoi(line.substr(LOCALS.length()));
+			continue;
+		}
 
-		if (line == ".const")
+		if (line == CONST)
 		{
 			parsingConstants = true;
 			parsingCode = false;
 			continue;
 		}
-		if (line == ".code")
+		if (line == CODE)
 		{
 			parsingConstants = false;
 			parsingCode = true;
@@ -125,4 +136,26 @@ void ParseInstruction(std::stringstream& ss, Chunk* chunk)
 	{
 		chunk->code.push_back(static_cast<uint8_t>(OpCode::OP_NEG));
 	}
+	else if (op == "set_local_var")
+	{
+		LocalsOp(ss, chunk, OpCode::OP_SET_LOCAL_VAR);
+	}
+	else if (op == "get_local_var")
+	{
+		LocalsOp(ss, chunk, OpCode::OP_GET_LOCAL_VAR);
+	}
+}
+
+void LocalsOp(std::stringstream& ss, Chunk* chunk, OpCode code)
+{
+	int index;
+	ss >> index;
+	if (index >= chunk->localsCount)
+	{
+		throw std::invalid_argument(
+			"Wrong local variable index: " + std::to_string(index)
+			+ "\nMax: " + std::to_string(chunk->localsCount));
+	}
+	chunk->code.push_back(static_cast<uint8_t>(code));
+	chunk->code.push_back(static_cast<uint8_t>(index));
 }

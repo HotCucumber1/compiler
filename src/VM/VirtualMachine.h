@@ -9,6 +9,7 @@
 
 struct Chunk
 {
+	size_t localsCount;
 	std::vector<uint8_t> code;
 	std::vector<Value> constants;
 };
@@ -18,7 +19,7 @@ class VirtualMachine
 public:
 	static constexpr short STACK_SIZE = 256;
 
-	VirtualMachine() = default;
+	explicit VirtualMachine(size_t localsCount);
 
 	void Interpret(std::unique_ptr<Chunk> chunk);
 
@@ -41,6 +42,10 @@ private:
 
 	void OpNeg();
 
+	void OpSetLocal();
+
+	void OpGetLocal();
+
 	void Push(const Value& value);
 
 	Value Pop();
@@ -48,9 +53,10 @@ private:
 	uint8_t ReadByte();
 
 private:
+	size_t m_iPointer = 0;
 	StringPool m_stringPool; // TODO применить стринг пул
 	std::unique_ptr<Chunk> m_currentChunk;
-	size_t m_iPointer = 0;
+
 	std::stack<Value> m_constLiterals;
-	std::stack<Value> m_localVars;
+	std::vector<Value> m_localVars;
 };

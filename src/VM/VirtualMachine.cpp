@@ -1,7 +1,14 @@
 #include "VirtualMachine.h"
 #include "OpCode.h"
 
+#include <algorithm>
 #include <iostream>
+#include <pstl/glue_execution_defs.h>
+
+VirtualMachine::VirtualMachine(const size_t localsCount)
+	: m_localVars(localsCount)
+{
+}
 
 void VirtualMachine::Interpret(std::unique_ptr<Chunk> chunk)
 {
@@ -39,6 +46,12 @@ void VirtualMachine::Run()
 			break;
 		case OpCode::OP_NEG:
 			OpNeg();
+			break;
+		case OpCode::OP_SET_LOCAL_VAR:
+			OpSetLocal();
+			break;
+		case OpCode::OP_GET_LOCAL_VAR:
+			OpGetLocal();
 			break;
 		default:
 			std::cerr << "Unknown operation: " << static_cast<int>(opCode) << std::endl;
@@ -80,7 +93,7 @@ void VirtualMachine::OpSub()
 	const auto first = Pop();
 	const auto second = Pop();
 
-	Push(first - second);
+	Push(second - first);
 }
 
 void VirtualMachine::OpMulti()
@@ -96,7 +109,7 @@ void VirtualMachine::OpDiv()
 	const auto first = Pop();
 	const auto second = Pop();
 
-	Push(first / second);
+	Push(second / first);
 }
 
 void VirtualMachine::OpMod()
@@ -104,12 +117,24 @@ void VirtualMachine::OpMod()
 	const auto first = Pop();
 	const auto second = Pop();
 
-	Push(first % second);
+	Push(second % first);
 }
 
 void VirtualMachine::OpNeg()
 {
 	Push(-Pop());
+}
+
+void VirtualMachine::OpSetLocal()
+{
+	const auto index = ReadByte();
+	m_localVars[index] = Pop();
+}
+
+void VirtualMachine::OpGetLocal()
+{
+	const auto index = ReadByte();
+	Push(m_localVars[index]);
 }
 
 void VirtualMachine::Push(const Value& value)
