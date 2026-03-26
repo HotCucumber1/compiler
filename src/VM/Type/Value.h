@@ -118,10 +118,7 @@ inline Value operator+(const Value& lhs, const Value& rhs) // TODO добави�
 		{
 			return static_cast<double>(l) + static_cast<double>(r);
 		}
-		else
-		{
-			throw std::runtime_error("Unsupported combination");
-		}
+		throw std::runtime_error("Unsupported combination");
 	},
 		lhs, rhs);
 }
@@ -153,10 +150,7 @@ inline Value operator-(const Value& lhs, const Value& rhs)
 		{
 			return static_cast<double>(l) - static_cast<double>(r);
 		}
-		else
-		{
-			throw std::runtime_error("Unsupported combination");
-		}
+		throw std::runtime_error("Unsupported combination");
 	},
 		lhs, rhs);
 }
@@ -188,10 +182,7 @@ inline Value operator*(const Value& lhs, const Value& rhs)
 		{
 			return static_cast<double>(l) * static_cast<double>(r);
 		}
-		else
-		{
-			throw std::runtime_error("Unsupported combination");
-		}
+		throw std::runtime_error("Unsupported combination");
 	},
 		lhs, rhs);
 }
@@ -227,10 +218,7 @@ inline Value operator/(const Value& lhs, const Value& rhs)
 		{
 			return static_cast<double>(l) / static_cast<double>(r);
 		}
-		else
-		{
-			throw std::runtime_error("Unsupported combination");
-		}
+		throw std::runtime_error("Unsupported combination");
 	},
 		lhs, rhs);
 }
@@ -262,10 +250,7 @@ inline Value operator%(const Value& lhs, const Value& rhs)
 		{
 			throw std::runtime_error("Cannot mod non-integers");
 		}
-		else
-		{
-			throw std::runtime_error("Unsupported combination");
-		}
+		throw std::runtime_error("Unsupported combination");
 	},
 		lhs, rhs);
 }
@@ -295,10 +280,26 @@ inline Value operator-(const Value& value)
 		{
 			return -v;
 		}
-		else
+		throw std::runtime_error("Unsupported type for unary minus");
+	},
+		value);
+}
+
+// OP_NOT
+inline bool operator!(const Value& value)
+{
+	return std::visit([]<typename T>(T&& v) -> bool {
+		using Type = std::decay_t<T>;
+
+		if constexpr (std::is_integral_v<Type> || std::is_same_v<Type, double>)
 		{
-			throw std::runtime_error("Unsupported type for unary minus");
+			return v == 0;
 		}
+		if constexpr (std::is_same_v<Type, bool>)
+		{
+			return !v;
+		}
+		throw std::runtime_error("Unsupported type for not operation");
 	},
 		value);
 }

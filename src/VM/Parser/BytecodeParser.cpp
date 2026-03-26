@@ -4,14 +4,18 @@
 #include <iomanip>
 #include <sstream>
 
+constexpr char METKA = ':';
+
 const std::string LOCALS = ".locals";
 const std::string CONST = ".const";
 const std::string CODE = ".code";
 
+void PatchJumps(Chunk* chunk);
 void ParseConstant(std::stringstream& ss, Chunk* chunk);
 void ParseInstruction(std::stringstream& ss, Chunk* chunk);
 
 void LocalsOp(std::stringstream& ss, Chunk* chunk, OpCode code);
+void JmpOp(std::stringstream& ss, Chunk* chunk, OpCode code);
 
 std::unique_ptr<Chunk> BytecodeParser::Parse(const std::string& source)
 {
@@ -64,7 +68,7 @@ std::unique_ptr<Chunk> BytecodeParser::Parse(const std::string& source)
 			ParseInstruction(lineStream, chunk.get());
 		}
 	}
-
+	PatchJumps(chunk.get());
 	return chunk;
 }
 
@@ -103,6 +107,13 @@ void ParseInstruction(std::stringstream& ss, Chunk* chunk)
 {
 	std::string op;
 	ss >> op;
+
+	if (op.back() == METKA)
+	{
+		const auto label = op.substr(0, op.length() - 1);
+		chunk->labels[label] = chunk->code.size();
+		ss >> op;
+	}
 
 	if (op == "push")
 	{
@@ -152,6 +163,35 @@ void ParseInstruction(std::stringstream& ss, Chunk* chunk)
 	{
 		LocalsOp(ss, chunk, OpCode::OP_GET_LOCAL_VAR);
 	}
+	else if (op == "jmp")
+	{
+		JmpOp(ss, chunk, OpCode::OP_JMP);
+	}
+	else if (op == "jmp_if_false")
+	{
+		JmpOp(ss, chunk, OpCode::OP_JMP_IF_FALSE);
+	}
+}
+
+void PatchJumps(Chunk* chunk)
+{
+	for (const auto& [pos, label] : chunk->pendingJumps)
+	{
+		const auto it = chunk->labels.find(label);
+		if (it == chunk->labels.end())
+		{
+			throw std::runtime_error("Undefined label: " + label);
+		}
+
+		const auto targetAddr = it->second;
+		if (targetAddr > 65535) // TODO max
+		{
+			throw std::runtime_error("Label address too large: " + label);
+		}
+
+		chunk->code[pos] = static_cast<uint8_t>((targetAddr >> 8) & 0xFF);
+		chunk->code[pos + 1] = static_cast<uint8_t>(targetAddr & 0xFF);
+	}
 }
 
 void LocalsOp(std::stringstream& ss, Chunk* chunk, OpCode code)
@@ -166,4 +206,17 @@ void LocalsOp(std::stringstream& ss, Chunk* chunk, OpCode code)
 	}
 	chunk->code.push_back(static_cast<uint8_t>(code));
 	chunk->code.push_back(static_cast<uint8_t>(index));
+}
+
+void JmpOp(std::stringstream& ss, Chunk* chunk, OpCode code)
+{
+	std::string label;
+	ss >> label;
+
+	const auto jmpPos = chunk->code.size();
+	chunk->code.push_back(static_cast<uint8_t>(code));
+	chunk->code.push_back(0);
+	chunk->code.push_back(0);
+
+	chunk->pendingJumps.emplace_back(jmpPos + 1, label);
 }

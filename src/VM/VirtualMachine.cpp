@@ -5,6 +5,8 @@
 #include <iostream>
 #include <pstl/glue_execution_defs.h>
 
+constexpr int BYTE_SIZE = 8;
+
 VirtualMachine::VirtualMachine(const size_t localsCount)
 	: m_localVars(localsCount)
 {
@@ -13,7 +15,7 @@ VirtualMachine::VirtualMachine(const size_t localsCount)
 void VirtualMachine::Interpret(std::unique_ptr<Chunk> chunk)
 {
 	m_currentChunk = std::move(chunk);
-	m_iPointer = 0;
+	m_instructionPointer = 0;
 	Run();
 }
 
@@ -29,7 +31,7 @@ Value VirtualMachine::GetLocal(const size_t index) const
 
 void VirtualMachine::Run()
 {
-	while (m_iPointer < m_currentChunk->code.size())
+	while (m_instructionPointer < m_currentChunk->code.size())
 	{
 		switch (const auto opCode = static_cast<OpCode>(ReadByte()))
 		{
@@ -62,6 +64,12 @@ void VirtualMachine::Run()
 			break;
 		case OpCode::OP_GET_LOCAL_VAR:
 			OpGetLocal();
+			break;
+		case OpCode::OP_JMP:
+			OpJmp();
+			break;
+		case OpCode::OP_JMP_IF_FALSE:
+			OpJmpIfFalse();
 			break;
 		default:
 			std::cerr << "Unknown operation: " << static_cast<int>(opCode) << std::endl;
@@ -147,6 +155,23 @@ void VirtualMachine::OpGetLocal()
 	Push(m_localVars[index]);
 }
 
+void VirtualMachine::OpJmp()
+{
+	const auto address = static_cast<uint16_t>(ReadByte()) << BYTE_SIZE | ReadByte();
+	m_instructionPointer = address;
+}
+
+void VirtualMachine::OpJmpIfFalse()
+{
+	const auto address = static_cast<uint16_t>(ReadByte()) << BYTE_SIZE | ReadByte();
+	const auto condition = Pop();
+
+	if (!condition)
+	{
+		m_instructionPointer = address;
+	}
+}
+
 void VirtualMachine::Push(const Value& value)
 {
 	m_constLiterals.push(value);
@@ -165,5 +190,5 @@ Value VirtualMachine::Pop()
 
 uint8_t VirtualMachine::ReadByte()
 {
-	return m_currentChunk->code[m_iPointer++];
+	return m_currentChunk->code[m_instructionPointer++];
 }

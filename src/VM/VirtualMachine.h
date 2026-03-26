@@ -12,6 +12,9 @@ struct Chunk
 	size_t localsCount;
 	std::vector<uint8_t> code;
 	std::vector<Value> constants;
+
+	std::unordered_map<std::string, size_t> labels;
+	std::vector<std::pair<size_t, std::string>> pendingJumps;
 };
 
 class VirtualMachine
@@ -46,6 +49,10 @@ private:
 
 	void OpGetLocal();
 
+	void OpJmp();
+
+	void OpJmpIfFalse();
+
 	void Push(const Value& value);
 
 	Value Pop();
@@ -59,7 +66,7 @@ private:
 private:
 	friend struct VMAccessor;
 
-	size_t m_iPointer = 0;
+	size_t m_instructionPointer = 0;
 	StringPool m_stringPool; // TODO применить стринг пул
 	std::unique_ptr<Chunk> m_currentChunk;
 
