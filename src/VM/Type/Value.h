@@ -302,7 +302,7 @@ inline Value operator-(const Value& lhs, const Value& rhs)
 		}
 		else if constexpr (std::is_same_v<LType, std::monostate> || std::is_same_v<RType, std::monostate>)
 		{
-			throw std::runtime_error("Cannot add null"); // TODO
+			throw std::runtime_error("Cannot sub null"); // TODO
 		}
 		else if constexpr (std::is_same_v<LType, double> || std::is_same_v<RType, double>)
 		{
