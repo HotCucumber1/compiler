@@ -29,7 +29,7 @@ struct VMAccessor
 // ==========================================
 TEST_CASE("VM: Integer Arithmetic", "[vm][math][int]")
 {
-	VirtualMachine vm(0);
+	VirtualMachine vm;
 
 	SECTION("Addition")
 	{
@@ -146,7 +146,7 @@ TEST_CASE("VM: Integer Arithmetic", "[vm][math][int]")
 // ==========================================
 TEST_CASE("VM: Double Arithmetic", "[vm][math][double]")
 {
-	VirtualMachine vm(0);
+	VirtualMachine vm;
 
 	SECTION("Addition with Doubles")
 	{
@@ -191,7 +191,7 @@ TEST_CASE("VM: Double Arithmetic", "[vm][math][double]")
 // ==========================================
 TEST_CASE("VM: Local Variables", "[vm][locals]")
 {
-	VirtualMachine vm(2); // Provide space for 2 locals
+	VirtualMachine vm; // Provide space for 2 locals
 
 	SECTION("Set and Get Local Variable")
 	{
@@ -240,7 +240,7 @@ TEST_CASE("VM: Local Variables", "[vm][locals]")
 // ==========================================
 TEST_CASE("VM: Complex Expressions", "[vm][execution]")
 {
-	VirtualMachine vm(0);
+	VirtualMachine vm;
 
 	SECTION("Evaluate: (10 - 2) * 3 = 24")
 	{
@@ -269,7 +269,7 @@ TEST_CASE("VM: Complex Expressions", "[vm][execution]")
 // ==========================================
 TEST_CASE("VM: Error Handling and Edge Cases", "[vm][errors]")
 {
-	VirtualMachine vm(1); // 1 local var max
+	VirtualMachine vm; // 1 local var max
 
 	SECTION("Stack Underflow on Math Operation")
 	{

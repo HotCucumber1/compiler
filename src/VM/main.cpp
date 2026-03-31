@@ -19,7 +19,7 @@ int main(const int argc, char* argv[])
 
 		auto chunk = BytecodeParser::Parse(bytecodeSource);
 
-		VirtualMachine vm(chunk->localsCount);
+		VirtualMachine vm;
 		vm.Interpret(std::move(chunk));
 	}
 	catch (const std::exception& e)

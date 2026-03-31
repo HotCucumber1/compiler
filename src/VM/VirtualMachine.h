@@ -1,28 +1,17 @@
 #pragma once
 
 #include "StringPool/StringPool.h"
-#include "Type/Value.h"
+#include "Type/Chunk.h"
 
 #include <memory>
-#include <stack>
 #include <vector>
-
-struct Chunk
-{
-	size_t localsCount;
-	std::vector<uint8_t> code;
-	std::vector<Value> constants;
-
-	std::unordered_map<std::string, size_t> labels;
-	std::vector<std::pair<size_t, std::string>> pendingJumps;
-};
 
 class VirtualMachine
 {
 public:
 	static constexpr short STACK_SIZE = 256;
 
-	explicit VirtualMachine(size_t localsCount);
+	VirtualMachine() = default;
 
 	void Interpret(std::unique_ptr<Chunk> chunk);
 
@@ -53,11 +42,19 @@ private:
 
 	void OpJmpIfFalse();
 
+	void OpCall();
+
+	void OpFunc();
+
 	void Push(const Value& value);
 
 	Value Pop();
 
+	Value Peek(int distance) const;
+
 	uint8_t ReadByte();
+
+	uint16_t ReadShort();
 
 	Value GetStackTop() const;
 
@@ -68,8 +65,11 @@ private:
 
 	size_t m_instructionPointer = 0;
 	StringPool m_stringPool; // TODO применить стринг пул
-	std::unique_ptr<Chunk> m_currentChunk;
+	Chunk* m_currentChunk{};
 
-	std::stack<Value> m_constLiterals;
-	std::vector<Value> m_localVars;
+	std::vector<CallFrame> m_callFrames;
+	std::vector<Value> m_valueStack;
+
+	// std::stack<Value> m_constLiterals;
+	// std::vector<Value> m_localVars;
 };

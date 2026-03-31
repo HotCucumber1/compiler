@@ -1,16 +1,20 @@
 #pragma once
-#include "Object.h"
 
+#include "Object.h"
 #include <iostream>
 #include <stdexcept>
 #include <variant>
+
+struct Function;
+using FunctionPtr = std::shared_ptr<Function>;
 
 using Value = std::variant<
 	int64_t,
 	double,
 	bool,
 	char,
-	HeapObjectPtr>;
+	HeapObjectPtr,
+	FunctionPtr>;
 
 inline Value MakeString(std::string str)
 {
@@ -30,6 +34,24 @@ inline bool IsString(const Value& value)
 		return false;
 	},
 		value);
+}
+
+inline bool IsFunction(const Value& value)
+{
+	return std::visit([]<typename T0>(T0&&) {
+		using T = std::decay_t<T0>;
+		return std::is_same_v<T, FunctionPtr>;
+	},
+		value);
+}
+
+inline FunctionPtr AsFunc(const Value& value)
+{
+	if (!IsFunction(value))
+	{
+		throw std::runtime_error("Value is not a function");
+	}
+	return std::get<FunctionPtr>(value);
 }
 
 inline std::string AsString(const Value& value)
@@ -114,6 +136,10 @@ inline Value operator+(const Value& lhs, const Value& rhs) // TODO добави�
 			using CommonInt = std::conditional_t<std::is_same_v<LType, int64_t> || std::is_same_v<RType, int64_t>, int64_t, char>;
 			return static_cast<CommonInt>(l) + static_cast<CommonInt>(r);
 		}
+		else if constexpr (std::is_same_v<LType, FunctionPtr> || std::is_same_v<RType, FunctionPtr>)
+		{
+			throw std::runtime_error("Cannot add function");
+		}
 		else if constexpr (std::is_same_v<LType, double> || std::is_same_v<RType, double>)
 		{
 			return static_cast<double>(l) + static_cast<double>(r);
@@ -146,6 +172,10 @@ inline Value operator-(const Value& lhs, const Value& rhs)
 			using CommonInt = std::conditional_t<std::is_same_v<LType, int64_t> || std::is_same_v<RType, int64_t>, int64_t, char>;
 			return static_cast<CommonInt>(l) - static_cast<CommonInt>(r);
 		}
+		else if constexpr (std::is_same_v<LType, FunctionPtr> || std::is_same_v<RType, FunctionPtr>)
+		{
+			throw std::runtime_error("Cannot sub function");
+		}
 		else if constexpr (std::is_same_v<LType, double> || std::is_same_v<RType, double>)
 		{
 			return static_cast<double>(l) - static_cast<double>(r);
@@ -177,6 +207,10 @@ inline Value operator*(const Value& lhs, const Value& rhs)
 		{
 			using CommonInt = std::conditional_t<std::is_same_v<LType, int64_t> || std::is_same_v<RType, int64_t>, int64_t, char>;
 			return static_cast<CommonInt>(l) * static_cast<CommonInt>(r);
+		}
+		else if constexpr (std::is_same_v<LType, FunctionPtr> || std::is_same_v<RType, FunctionPtr>)
+		{
+			throw std::runtime_error("Cannot multiply function");
 		}
 		else if constexpr (std::is_same_v<LType, double> || std::is_same_v<RType, double>)
 		{
@@ -213,6 +247,10 @@ inline Value operator/(const Value& lhs, const Value& rhs)
 				throw std::runtime_error("Division by zero");
 			}
 			return static_cast<CommonInt>(l) / static_cast<CommonInt>(r);
+		}
+		else if constexpr (std::is_same_v<LType, FunctionPtr> || std::is_same_v<RType, FunctionPtr>)
+		{
+			throw std::runtime_error("Cannot div function");
 		}
 		else if constexpr (std::is_same_v<LType, double> || std::is_same_v<RType, double>)
 		{

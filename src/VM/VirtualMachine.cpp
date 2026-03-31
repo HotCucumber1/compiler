@@ -7,32 +7,59 @@
 
 constexpr int BYTE_SIZE = 8;
 
-VirtualMachine::VirtualMachine(const size_t localsCount)
-	: m_localVars(localsCount)
-{
-}
 
 void VirtualMachine::Interpret(std::unique_ptr<Chunk> chunk)
 {
-	m_currentChunk = std::move(chunk);
-	m_instructionPointer = 0;
+	const auto mainFunc = std::make_shared<Function>(nullptr, 0);
+	mainFunc->chunk = std::move(*chunk);
+
+	const CallFrame mainFrame(mainFunc);
+	m_callFrames.push_back(mainFrame);
+
+	m_valueStack.clear();
 	Run();
 }
 
 Value VirtualMachine::GetStackTop() const
 {
-	return m_constLiterals.top();
+	if (m_valueStack.empty())
+	{
+		throw std::runtime_error("Stack is empty");
+	}
+	return m_valueStack.back();
 }
 
 Value VirtualMachine::GetLocal(const size_t index) const
 {
-	return m_localVars[index];
+	if (m_callFrames.empty())
+	{
+		throw std::runtime_error("No call frame");
+	}
+	const auto& locals = m_callFrames.back().locals;
+	if (index >= locals.size())
+	{
+		throw std::runtime_error("Local variable index out of range");
+	}
+	return locals[index];
 }
 
 void VirtualMachine::Run()
 {
-	while (m_instructionPointer < m_currentChunk->code.size())
+	while (true)
 	{
+		if (m_callFrames.empty())
+		{
+			return;
+		}
+		CallFrame& currentFrame = m_callFrames.back();
+		m_currentChunk = &currentFrame.function->chunk;
+		m_instructionPointer = currentFrame.instructionPointer;
+
+		if (m_instructionPointer >= m_currentChunk->code.size())
+		{
+			OpReturn();
+			continue;
+		}
 		switch (const auto opCode = static_cast<OpCode>(ReadByte()))
 		{
 		case OpCode::OP_CONSTANT:
@@ -40,7 +67,7 @@ void VirtualMachine::Run()
 			break;
 		case OpCode::OP_RETURN:
 			OpReturn();
-			return;
+			continue;
 		case OpCode::OP_ADD:
 			OpAdd();
 			break;
@@ -71,10 +98,17 @@ void VirtualMachine::Run()
 		case OpCode::OP_JMP_IF_FALSE:
 			OpJmpIfFalse();
 			break;
+		case OpCode::OP_CALL:
+			OpCall();
+			break;
+		case OpCode::OP_FUNC:
+			OpFunc();
+			break;
 		default:
 			std::cerr << "Unknown operation: " << static_cast<int>(opCode) << std::endl;
 			return;
 		}
+		currentFrame.instructionPointer = m_instructionPointer;
 	}
 }
 
@@ -90,12 +124,26 @@ void VirtualMachine::OpConstant()
 
 void VirtualMachine::OpReturn()
 {
-	if (m_constLiterals.empty())
+	Value returnValue;
+	if (!m_valueStack.empty())
 	{
-		return;
+		returnValue = Pop();
 	}
-	std::cout << "\nOn return: ";
-	PrintValue(m_constLiterals.top());
+
+	m_callFrames.pop_back();
+	Push(returnValue);
+	if (!m_callFrames.empty())
+	{
+		std::cout << "Returned: ";
+		PrintValue(returnValue);
+		std::cout << std::endl;
+	}
+	else
+	{
+		std::cout << "\nProgram finished. Result: ";
+		PrintValue(returnValue);
+		std::cout << std::endl;
+	}
 }
 
 void VirtualMachine::OpAdd()
@@ -146,13 +194,35 @@ void VirtualMachine::OpNeg()
 void VirtualMachine::OpSetLocal()
 {
 	const auto index = ReadByte();
-	m_localVars[index] = Pop();
+	const auto value = Pop();
+
+	if (m_callFrames.empty())
+	{
+		throw std::runtime_error("No call frame");
+	}
+
+	auto& locals = m_callFrames.back().locals;
+	if (index >= locals.size())
+	{
+		throw std::runtime_error("Local variable index out of range");
+	}
+	locals[index] = value;
 }
 
 void VirtualMachine::OpGetLocal()
 {
 	const auto index = ReadByte();
-	Push(m_localVars[index]);
+	if (m_callFrames.empty())
+	{
+		throw std::runtime_error("No call frame");
+	}
+
+	const auto& locals = m_callFrames.back().locals;
+	if (index >= locals.size())
+	{
+		throw std::runtime_error("Local variable index out of range");
+	}
+	Push(locals[index]);
 }
 
 void VirtualMachine::OpJmp()
@@ -172,19 +242,84 @@ void VirtualMachine::OpJmpIfFalse()
 	}
 }
 
+void VirtualMachine::OpCall()
+{
+	const auto argCount = ReadByte();
+
+	const auto callee = Peek(argCount);
+	if (!IsFunction(callee))
+	{
+		throw std::runtime_error("Can only call functions");
+	}
+
+	const auto function = AsFunc(callee);
+	if (argCount != function->arity)
+	{
+		throw std::runtime_error("Expected " + std::to_string(function->arity) + " arguments but got " + std::to_string(argCount));
+	}
+
+	CallFrame frame(function);
+	for (int i = argCount - 1; i >= 0; i--)
+	{
+		const auto arg = m_valueStack[m_valueStack.size() - 1 - i];
+		frame.locals[i] = arg;
+	}
+	for (int i = 0; i <= argCount; i++)
+	{
+		m_valueStack.pop_back();
+	}
+
+	CallFrame& currentFrame = m_callFrames.back();
+	currentFrame.instructionPointer = m_instructionPointer;
+
+	m_callFrames.push_back(frame);
+}
+
+void VirtualMachine::OpFunc()
+{
+	const auto funcIndex = ReadByte();
+	if (funcIndex >= m_currentChunk->constants.size())
+	{
+		throw std::runtime_error("Function index out of range");
+	}
+
+	const auto funcValue = m_currentChunk->constants[funcIndex];
+
+	if (!IsFunction(funcValue))
+	{
+		throw std::runtime_error("Expected function constant");
+	}
+
+	Push(funcValue);
+}
+
+Value VirtualMachine::Peek(const int distance) const
+{
+	if (distance >= static_cast<int>(m_valueStack.size()))
+	{
+		throw std::runtime_error("Stack index out of range");
+	}
+	return m_valueStack[m_valueStack.size() - 1 - distance];
+}
+
+uint16_t VirtualMachine::ReadShort()
+{
+	return static_cast<uint16_t>(ReadByte()) << BYTE_SIZE | ReadByte();
+}
+
 void VirtualMachine::Push(const Value& value)
 {
-	m_constLiterals.push(value);
+	m_valueStack.push_back(value);
 }
 
 Value VirtualMachine::Pop()
 {
-	if (m_constLiterals.empty())
+	if (m_valueStack.empty())
 	{
 		throw std::runtime_error("Const stack is empty");
 	}
-	const auto top = m_constLiterals.top();
-	m_constLiterals.pop();
+	const auto top = m_valueStack.back();
+	m_valueStack.pop_back();
 	return top;
 }
 

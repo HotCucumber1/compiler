@@ -17,5 +17,8 @@ enum class OpCode : uint8_t
 	OP_JMP,
 	OP_JMP_IF_FALSE,
 
+	OP_CALL,
+	OP_FUNC,
+
 	OP_RETURN = 255,
 };

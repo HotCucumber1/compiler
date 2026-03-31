@@ -6,6 +6,7 @@ enum class ObjectType
 {
 	STRING,
 	OBJECT,
+	FUNC,
 };
 
 struct Object
