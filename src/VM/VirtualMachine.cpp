@@ -7,7 +7,6 @@
 
 constexpr int BYTE_SIZE = 8;
 
-
 void VirtualMachine::Interpret(std::unique_ptr<Chunk> chunk)
 {
 	const auto mainFunc = std::make_shared<Function>(nullptr, 0);
@@ -103,6 +102,15 @@ void VirtualMachine::Run()
 			break;
 		case OpCode::OP_FUNC:
 			OpFunc();
+			break;
+		case OpCode::OP_CREATE_ARRAY:
+			OpCreateArr();
+			break;
+		case OpCode::OP_GET_ELEMENT:
+			OpGetEl();
+			break;
+		case OpCode::OP_SET_ELEMENT:
+			OpSetEl();
 			break;
 		default:
 			std::cerr << "Unknown operation: " << static_cast<int>(opCode) << std::endl;
@@ -291,6 +299,70 @@ void VirtualMachine::OpFunc()
 	}
 
 	Push(funcValue);
+}
+
+void VirtualMachine::OpCreateArr()
+{
+	const auto count = ReadByte();
+	auto array = std::make_shared<Array>(count);
+
+	for (int i = count - 1; i >= 0; --i)
+	{
+		array->elements[i] = Pop();
+	}
+	Push(array);
+}
+
+void VirtualMachine::OpGetEl()
+{
+	const auto indexVal = Pop();
+	const auto arrayVal = Pop();
+
+	if (!IsArray(arrayVal))
+	{
+		throw std::runtime_error("Cannot get element from non-array");
+	}
+
+	const auto arr = AsArray(arrayVal);
+	if (!std::holds_alternative<int64_t>(indexVal))
+	{
+		throw std::runtime_error("Array index must be integer");
+	}
+
+	const auto idx = std::get<int64_t>(indexVal);
+	if (idx < 0 || idx >= static_cast<int64_t>(arr->elements.size()))
+	{
+		Push(Value{}); // null
+	}
+	else
+	{
+		Push(arr->elements[idx]);
+	}
+}
+
+void VirtualMachine::OpSetEl()
+{
+	Value indexVal = Pop();
+	Value arrayVal = Pop();
+	Value value = Pop();
+
+	if (!IsArray(arrayVal))
+	{
+		throw std::runtime_error("Cannot set element on non-array");
+	}
+
+	auto arr = AsArray(arrayVal);
+	if (!std::holds_alternative<int64_t>(indexVal))
+	{
+		throw std::runtime_error("Array index must be integer");
+	}
+
+	auto idx = std::get<int64_t>(indexVal);
+	if (idx < 0 || idx >= static_cast<int64_t>(arr->elements.size()))
+	{
+		throw std::runtime_error("Array index out of bounds");
+	}
+	arr->elements[idx] = value;
 }
 
 Value VirtualMachine::Peek(const int distance) const

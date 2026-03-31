@@ -20,5 +20,9 @@ enum class OpCode : uint8_t
 	OP_CALL,
 	OP_FUNC,
 
+	OP_CREATE_ARRAY,
+	OP_GET_ELEMENT,
+	OP_SET_ELEMENT,
+
 	OP_RETURN = 255,
 };

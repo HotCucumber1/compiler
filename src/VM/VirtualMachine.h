@@ -46,6 +46,12 @@ private:
 
 	void OpFunc();
 
+	void OpCreateArr();
+
+	void OpGetEl();
+
+	void OpSetEl();
+
 	void Push(const Value& value);
 
 	Value Pop();

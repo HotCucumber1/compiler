@@ -171,6 +171,21 @@ void ParseInstruction(std::stringstream& ss, Chunk* chunk)
 	{
 		JmpOp(ss, chunk, OpCode::OP_JMP_IF_FALSE);
 	}
+	else if (op == "create_arr")
+	{
+		int count;
+		ss >> count;
+		chunk->code.push_back(static_cast<uint8_t>(OpCode::OP_CREATE_ARRAY));
+		chunk->code.push_back(static_cast<uint8_t>(count));
+	}
+	else if (op == "get_el")
+	{
+		chunk->code.push_back(static_cast<uint8_t>(OpCode::OP_GET_ELEMENT));
+	}
+	else if (op == "set_el")
+	{
+		chunk->code.push_back(static_cast<uint8_t>(OpCode::OP_SET_ELEMENT));
+	}
 }
 
 void PatchJumps(Chunk* chunk)

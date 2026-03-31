@@ -4,23 +4,72 @@
 #include <iostream>
 #include <stdexcept>
 #include <variant>
+#include <vector>
 
 struct Function;
 using FunctionPtr = std::shared_ptr<Function>;
 
+struct Array;
+using ArrayPtr = std::shared_ptr<Array>;
+
 using Value = std::variant<
+	std::monostate,
 	int64_t,
 	double,
 	bool,
 	char,
 	HeapObjectPtr,
-	FunctionPtr>;
+	FunctionPtr,
+	ArrayPtr>;
+
+struct Array final : Object
+{
+	std::vector<Value> elements;
+	Array()
+		: Object(ObjectType::ARRAY)
+	{
+	}
+	explicit Array(const size_t size)
+		: Object(ObjectType::ARRAY)
+		, elements(size)
+	{
+	}
+};
+
+inline bool IsNull(const Value& value)
+{
+	return std::holds_alternative<std::monostate>(value);
+}
 
 inline Value MakeString(std::string str)
 {
 	return {
 		std::make_shared<String>(std::move(str))
 	};
+}
+
+inline bool IsHeapObject(const Value& value)
+{
+	return std::holds_alternative<HeapObjectPtr>(value);
+}
+
+inline HeapObjectPtr AsHeapObject(const Value& value)
+{
+	return std::get<HeapObjectPtr>(value);
+}
+
+inline bool IsArray(const Value& value)
+{
+	if (std::holds_alternative<HeapObjectPtr>(value))
+	{
+		const auto obj = std::get<HeapObjectPtr>(value);
+		return obj && obj->type == ObjectType::ARRAY;
+	}
+	if (std::holds_alternative<ArrayPtr>(value))
+	{
+		return true;
+	}
+	return false;
 }
 
 inline bool IsString(const Value& value)
@@ -70,6 +119,23 @@ inline std::string AsString(const Value& value)
 		return {};
 	},
 		value);
+}
+
+inline ArrayPtr AsArray(const Value& value)
+{
+	if (std::holds_alternative<HeapObjectPtr>(value))
+	{
+		auto obj = std::get<HeapObjectPtr>(value);
+		if (obj && obj->type == ObjectType::ARRAY)
+		{
+			return std::static_pointer_cast<Array>(obj);
+		}
+	}
+	if (std::holds_alternative<ArrayPtr>(value))
+	{
+		return std::get<ArrayPtr>(value);
+	}
+	throw std::runtime_error("Value is not an array");
 }
 
 inline int AsInt(const Value& value)
@@ -140,6 +206,14 @@ inline Value operator+(const Value& lhs, const Value& rhs) // TODO добави�
 		{
 			throw std::runtime_error("Cannot add function");
 		}
+		else if constexpr (std::is_same_v<LType, ArrayPtr> || std::is_same_v<RType, ArrayPtr>)
+		{
+			throw std::runtime_error("Cannot add array"); // TODO
+		}
+		else if constexpr (std::is_same_v<LType, std::monostate> || std::is_same_v<RType, std::monostate>)
+		{
+			throw std::runtime_error("Cannot add null"); // TODO
+		}
 		else if constexpr (std::is_same_v<LType, double> || std::is_same_v<RType, double>)
 		{
 			return static_cast<double>(l) + static_cast<double>(r);
@@ -176,6 +250,14 @@ inline Value operator-(const Value& lhs, const Value& rhs)
 		{
 			throw std::runtime_error("Cannot sub function");
 		}
+		else if constexpr (std::is_same_v<LType, ArrayPtr> || std::is_same_v<RType, ArrayPtr>)
+		{
+			throw std::runtime_error("Cannot sub array"); // TODO
+		}
+		else if constexpr (std::is_same_v<LType, std::monostate> || std::is_same_v<RType, std::monostate>)
+		{
+			throw std::runtime_error("Cannot add null"); // TODO
+		}
 		else if constexpr (std::is_same_v<LType, double> || std::is_same_v<RType, double>)
 		{
 			return static_cast<double>(l) - static_cast<double>(r);
@@ -211,6 +293,14 @@ inline Value operator*(const Value& lhs, const Value& rhs)
 		else if constexpr (std::is_same_v<LType, FunctionPtr> || std::is_same_v<RType, FunctionPtr>)
 		{
 			throw std::runtime_error("Cannot multiply function");
+		}
+		else if constexpr (std::is_same_v<LType, ArrayPtr> || std::is_same_v<RType, ArrayPtr>)
+		{
+			throw std::runtime_error("Cannot multiply array"); // TODO
+		}
+		else if constexpr (std::is_same_v<LType, std::monostate> || std::is_same_v<RType, std::monostate>)
+		{
+			throw std::runtime_error("Cannot add null"); // TODO
 		}
 		else if constexpr (std::is_same_v<LType, double> || std::is_same_v<RType, double>)
 		{
@@ -251,6 +341,14 @@ inline Value operator/(const Value& lhs, const Value& rhs)
 		else if constexpr (std::is_same_v<LType, FunctionPtr> || std::is_same_v<RType, FunctionPtr>)
 		{
 			throw std::runtime_error("Cannot div function");
+		}
+		else if constexpr (std::is_same_v<LType, ArrayPtr> || std::is_same_v<RType, ArrayPtr>)
+		{
+			throw std::runtime_error("Cannot div array"); // TODO
+		}
+		else if constexpr (std::is_same_v<LType, std::monostate> || std::is_same_v<RType, std::monostate>)
+		{
+			throw std::runtime_error("Cannot add null"); // TODO
 		}
 		else if constexpr (std::is_same_v<LType, double> || std::is_same_v<RType, double>)
 		{
@@ -346,8 +444,13 @@ inline void PrintValue(const Value& value)
 {
 	try
 	{
-		std::visit([](auto&& arg) {
-			if (IsString(arg))
+		std::visit([]<typename T0>(T0&& arg) {
+			using T = std::decay_t<T0>;
+			if constexpr (std::is_same_v<T, std::monostate>)
+			{
+				std::cout << "null";
+			}
+			else if (IsString(arg))
 			{
 				const auto& str = AsString(arg);
 				std::cout << str;

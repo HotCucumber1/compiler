@@ -7,6 +7,7 @@ enum class ObjectType
 	STRING,
 	OBJECT,
 	FUNC,
+	ARRAY,
 };
 
 struct Object

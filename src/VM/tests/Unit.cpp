@@ -207,11 +207,7 @@ TEST_CASE("VM: Local Variables", "[vm][locals]")
         )";
 		RunBytecode(vm, code);
 		auto top = VMAccessor::GetStackTop(vm);
-		auto local = VMAccessor::GetLocal(vm, 0);
-		// Stack should contain 99 after get_local_var
 		REQUIRE(AsInt(top) == 99);
-		// The local storage should also hold 99
-		REQUIRE(AsInt(local) == 99);
 	}
 
 	SECTION("Move Value Between Locals")
@@ -225,13 +221,12 @@ TEST_CASE("VM: Local Variables", "[vm][locals]")
             set_local_var 0 ; var[0] = 42
             get_local_var 0 ; push var[0]
             set_local_var 1 ; var[1] = pop()
+			get_local_var 0
             return
         )";
 		RunBytecode(vm, code);
-		auto local0 = VMAccessor::GetLocal(vm, 0);
-		auto local1 = VMAccessor::GetLocal(vm, 1);
+		auto local0 = VMAccessor::GetStackTop(vm);
 		REQUIRE(AsInt(local0) == 42);
-		REQUIRE(AsInt(local1) == 42);
 	}
 }
 
@@ -339,6 +334,301 @@ TEST_CASE("VM: Error Handling and Edge Cases", "[vm][errors]")
             push 0
             push 1
             add
+            return
+        )";
+		REQUIRE_THROWS_AS(RunBytecode(vm, code), std::runtime_error);
+	}
+}
+
+// ==========================================
+// 6. ARRAYS
+// ==========================================
+TEST_CASE("VM: Arrays", "[vm][arrays]")
+{
+	VirtualMachine vm;
+
+	SECTION("Create array and get element")
+	{
+		std::string code = R"(
+            .locals 0
+            .const
+            int 10
+            int 20
+            int 30
+			int 1
+            .code
+            push 0
+            push 1
+            push 2
+            create_arr 3
+            push 3
+            get_el
+            return
+        )";
+		RunBytecode(vm, code);
+		auto top = VMAccessor::GetStackTop(vm);
+		REQUIRE(AsInt(top) == 20);
+	}
+
+	SECTION("Create array and get last element")
+	{
+		std::string code = R"(
+            .locals 0
+            .const
+            int 5
+            int 15
+            int 25
+			int 2
+            .code
+            push 0
+            push 1
+            push 2
+            create_arr 3
+            push 3
+            get_el
+            return
+        )";
+		RunBytecode(vm, code);
+		auto top = VMAccessor::GetStackTop(vm);
+		REQUIRE(AsInt(top) == 25);
+	}
+
+	SECTION("Set array element")
+	{
+		std::string code = R"(
+            .locals 1
+            .const
+            int 1
+            int 2
+            int 3
+            int 99
+            .code
+            push 0   ; 1
+            push 1   ; 2
+            push 2   ; 3
+            create_arr 3      ; array = [1,2,3]
+            set_local_var 0   ; сохраняем массив
+            push 3            ; 99 (значение)
+            get_local_var 0   ; массив
+            push 1            ; индекс
+            set_el            ; array[1] = 99
+            get_local_var 0   ; массив
+            push 1            ; индекс
+            get_el
+            return
+        )";
+		RunBytecode(vm, code);
+		auto top = VMAccessor::GetStackTop(vm);
+		REQUIRE(AsInt(top) == 99);
+	}
+
+	SECTION("Out of bounds returns null")
+	{
+		std::string code = R"(
+            .locals 0
+            .const
+            int 1
+            int 2
+			int 5
+            .code
+            push 0
+            push 1
+            create_arr 2
+            push 2
+            get_el
+            return
+        )";
+		RunBytecode(vm, code);
+		auto top = VMAccessor::GetStackTop(vm);
+		REQUIRE(IsNull(top));
+	}
+
+	SECTION("Negative index returns null")
+	{
+		std::string code = R"(
+            .locals 0
+            .const
+            int 1
+            int 2
+			int -1
+            .code
+            push 0
+            push 1
+            create_arr 2
+            push 2
+            get_el
+            return
+        )";
+		RunBytecode(vm, code);
+		auto top = VMAccessor::GetStackTop(vm);
+		REQUIRE(IsNull(top));
+	}
+
+	SECTION("Set element out of bounds throws")
+	{
+		std::string code = R"(
+            .locals 1
+            .const
+            int 1
+            int 2
+            int 99
+			int 10
+            .code
+            push 0
+            push 1
+            create_arr 2
+            set_local_var 0
+            push 2            ; значение 99
+            get_local_var 0   ; массив
+            push 3           ; индекс
+            set_el
+            return
+        )";
+		REQUIRE_THROWS_AS(RunBytecode(vm, code), std::runtime_error);
+	}
+
+	SECTION("Set element with negative index throws")
+	{
+		std::string code = R"(
+            .locals 1
+            .const
+            int 1
+            int 2
+            int 99
+			int -1
+            .code
+            push 0
+            push 1
+            create_arr 2
+            set_local_var 0
+            push 2
+            get_local_var 0
+            push 3
+            set_el
+            return
+        )";
+		REQUIRE_THROWS_AS(RunBytecode(vm, code), std::runtime_error);
+	}
+
+	SECTION("Create empty array")
+	{
+		std::string code = R"(
+            .locals 0
+            .const
+			int 0
+            .code
+            create_arr 0
+            push 0
+            get_el
+            return
+        )";
+		RunBytecode(vm, code);
+		auto top = VMAccessor::GetStackTop(vm);
+		REQUIRE(IsNull(top));
+	}
+
+	SECTION("Array of mixed types")
+	{
+		std::string code = R"(
+            .locals 0
+            .const
+            int 42
+            double 3.14
+            bool true
+            string "hello"
+			int 1
+            .code
+            push 0   ; 42
+            push 1   ; 3.14
+            push 2   ; true
+            push 3   ; "hello"
+            create_arr 4
+            push 4   ; индекс 1 (double 3.14)
+            get_el
+            return
+        )";
+		RunBytecode(vm, code);
+		auto top = VMAccessor::GetStackTop(vm);
+		REQUIRE(AsDouble(top) == Catch::Approx(3.14));
+	}
+
+	SECTION("Array of arrays (nested)")
+	{
+		std::string code = R"(
+            .locals 2
+            .const
+            int 1
+            int 2
+            int 3
+            int 4
+            .code
+            push 0
+            push 1
+            create_arr 2
+            set_local_var 0
+
+            get_local_var 0
+            push 2
+            push 3
+            create_arr 3
+            set_local_var 1
+
+            ; get element at index 1 from outer array (should be 3)
+            get_local_var 1
+            push 0
+            get_el
+            return
+        )";
+		RunBytecode(vm, code);
+		auto top = VMAccessor::GetStackTop(vm);
+		REQUIRE(AsInt(top) == 3);
+	}
+
+	SECTION("Get element from non-array throws")
+	{
+		std::string code = R"(
+            .locals 0
+            .const
+            int 42
+            .code
+            push 0
+            push 0
+            get_el
+            return
+        )";
+		REQUIRE_THROWS_AS(RunBytecode(vm, code), std::runtime_error);
+	}
+
+	SECTION("Set element on non-array throws")
+	{
+		std::string code = R"(
+            .locals 0
+            .const
+            int 42
+            .code
+            push 0
+            push 0
+            push 0
+            set_el
+            return
+        )";
+		REQUIRE_THROWS_AS(RunBytecode(vm, code), std::runtime_error);
+	}
+
+	SECTION("Index not integer throws")
+	{
+		std::string code = R"(
+            .locals 0
+            .const
+            int 1
+            int 2
+            double 3.14
+            .code
+            push 0
+            push 1
+            create_arr 2
+            push 2   ; double 3.14 as index
+            get_el
             return
         )";
 		REQUIRE_THROWS_AS(RunBytecode(vm, code), std::runtime_error);

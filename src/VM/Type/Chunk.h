@@ -14,6 +14,7 @@ struct Chunk
 	std::vector<std::pair<size_t, std::string>> pendingJumps;
 };
 
+// TODO убрать отсюда все типы
 struct Function final : Object
 {
 	int arity;
