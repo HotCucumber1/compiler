@@ -117,6 +117,12 @@ void VirtualMachine::Run()
 		case OpCode::OP_JMP_IF_FALSE:
 			OpJmpIfFalse();
 			break;
+		case OpCode::OP_JMP_IF_LESS:
+			OpJmpIfLess();
+			break;
+		case OpCode::OP_JMP_IF_GREATER:
+			OpJmpIfGreater();
+			break;
 		case OpCode::OP_CALL:
 			OpCall();
 			break;
@@ -271,6 +277,38 @@ void VirtualMachine::OpJmpIfFalse()
 	const auto condition = Pop();
 
 	if (!condition)
+	{
+		m_instructionPointer = address;
+	}
+}
+void VirtualMachine::OpJmpIfLess()
+{
+	const auto address = static_cast<uint16_t>(ReadByte()) << BYTE_SIZE | ReadByte();
+	const auto value = Pop();
+
+	if (!std::holds_alternative<int64_t>(value) && !std::holds_alternative<double>(value))
+	{
+		throw std::runtime_error("Condition for JMP_IF_LESS must be numeric");
+	}
+
+	if (std::holds_alternative<int64_t>(value) && std::get<int64_t>(value) < 0
+		|| std::holds_alternative<double>(value) && std::get<double>(value) < 0)
+	{
+		m_instructionPointer = address;
+	}
+}
+void VirtualMachine::OpJmpIfGreater()
+{
+	const auto address = static_cast<uint16_t>(ReadByte()) << BYTE_SIZE | ReadByte();
+	const auto value = Pop();
+
+	if (!std::holds_alternative<int64_t>(value) && !std::holds_alternative<double>(value))
+	{
+		throw std::runtime_error("Condition for JMP_IF_GREATER must be numeric");
+	}
+
+	if (std::holds_alternative<int64_t>(value) && std::get<int64_t>(value) > 0
+		|| std::holds_alternative<double>(value) && std::get<double>(value) > 0)
 	{
 		m_instructionPointer = address;
 	}

@@ -45,6 +45,10 @@ private:
 
 	void OpJmpIfFalse();
 
+	void OpJmpIfLess();
+
+	void OpJmpIfGreater();
+
 	void OpCall();
 
 	void OpFunc();

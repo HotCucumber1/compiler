@@ -171,6 +171,14 @@ void ParseInstruction(std::stringstream& ss, Chunk* chunk)
 	{
 		JmpOp(ss, chunk, OpCode::OP_JMP_IF_FALSE);
 	}
+	else if (op == "jmp_if_less")
+	{
+		JmpOp(ss, chunk, OpCode::OP_JMP_IF_LESS);
+	}
+	else if (op == "jmp_if_greater")
+	{
+		JmpOp(ss, chunk, OpCode::OP_JMP_IF_GREATER);
+	}
 	else if (op == "create_arr")
 	{
 		int count;

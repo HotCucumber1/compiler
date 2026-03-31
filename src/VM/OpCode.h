@@ -16,6 +16,8 @@ enum class OpCode : uint8_t
 
 	OP_JMP,
 	OP_JMP_IF_FALSE,
+	OP_JMP_IF_LESS,
+	OP_JMP_IF_GREATER,
 
 	OP_CALL,
 	OP_FUNC,
