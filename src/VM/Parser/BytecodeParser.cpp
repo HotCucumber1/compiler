@@ -186,6 +186,26 @@ void ParseInstruction(std::stringstream& ss, Chunk* chunk)
 	{
 		chunk->code.push_back(static_cast<uint8_t>(OpCode::OP_SET_ELEMENT));
 	}
+	else if (op == "get_global")
+	{
+		std::string name;
+		ss >> name;
+
+		chunk->constants.emplace_back(MakeString(name));
+		const auto index = static_cast<uint8_t>(chunk->constants.size() - 1);
+		chunk->code.push_back(static_cast<uint8_t>(OpCode::OP_GET_GLOBAL));
+		chunk->code.push_back(index);
+	}
+	else if (op == "set_global")
+	{
+		std::string name;
+		ss >> name;
+
+		chunk->constants.emplace_back(MakeString(name));
+		const auto index = static_cast<uint8_t>(chunk->constants.size() - 1);
+		chunk->code.push_back(static_cast<uint8_t>(OpCode::OP_SET_GLOBAL));
+		chunk->code.push_back(index);
+	}
 }
 
 void PatchJumps(Chunk* chunk)

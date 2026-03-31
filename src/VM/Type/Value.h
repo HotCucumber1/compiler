@@ -1,10 +1,15 @@
 #pragma once
 
 #include "Object.h"
+
+#include <functional>
 #include <iostream>
 #include <stdexcept>
 #include <variant>
 #include <vector>
+
+struct NativeFunction;
+using NativeFunctionPtr = std::shared_ptr<NativeFunction>;
 
 struct Function;
 using FunctionPtr = std::shared_ptr<Function>;
@@ -35,6 +40,28 @@ struct Array final : Object
 	{
 	}
 };
+
+struct NativeFunction final : Object
+{
+	using NativeFunc = std::function<Value(const std::vector<Value>&)>;
+
+	NativeFunc func;
+	std::string name;
+	int arity;
+
+	NativeFunction(
+		const std::string& name,
+		const int arity,
+		const NativeFunc& func)
+		: Object(ObjectType::NATIVE_FUNC)
+		, func(func)
+		, name(name)
+		, arity(arity)
+	{
+	}
+};
+
+using NativeFunctionPtr = std::shared_ptr<NativeFunction>;
 
 inline bool IsNull(const Value& value)
 {
@@ -85,6 +112,24 @@ inline bool IsString(const Value& value)
 		value);
 }
 
+inline std::string AsString(const Value& value)
+{
+	if (!IsString(value))
+	{
+		throw std::runtime_error("Value is not a string");
+	}
+
+	return std::visit([]<typename T0>(const T0& arg) -> std::string {
+		using T = std::decay_t<T0>;
+		if constexpr (std::is_same_v<T, HeapObjectPtr>)
+		{
+			return static_cast<String*>(arg.get())->str;
+		}
+		return {};
+	},
+		value);
+}
+
 inline bool IsFunction(const Value& value)
 {
 	return std::visit([]<typename T0>(T0&&) {
@@ -103,22 +148,23 @@ inline FunctionPtr AsFunc(const Value& value)
 	return std::get<FunctionPtr>(value);
 }
 
-inline std::string AsString(const Value& value)
+inline bool IsNativeFunction(const Value& value)
 {
-	if (!IsString(value))
+	if (!std::holds_alternative<HeapObjectPtr>(value))
 	{
-		throw std::runtime_error("Value is not a string");
+		return false;
 	}
+	auto obj = std::get<HeapObjectPtr>(value);
+	return obj && obj->type == ObjectType::NATIVE_FUNC;
+}
 
-	return std::visit([]<typename T0>(const T0& arg) -> std::string {
-		using T = std::decay_t<T0>;
-		if constexpr (std::is_same_v<T, HeapObjectPtr>)
-		{
-			return static_cast<String*>(arg.get())->str;
-		}
-		return {};
-	},
-		value);
+inline NativeFunctionPtr AsNativeFunction(const Value& value)
+{
+	if (!IsNativeFunction(value))
+	{
+		throw std::runtime_error("Value is not a native function");
+	}
+	return std::static_pointer_cast<NativeFunction>(std::get<HeapObjectPtr>(value));
 }
 
 inline ArrayPtr AsArray(const Value& value)
@@ -454,6 +500,14 @@ inline void PrintValue(const Value& value)
 			{
 				const auto& str = AsString(arg);
 				std::cout << str;
+			}
+			else if (IsArray(arg))
+			{
+				const auto arr = AsArray(arg)->elements;
+				for (const auto& val : arr)
+				{
+					PrintValue(val);
+				}
 			}
 			else
 			{

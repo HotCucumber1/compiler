@@ -7,6 +7,20 @@
 
 constexpr int BYTE_SIZE = 8;
 
+Value NativePrint(const std::vector<Value>& args)
+{
+	for (const auto& arg : args)
+	{
+		PrintValue(arg);
+	}
+	return {};
+}
+
+VirtualMachine::VirtualMachine()
+{
+	RegisterNativeFunction("print", 1, NativePrint);
+}
+
 void VirtualMachine::Interpret(std::unique_ptr<Chunk> chunk)
 {
 	const auto mainFunc = std::make_shared<Function>(nullptr, 0);
@@ -17,6 +31,12 @@ void VirtualMachine::Interpret(std::unique_ptr<Chunk> chunk)
 
 	m_valueStack.clear();
 	Run();
+}
+
+void VirtualMachine::RegisterNativeFunction(const std::string& name, int arity, const NativeFunction::NativeFunc& func)
+{
+	auto native = std::make_shared<NativeFunction>(name, arity, func);
+	m_globals[name] = native;
 }
 
 Value VirtualMachine::GetStackTop() const
@@ -111,6 +131,12 @@ void VirtualMachine::Run()
 			break;
 		case OpCode::OP_SET_ELEMENT:
 			OpSetEl();
+			break;
+		case OpCode::OP_GET_GLOBAL:
+			OpGetGlobal();
+			break;
+		case OpCode::OP_SET_GLOBAL:
+			OpSetGlobal();
 			break;
 		default:
 			std::cerr << "Unknown operation: " << static_cast<int>(opCode) << std::endl;
@@ -255,6 +281,28 @@ void VirtualMachine::OpCall()
 	const auto argCount = ReadByte();
 
 	const auto callee = Peek(argCount);
+	if (IsNativeFunction(callee))
+	{
+		auto native = AsNativeFunction(callee);
+		if (argCount != native->arity)
+		{
+			throw std::runtime_error("Expected " + std::to_string(native->arity) + " arguments but got " + std::to_string(argCount));
+		}
+
+		std::vector<Value> args;
+		for (int i = argCount - 1; i >= 0; --i)
+		{
+			args.push_back(m_valueStack[m_valueStack.size() - 1 - i]);
+		}
+
+		for (int i = 0; i <= argCount; ++i)
+		{
+			m_valueStack.pop_back();
+		}
+		Value result = native->func(args);
+		Push(result);
+		return;
+	}
 	if (!IsFunction(callee))
 	{
 		throw std::runtime_error("Can only call functions");
@@ -363,6 +411,38 @@ void VirtualMachine::OpSetEl()
 		throw std::runtime_error("Array index out of bounds");
 	}
 	arr->elements[idx] = value;
+}
+
+void VirtualMachine::OpGetGlobal()
+{
+	const uint8_t nameIndex = ReadByte();
+	const auto& name = m_currentChunk->constants[nameIndex];
+	if (!IsString(name))
+	{
+		throw std::runtime_error("Expected string constant for global name");
+	}
+	const auto nameStr = AsString(name);
+
+	const auto it = m_globals.find(nameStr);
+	if (it == m_globals.end())
+	{
+		throw std::runtime_error("Undefined global variable: " + nameStr);
+	}
+	Push(it->second);
+}
+
+void VirtualMachine::OpSetGlobal()
+{
+	const auto nameIndex = ReadByte();
+	const auto& name = m_currentChunk->constants[nameIndex];
+	if (!IsString(name))
+	{
+		throw std::runtime_error("Expected string constant for global name");
+	}
+	const auto nameStr = AsString(name);
+
+	const auto value = Pop();
+	m_globals[nameStr] = value;
 }
 
 Value VirtualMachine::Peek(const int distance) const

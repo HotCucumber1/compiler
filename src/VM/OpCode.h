@@ -24,5 +24,8 @@ enum class OpCode : uint8_t
 	OP_GET_ELEMENT,
 	OP_SET_ELEMENT,
 
+	OP_GET_GLOBAL,
+	OP_SET_GLOBAL,
+
 	OP_RETURN = 255,
 };

@@ -2,6 +2,7 @@
 
 #include "StringPool/StringPool.h"
 #include "Type/Chunk.h"
+#include "Type/NativeFunction.h"
 
 #include <memory>
 #include <vector>
@@ -11,11 +12,13 @@ class VirtualMachine
 public:
 	static constexpr short STACK_SIZE = 256;
 
-	VirtualMachine() = default;
+	VirtualMachine();
 
 	void Interpret(std::unique_ptr<Chunk> chunk);
 
 private:
+	void RegisterNativeFunction(const std::string& name, int arity, const NativeFunction::NativeFunc& func);
+
 	void Run();
 
 	void OpConstant();
@@ -66,6 +69,10 @@ private:
 
 	Value GetLocal(size_t index) const;
 
+	void OpGetGlobal();
+
+	void OpSetGlobal();
+
 private:
 	friend struct VMAccessor;
 
@@ -76,6 +83,7 @@ private:
 	std::vector<CallFrame> m_callFrames;
 	std::vector<Value> m_valueStack;
 
+	std::unordered_map<std::string, Value> m_globals;
 	// std::stack<Value> m_constLiterals;
 	// std::vector<Value> m_localVars;
 };

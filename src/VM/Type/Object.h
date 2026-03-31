@@ -8,6 +8,7 @@ enum class ObjectType
 	OBJECT,
 	FUNC,
 	ARRAY,
+	NATIVE_FUNC,
 };
 
 struct Object
