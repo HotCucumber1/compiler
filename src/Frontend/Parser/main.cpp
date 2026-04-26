@@ -1,5 +1,5 @@
 #include "../Lexer/Lexer.h"
-#include "Grammar.h"
+#include "Common/Grammar.h"
 #include "Parser.h"
 #include "SLRTableBuilder.h"
 #include <iostream>

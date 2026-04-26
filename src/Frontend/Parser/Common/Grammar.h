@@ -1,5 +1,5 @@
 #pragma once
-#include "AST/Node.h"
+#include "Node.h"
 
 #include <iostream>
 #include <map>
@@ -14,19 +14,25 @@ struct RuleItem
 	auto operator<=>(const RuleItem&) const = default;
 };
 
+struct RuleDefinition
+{
+	std::vector<RuleItem> rhs;
+	AstNodeType nodeType;
+};
+
 class Grammar
 {
 public:
 	static constexpr std::string EPSILON = "#";
 	static constexpr std::string END_OF_FILE = "$";
 
-	using RulesMap = std::map<RuleItem, std::vector<std::vector<RuleItem>>>;
+	using RulesMap = std::map<RuleItem, std::vector<RuleDefinition>>;
 
 	const RulesMap& GetRules() const;
 
 	void SetRules(const RulesMap& rules);
 
-	void AddRule(const RuleItem& left, const std::vector<RuleItem>& right, bool isAxiom = false);
+	void AddRule(const RuleItem& left, const std::vector<RuleItem>& right, bool isAxiom = false, AstNodeType nodeType = AstNodeType::UNDEFINED);
 
 	static bool IsNonTerminal(const RuleItem& rule);
 

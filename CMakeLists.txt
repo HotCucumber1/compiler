@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.29)
 project(compiler)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
 
 set(CMAKE_CXX_STANDARD 23)
 
@@ -14,6 +15,7 @@ FetchContent_MakeAvailable(Catch2)
 add_subdirectory(src/VM)
 add_subdirectory(src/Frontend/Lexer)
 add_subdirectory(src/Frontend/Parser)
+add_subdirectory(src/CodeGenerator)
 
 add_executable(compiler src/main.cpp)
 
@@ -21,4 +23,5 @@ target_link_libraries(
         compiler PRIVATE
         VM
         Lexer
+        CodeGen
 )

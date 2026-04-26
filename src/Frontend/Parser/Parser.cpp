@@ -29,17 +29,17 @@ std::shared_ptr<AstNode> Parser::Parse() const
 		if (it == m_table[currentState].end())
 		{
 			throw std::runtime_error(
-				"Syntax error: " + std::to_string(currentToken.line) + ':' + std::to_string(currentToken.pos)
-				+ ". Unexpected token '" + currentToken.value + "'");
+				"Syntax error (" + std::to_string(currentToken.line) + ':' + std::to_string(currentToken.pos)
+				+ "): Unexpected token '" + currentToken.value + "'");
 		}
 
-		auto action = it->second;
+		const auto action = it->second;
 
 		if (action.type == ActionType::Shift)
 		{
 			stateStack.push_back(action.value);
 
-			auto leaf = std::make_shared<AstNode>(currentSymbolId, currentToken);
+			auto leaf = std::make_shared<AstNode>(currentSymbolId, currentToken, AstNodeType::TERMINAL);
 			nodeStack.push_back(leaf);
 
 			if (!m_lexer.IsEmpty())
@@ -55,7 +55,7 @@ std::shared_ptr<AstNode> Parser::Parse() const
 		else if (action.type == ActionType::Reduce)
 		{
 			const auto& rule = m_rules[action.value];
-			auto parentNode = std::make_shared<AstNode>(rule.lhsId);
+			auto parentNode = std::make_shared<AstNode>(rule.lhsId, rule.nodeType);
 
 			for (size_t i = 0; i < rule.rhsSize; ++i)
 			{
@@ -78,10 +78,6 @@ std::shared_ptr<AstNode> Parser::Parse() const
 		else if (action.type == ActionType::Accept)
 		{
 			return nodeStack.back();
-		}
-		else
-		{
-			throw std::runtime_error("Unknown action type in SLR Table");
 		}
 	}
 }

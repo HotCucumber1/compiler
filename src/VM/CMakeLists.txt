@@ -20,3 +20,5 @@ add_executable(TestVM_Unit
 )
 
 target_link_libraries(TestVM_Unit PRIVATE Catch2::Catch2WithMain)
+
+target_compile_definitions(VM_exe PRIVATE VM_STANDALONE_MODE)

@@ -1,6 +1,6 @@
 #pragma once
-#include "AST/Node.h"
-#include "Grammar.h"
+#include "Common/Node.h"
+#include "Common/Grammar.h"
 
 #include <iostream>
 #include <map>
@@ -13,7 +13,7 @@ struct TypedRule
 {
 	SymbolId lhsId;
 	SymbolId rhsSize;
-	// TokenType resultType;
+	AstNodeType nodeType;
 };
 
 enum class ActionType
@@ -65,6 +65,13 @@ struct LR0Item
 	}
 };
 
+struct RuleSchema
+{
+	RuleItem lhs;
+	std::vector<RuleItem> rhs;
+	AstNodeType type;
+};
+
 class SLRTableBuilder
 {
 	using Table = std::vector<std::unordered_map<SymbolId, Action>>;
@@ -108,7 +115,7 @@ private:
 	Grammar m_grammar;
 	Table m_table;
 
-	std::vector<std::pair<RuleItem, std::vector<RuleItem>>> m_flatRules;
+	std::vector<RuleSchema> m_flatRules;
 	std::map<RuleItem, std::set<RuleItem>> m_firstSets;
 	std::map<RuleItem, std::set<RuleItem>> m_followSets;
 	std::set<RuleItem> m_allSymbols;

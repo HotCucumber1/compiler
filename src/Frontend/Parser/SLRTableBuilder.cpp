@@ -14,43 +14,20 @@ void SLRTableBuilder::PrepareGrammar()
 	RuleItem axiom = m_grammar.GetAxiom();
 	const auto& rulesMap = m_grammar.GetRules();
 
-	bool needsAugment = false;
+	m_flatRules.clear();
+	m_rules.clear();
+	m_allSymbols.clear();
 
-	auto it = rulesMap.find(axiom);
-	if (it != rulesMap.end() && it->second.size() > 1)
-	{
-		needsAugment = true;
-	}
-	else
-	{
-		for (const auto& rhsList : rulesMap | std::views::values)
-		{
-			for (const auto& rhs : rhsList)
-			{
-				for (const auto& sym : rhs)
-				{
-					if (sym == axiom)
-					{
-						needsAugment = true;
-						break;
-					}
-				}
-			}
-		}
-	}
+	RuleItem newAxiom = { axiom.ruleName + "'", false };
+	m_flatRules.push_back({ newAxiom, { axiom }, AstNodeType::PROGRAM });
 
-	if (needsAugment)
+	// 2. Превращаем карту правил в плоский список с сохранением типа узла
+	for (const auto& [lhs, definitions] : rulesMap)
 	{
-		RuleItem newAxiom = { axiom.ruleName + "'", false };
-		m_flatRules.push_back({ newAxiom, { axiom } });
-	}
-
-	for (const auto& [lhs, rhsList] : rulesMap)
-	{
-		for (const auto& rhs : rhsList)
+		for (const auto& def : definitions)
 		{
 			std::vector<RuleItem> cleanRhs;
-			for (const auto& sym : rhs)
+			for (const auto& sym : def.rhs)
 			{
 				if (sym.ruleName != Grammar::EPSILON)
 				{
@@ -59,7 +36,8 @@ void SLRTableBuilder::PrepareGrammar()
 				}
 			}
 			m_allSymbols.insert(lhs);
-			m_flatRules.emplace_back(lhs, cleanRhs);
+
+			m_flatRules.push_back({ lhs, cleanRhs, def.nodeType });
 		}
 	}
 
@@ -72,30 +50,18 @@ void SLRTableBuilder::PrepareGrammar()
 		m_symbolToId[sym] = currentId;
 		m_idToSymbol[currentId] = sym;
 		if (sym == eofItem)
-		{
 			m_endOfFileId = currentId;
-		}
 		currentId++;
 	}
 
-	for (size_t i = 0; i < m_flatRules.size(); ++i)
+	for (const auto& flatRule : m_flatRules)
 	{
-		m_rules.emplace_back(
-			m_symbolToId[m_flatRules[i].first],
-			m_flatRules[i].second.size());
+		m_rules.push_back({ m_symbolToId[flatRule.lhs],
+			static_cast<SymbolId>(flatRule.rhs.size()),
+			flatRule.type });
 	}
 
-	const auto targetAxiom = needsAugment
-		? RuleItem{ axiom.ruleName + "'", false }
-		: axiom;
-	for (size_t i = 0; i < m_flatRules.size(); ++i)
-	{
-		if (m_flatRules[i].first == targetAxiom)
-		{
-			m_startRuleIdx = i;
-			break;
-		}
-	}
+	m_startRuleIdx = 0;
 }
 
 void SLRTableBuilder::ComputeFirstSets()
@@ -106,8 +72,8 @@ void SLRTableBuilder::ComputeFirstSets()
 		changed = false;
 		for (const auto& rule : m_flatRules)
 		{
-			const auto& lhs = rule.first;
-			const auto& rhs = rule.second;
+			const auto& lhs = rule.lhs;
+			const auto& rhs = rule.rhs;
 			const auto beforeSize = m_firstSets[lhs].size();
 
 			bool allCanBeEmpty = true;
@@ -152,15 +118,15 @@ void SLRTableBuilder::ComputeFirstSets()
 
 void SLRTableBuilder::ComputeFollowSets()
 {
-	m_followSets[m_flatRules[m_startRuleIdx].first].insert(RuleItem{ Grammar::END_OF_FILE, true });
+	m_followSets[m_flatRules[m_startRuleIdx].lhs].insert(RuleItem{ Grammar::END_OF_FILE, true });
 	bool changed = true;
 	while (changed)
 	{
 		changed = false;
 		for (const auto& rule : m_flatRules)
 		{
-			const auto& lhs = rule.first;
-			const auto& rhs = rule.second;
+			const auto& lhs = rule.lhs;
+			const auto& rhs = rule.rhs;
 
 			for (size_t i = 0; i < rhs.size(); ++i)
 			{
@@ -228,14 +194,14 @@ std::set<LR0Item> SLRTableBuilder::Closure(const std::set<LR0Item>& items) const
 
 		for (const auto& item : result)
 		{
-			if (item.dotPos < m_flatRules[item.ruleIdx].second.size())
+			if (item.dotPos < m_flatRules[item.ruleIdx].rhs.size())
 			{
-				RuleItem sym = m_flatRules[item.ruleIdx].second[item.dotPos];
+				RuleItem sym = m_flatRules[item.ruleIdx].rhs[item.dotPos];
 				if (!sym.isTerminal)
 				{
 					for (size_t i = 0; i < m_flatRules.size(); ++i)
 					{
-						if (m_flatRules[i].first == sym)
+						if (m_flatRules[i].lhs == sym)
 						{
 							LR0Item newItem{ i, 0 };
 							if (newItems.insert(newItem).second)
@@ -257,9 +223,9 @@ std::set<LR0Item> SLRTableBuilder::Goto(const std::set<LR0Item>& items, const Ru
 	std::set<LR0Item> nextItems;
 	for (const auto& item : items)
 	{
-		if (item.dotPos < m_flatRules[item.ruleIdx].second.size())
+		if (item.dotPos < m_flatRules[item.ruleIdx].rhs.size())
 		{
-			if (m_flatRules[item.ruleIdx].second[item.dotPos] == symbol)
+			if (m_flatRules[item.ruleIdx].rhs[item.dotPos] == symbol)
 			{
 				nextItems.insert({ item.ruleIdx, item.dotPos + 1 });
 			}
@@ -312,7 +278,7 @@ void SLRTableBuilder::BuildTable()
 
 		for (const auto& item : states[i])
 		{
-			if (item.dotPos != m_flatRules[item.ruleIdx].second.size())
+			if (item.dotPos != m_flatRules[item.ruleIdx].rhs.size())
 			{
 				continue;
 			}
@@ -322,7 +288,7 @@ void SLRTableBuilder::BuildTable()
 				continue;
 			}
 
-			const auto lhs = m_flatRules[item.ruleIdx].first;
+			const auto lhs = m_flatRules[item.ruleIdx].lhs;
 
 			for (const auto& followSym : m_followSets[lhs])
 			{
@@ -347,12 +313,12 @@ void SLRTableBuilder::Print(std::ostream& out) const
 	out << "--- Grammar rules ---" << std::endl;
 	for (size_t i = 0; i < m_flatRules.size(); ++i)
 	{
-		out << i << ": " << m_flatRules[i].first.ruleName << " -> ";
-		if (m_flatRules[i].second.empty())
+		out << i << ": " << m_flatRules[i].lhs.ruleName << " -> ";
+		if (m_flatRules[i].rhs.empty())
 		{
 			out << "eps";
 		}
-		for (const auto& sym : m_flatRules[i].second)
+		for (const auto& sym : m_flatRules[i].rhs)
 		{
 			out << sym.ruleName << " ";
 		}
