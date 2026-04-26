@@ -4,12 +4,13 @@ Grammar GetSimpleGrammar();
 Grammar GetWithLeftRecursion();
 Grammar GetJustAnotherGrammar();
 Grammar GetGrammarWithEpsilon();
+Grammar GetZeroOneGrammar();
 
 int main()
 {
 	try
 	{
-		const auto gr = GetWithLeftRecursion();
+		const auto gr = GetZeroOneGrammar();
 		const SLRTableBuilder table(gr);
 
 		table.Print();
@@ -19,6 +20,16 @@ int main()
 		std::cerr << e.what() << std::endl;
 		return 1;
 	}
+}
+
+Grammar GetZeroOneGrammar()
+{
+	Grammar grammar;
+
+	grammar.AddRule(NT("S"), { T("0"), NT("S"), T("1") });
+	grammar.AddRule(NT("S"), { T("0"), T("1") });
+
+	return grammar;
 }
 
 Grammar GetSimpleGrammar()

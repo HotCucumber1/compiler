@@ -63,7 +63,27 @@ void SLRTableBuilder::PrepareGrammar()
 		}
 	}
 
-	m_allSymbols.insert(RuleItem{ Grammar::END_OF_FILE, true });
+	const RuleItem eofItem{ Grammar::END_OF_FILE, true };
+	m_allSymbols.insert(eofItem);
+
+	SymbolId currentId = 0;
+	for (const auto& sym : m_allSymbols)
+	{
+		m_symbolToId[sym] = currentId;
+		m_idToSymbol[currentId] = sym;
+		if (sym == eofItem)
+		{
+			m_endOfFileId = currentId;
+		}
+		currentId++;
+	}
+
+	for (size_t i = 0; i < m_flatRules.size(); ++i)
+	{
+		m_rules.emplace_back(
+			m_symbolToId[m_flatRules[i].first],
+			m_flatRules[i].second.size());
+	}
 
 	const auto targetAxiom = needsAugment
 		? RuleItem{ axiom.ruleName + "'", false }
@@ -254,23 +274,22 @@ void SLRTableBuilder::BuildTable()
 	ComputeFirstSets();
 	ComputeFollowSets();
 
+	m_table.clear();
+
 	std::vector<std::set<LR0Item>> states;
 	std::map<std::set<LR0Item>, size_t> stateToIndex;
-	std::vector<std::string> stateNames; // Хранит названия в формате S_0_1
 
-	std::set<LR0Item> startState = Closure({ { m_startRuleIdx, 0 } });
+	const std::set<LR0Item> startState = Closure({ { m_startRuleIdx, 0 } });
 	states.push_back(startState);
 	stateToIndex[startState] = 0;
 
-	// Имя первого стейта тоже генерируем динамически
-	stateNames.push_back(m_flatRules[m_startRuleIdx].first.ruleName + "_" + std::to_string(m_startRuleIdx) + "0");
-
-	// BFS для построения состояний
 	for (size_t i = 0; i < states.size(); ++i)
 	{
-		std::string stateStr = stateNames[i];
+		if (m_table.size() <= i)
+		{
+			m_table.emplace_back();
+		}
 
-		// Обработка SHIFT и GOTO
 		for (const auto& sym : m_allSymbols)
 		{
 			auto nextState = Goto(states[i], sym);
@@ -282,37 +301,13 @@ void SLRTableBuilder::BuildTable()
 			{
 				stateToIndex[nextState] = states.size();
 				states.push_back(nextState);
-
-				// Формируем имя для нового состояния: "символ_номерПравила_номерСимвола"
-				std::string newStateName = sym.ruleName;
-				bool isFirstItem = true;
-
-				for (const auto& item : states[i])
-				{
-					// Ищем все пункты, по которым произошел этот переход
-					if (item.dotPos < m_flatRules[item.ruleIdx].second.size() && m_flatRules[item.ruleIdx].second[item.dotPos] == sym)
-					{
-						if (isFirstItem)
-						{
-							newStateName += "_";
-							isFirstItem = false;
-						}
-						else
-						{
-							newStateName += "-"; // Разделитель для склеенных правил
-						}
-
-						// Добавляем индекс правила и позицию точки (+1, т.к. мы шагнули через символ)
-						newStateName += std::to_string(item.ruleIdx) + std::to_string(item.dotPos + 1);
-					}
-				}
-				stateNames.push_back(newStateName);
 			}
 
 			const auto nextIdx = stateToIndex[nextState];
-			const auto nextStateName = stateNames[nextIdx];
-
-			m_table[stateStr][sym.ruleName] = nextStateName;
+			m_table[i][m_symbolToId[sym]] = Action{
+				ActionType::Shift,
+				static_cast<SymbolId>(nextIdx)
+			};
 		}
 
 		for (const auto& item : states[i])
@@ -323,27 +318,28 @@ void SLRTableBuilder::BuildTable()
 			}
 			if (item.ruleIdx == m_startRuleIdx)
 			{
-				m_table[stateStr][Grammar::END_OF_FILE] = "END";
+				m_table[i][m_endOfFileId] = Action{ ActionType::Accept, 0 };
 				continue;
 			}
-			RuleItem lhs = m_flatRules[item.ruleIdx].first;
-			std::string reduceStr = "R" + std::to_string(item.ruleIdx);
+
+			const auto lhs = m_flatRules[item.ruleIdx].first;
 
 			for (const auto& followSym : m_followSets[lhs])
 			{
-				auto& cell = m_table[stateStr][followSym.ruleName];
-				if (cell.empty())
+				SymbolId followId = m_symbolToId[followSym];
+
+				if (m_table[i].contains(followId))
 				{
-					cell = reduceStr;
+					const auto [type, value] = m_table[i][followId];
+					if (type == ActionType::Shift)
+					{
+						std::cerr << "Conflict Shift/Reduce in state " << i << " on symbol " << followSym.ruleName << std::endl;
+					}
 				}
-				else if (cell != reduceStr && cell.find(reduceStr) == std::string::npos)
-				{
-					cell += "/" + reduceStr;
-				}
+				m_table[i][followId] = Action{ ActionType::Reduce, static_cast<int>(item.ruleIdx) };
 			}
 		}
 	}
-	m_orderedStates = stateNames;
 }
 
 void SLRTableBuilder::Print(std::ostream& out) const
@@ -364,51 +360,62 @@ void SLRTableBuilder::Print(std::ostream& out) const
 	}
 	out << "\n----- SLR Table -----\n";
 
-	std::vector<std::string> terminals;
-	std::vector<std::string> nonTerminals;
+	std::vector<SymbolId> terminals;
+	std::vector<SymbolId> nonTerminals;
 
-	for (const auto& sym : m_allSymbols)
+	for (const auto& [sym, id] : m_symbolToId)
 	{
 		if (sym.isTerminal)
-		{
-			terminals.push_back(sym.ruleName);
-			continue;
-		}
-		nonTerminals.push_back(sym.ruleName);
+			terminals.push_back(id);
+		else
+			nonTerminals.push_back(id);
 	}
+
 	constexpr int colWidth = 10;
 
 	out << std::left << std::setw(colWidth) << "State";
-	for (const auto& nt : nonTerminals)
+	for (const auto& ntId : nonTerminals)
 	{
-		out << std::setw(colWidth) << nt;
+		out << std::setw(colWidth) << m_idToSymbol.at(ntId).ruleName;
 	}
-	for (const auto& t : terminals)
+	for (const auto& tId : terminals)
 	{
-		out << std::setw(colWidth) << t;
+		out << std::setw(colWidth) << m_idToSymbol.at(tId).ruleName;
 	}
 	out << "\n";
 
-	for (const auto& stateStr : m_orderedStates)
+	for (size_t stateIdx = 0; stateIdx < m_table.size(); ++stateIdx)
 	{
-		if (!m_table.contains(stateStr))
-		{
-			continue;
-		}
-		out << std::left << std::setw(colWidth) << stateStr;
+		out << std::left << std::setw(colWidth) << stateIdx;
 
-		const auto& rowMap = m_table.at(stateStr);
+		const auto& rowMap = m_table[stateIdx];
 
-		for (const auto& nt : nonTerminals)
-		{
-			auto it = rowMap.find(nt);
-			out << std::setw(colWidth) << (it != rowMap.end() ? it->second : "");
-		}
-		for (const auto& t : terminals)
-		{
-			auto it = rowMap.find(t);
-			out << std::setw(colWidth) << (it != rowMap.end() ? it->second : "");
-		}
+		auto printCell = [&](SymbolId id) {
+			auto it = rowMap.find(id);
+			if (it == rowMap.end())
+			{
+				out << std::setw(colWidth) << "";
+			}
+			else
+			{
+				const Action& act = it->second;
+				std::string cellStr;
+				if (act.type == ActionType::Shift)
+					cellStr = "S" + std::to_string(act.value);
+				else if (act.type == ActionType::Reduce)
+					cellStr = "R" + std::to_string(act.value);
+				else if (act.type == ActionType::Accept)
+					cellStr = "ACC";
+
+				out << std::setw(colWidth) << cellStr;
+			}
+		};
+
+		for (const auto& ntId : nonTerminals)
+			printCell(ntId);
+		for (const auto& tId : terminals)
+			printCell(tId);
+
 		out << std::endl;
 	}
 }

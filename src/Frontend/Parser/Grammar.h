@@ -1,4 +1,6 @@
 #pragma once
+#include "AST/Node.h"
+
 #include <iostream>
 #include <map>
 #include <string>
