@@ -12,7 +12,12 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(Catch2)
 
 add_subdirectory(src/VM)
+add_subdirectory(src/Frontend/Lexer)
 
 add_executable(compiler src/main.cpp)
 
-target_link_libraries(compiler PRIVATE VM)
+target_link_libraries(
+        compiler PRIVATE
+        VM
+        Lexer
+)
