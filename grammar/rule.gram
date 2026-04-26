@@ -1,0 +1,8 @@
+Program -> StatementList : PROGRAM
+
+StatementList -> Statement ; StatementList : UNDEFINED
+StatementList -> Statement ; : UNDEFINED
+
+Statement -> int IDENTIFIER = Expression : VAR_DECL
+
+Expression -> INT : LITERAL

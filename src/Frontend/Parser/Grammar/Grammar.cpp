@@ -59,14 +59,13 @@ void Grammar::Print(std::ostream& out) const
 			{
 				for (const auto& item : def.rhs)
 				{
-					out << item.ruleName << " ";
+					out << item.ruleName << "[is_t: " << item.isTerminal << "]" << " ";
 				}
 			}
 			if (def.nodeType != AstNodeType::UNDEFINED)
 			{
 				out << " [Node: " << static_cast<int>(def.nodeType) << "]";
 			}
-
 			out << std::endl;
 		}
 	}

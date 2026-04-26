@@ -41,3 +41,16 @@ struct AstNode
 	{
 	}
 };
+
+static const std::unordered_map<std::string, AstNodeType> AST_NODE_TYPES = {
+	{ "UNDEFINED", AstNodeType::UNDEFINED },
+	{ "PROGRAM", AstNodeType::PROGRAM },
+	{ "BLOCK", AstNodeType::BLOCK },
+	{ "VAR_DECL", AstNodeType::VAR_DECL },
+	{ "IF_STATEMENT", AstNodeType::IF_STATEMENT },
+	{ "ASSIGNMENT", AstNodeType::ASSIGNMENT },
+	{ "EXPRESSION", AstNodeType::EXPRESSION },
+	{ "BINARY_OP", AstNodeType::BINARY_OP },
+	{ "LITERAL", AstNodeType::LITERAL },
+	{ "TERMINAL", AstNodeType::TERMINAL },
+};

@@ -1,13 +1,15 @@
 add_library(
         Parser STATIC
-        Common/Grammar.cpp
+        Grammar/Grammar.cpp
+        Grammar/GrammarReader.cpp
         SLRTableBuilder.cpp
         Parser.cpp
 )
 
 add_executable(
         Parser_exe
-        Common/Grammar.cpp
+        Grammar/Grammar.cpp
+        Grammar/GrammarReader.cpp
         SLRTableBuilder.cpp
         Parser.cpp
         main.cpp

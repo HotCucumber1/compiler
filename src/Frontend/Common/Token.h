@@ -1,4 +1,5 @@
 #pragma once
+#include <iostream>
 #include <string>
 #include <unordered_map>
 
@@ -132,6 +133,15 @@ static const std::unordered_map<std::string, TokenType> KEYWORDS = {
 	{ "begin", TokenType::BEGIN },
 };
 
+static const std::unordered_map<TokenType, std::string> REVERSE_KEYWORDS = [] {
+	std::unordered_map<TokenType, std::string> reverse;
+	for (const auto& [keyword, type] : KEYWORDS)
+	{
+		reverse[type] = keyword;
+	}
+	return reverse;
+}();
+
 const std::unordered_map<char, TokenType> SPECIAL_CHARS = {
 	{ '(', TokenType::BRACKET_BASE_OPEN },
 	{ ')', TokenType::BRACKET_BASE_CLOSE },
@@ -152,6 +162,15 @@ const std::unordered_map<char, TokenType> SPECIAL_CHARS = {
 	{ '.', TokenType::OP_DOT },
 };
 
+static const std::unordered_map<TokenType, std::string> REVERSE_SPECIAL_CHARS = [] {
+	std::unordered_map<TokenType, std::string> reverse;
+	for (const auto& [keyword, type] : SPECIAL_CHARS)
+	{
+		reverse[type] = keyword;
+	}
+	return reverse;
+}();
+
 const std::unordered_map<char, std::pair<char, TokenType>> SPECIAL_CHARS_DOUBLE = {
 	{ '=', { '=', TokenType::OP_EQUAL } },
 	{ '!', { '=', TokenType::OP_NOT_EQUAL } },
@@ -160,6 +179,16 @@ const std::unordered_map<char, std::pair<char, TokenType>> SPECIAL_CHARS_DOUBLE 
 	{ '+', { '+', TokenType::OP_INCREMENT } },
 	{ '-', { '-', TokenType::OP_DECREMENT } },
 };
+
+const std::unordered_map<TokenType, std::string> REVERSE_SPECIAL_CHARS_DOUBLE = {
+	{TokenType::OP_EQUAL, "==" },
+	{TokenType::OP_NOT_EQUAL, "!=" },
+	{TokenType::OP_LESS_OR_EQUAL, "<=" },
+	{TokenType::OP_MORE_OR_EQUAL, ">=" },
+	{TokenType::OP_INCREMENT, "++" },
+	{TokenType::OP_DECREMENT, "--" },
+};
+
 const std::unordered_map<TokenType, std::string> TOKEN_NAMES = {
 	{ TokenType::IDENTIFIER, "IDENTIFIER" },
 	{ TokenType::INT, "INT" },
@@ -241,5 +270,14 @@ const std::unordered_map<TokenType, std::string> TOKEN_NAMES = {
 	{ TokenType::MAIN, "MAIN" },
 	{ TokenType::END, "END" },
 	{ TokenType::BEGIN, "BEGIN" },
-	{ TokenType::COLON, ":" },
+	{ TokenType::COLON, "COLON" },
 };
+
+inline void PrintToken(const Token& token)
+{
+	std::cout << "Value: " << token.value << std::endl
+				  << "Line:  " << token.line << std::endl
+				  << "Pos:   " << token.pos << std::endl
+				  << "Token: " << TOKEN_NAMES.at(token.type)
+				  << std::endl << std::endl;
+}

@@ -1,5 +1,5 @@
 #pragma once
-#include "Node.h"
+#include "../Common/Node.h"
 
 #include <iostream>
 #include <map>

@@ -21,7 +21,6 @@ void SLRTableBuilder::PrepareGrammar()
 	RuleItem newAxiom = { axiom.ruleName + "'", false };
 	m_flatRules.push_back({ newAxiom, { axiom }, AstNodeType::PROGRAM });
 
-	// 2. Превращаем карту правил в плоский список с сохранением типа узла
 	for (const auto& [lhs, definitions] : rulesMap)
 	{
 		for (const auto& def : definitions)
@@ -50,7 +49,9 @@ void SLRTableBuilder::PrepareGrammar()
 		m_symbolToId[sym] = currentId;
 		m_idToSymbol[currentId] = sym;
 		if (sym == eofItem)
+		{
 			m_endOfFileId = currentId;
+		}
 		currentId++;
 	}
 

@@ -1,9 +1,11 @@
 #include "CodeGenerator//CodeGenerator.h"
 #include "Frontend/Lexer/Lexer.h"
+#include "Frontend/Parser/Grammar/GrammarReader.h"
 #include "Frontend/Parser/Parser.h"
 #include "Frontend/Parser/SLRTableBuilder.h"
 #include "VM/VirtualMachine.h"
 
+#include <filesystem>
 #include <fstream>
 
 void PrintAST(const std::shared_ptr<AstNode>& node, int indent, const SLRTableBuilder& builder)
@@ -43,16 +45,17 @@ std::string ReadFile(const std::string& path)
 	return buffer.str();
 }
 
-Grammar SetupGrammar()
+Grammar SetupGrammar(const std::string& exePath)
 {
-	Grammar g;
-	g.AddRule(NT("Program"), { NT("StatementList") }, true, AstNodeType::PROGRAM);
-	g.AddRule(NT("StatementList"), { NT("Statement"), T("SEMICOLON"), NT("StatementList") });
-	g.AddRule(NT("StatementList"), { NT("Statement"), T("SEMICOLON") });
-	g.AddRule(NT("Statement"), { T("VAR"), T("IDENTIFIER"), T("OP_ASSIGN"), NT("Expression") }, false, AstNodeType::VAR_DECL);
-	g.AddRule(NT("Expression"), { T("INT") }, false, AstNodeType::LITERAL);
+	const auto binaryPath = std::filesystem::absolute(exePath);
+	const auto binaryDir = binaryPath.parent_path();
+	const auto grammarPath = binaryDir / "../grammar/rule.gram";
 
-	return g;
+	const auto grammar = GrammarReader::Read(grammarPath);
+
+	// grammar.Print();
+
+	return grammar;
 }
 
 int main(int argc, char* argv[])
@@ -70,7 +73,7 @@ int main(int argc, char* argv[])
 		std::string sourceCode = ReadFile(filePath);
 		std::cout << "[1/5] File read successfully." << std::endl;
 
-		const auto myGrammar = SetupGrammar();
+		const auto myGrammar = SetupGrammar(argv[0]);
 		SLRTableBuilder slrBuilder(myGrammar);
 		std::cout << "[2/5] Grammar and SLR table built." << std::endl;
 

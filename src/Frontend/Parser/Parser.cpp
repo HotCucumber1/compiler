@@ -49,7 +49,10 @@ std::shared_ptr<AstNode> Parser::Parse() const
 			}
 			else
 			{
-				currentSymbolId = m_builder.GetSymbolId({ Grammar::END_OF_FILE, true });
+				currentSymbolId = m_builder.GetSymbolId({
+					Grammar::END_OF_FILE,
+					true,
+				});
 			}
 		}
 		else if (action.type == ActionType::Reduce)
@@ -84,9 +87,38 @@ std::shared_ptr<AstNode> Parser::Parse() const
 
 SymbolId Parser::GetSymbolId(const Token& token) const
 {
-	const auto& terminalName = TOKEN_NAMES.at(token.type);
+	std::string terminalName = TOKEN_NAMES.at(TokenType::IDENTIFIER);
+	if (REVERSE_KEYWORDS.contains(token.type))
+	{
+		terminalName = REVERSE_KEYWORDS.at(token.type);
+	}
+	else if (REVERSE_SPECIAL_CHARS.contains(token.type))
+	{
+		terminalName = REVERSE_SPECIAL_CHARS.at(token.type);
+	}
+	else if (REVERSE_SPECIAL_CHARS_DOUBLE.contains(token.type))
+	{
+		terminalName = REVERSE_SPECIAL_CHARS_DOUBLE.at(token.type);
+	}
+	else
+	{
+		switch (token.type)
+		{
+		case TokenType::INT:
+		case TokenType::FLOAT:
+		case TokenType::IDENTIFIER:
+		case TokenType::STRING:
+			terminalName = TOKEN_NAMES.at(token.type);
+			break;
+		default:
+			throw std::runtime_error("Unknown token type in Parser");
+		}
+	}
 
-	const RuleItem terminalItem{ terminalName, true };
+	const RuleItem terminalItem{
+		terminalName,
+		true,
+	};
 	const auto id = m_builder.GetSymbolId(terminalItem);
 
 	if (id == -1)
