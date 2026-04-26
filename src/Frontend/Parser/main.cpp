@@ -1,89 +1,69 @@
+#include "../Lexer/Lexer.h"
+#include "Grammar.h"
+#include "Parser.h"
 #include "SLRTableBuilder.h"
+#include <iostream>
 
-Grammar GetSimpleGrammar();
-Grammar GetWithLeftRecursion();
-Grammar GetJustAnotherGrammar();
-Grammar GetGrammarWithEpsilon();
-Grammar GetZeroOneGrammar();
+void PrintAST(
+	const std::shared_ptr<AstNode>& node,
+	int indent,
+	const SLRTableBuilder& builder);
 
 int main()
 {
 	try
 	{
-		const auto gr = GetZeroOneGrammar();
-		const SLRTableBuilder table(gr);
+		Grammar myLang;
+		myLang.AddRule(NT("Program"), { NT("StatementList") }, true);
+		myLang.AddRule(NT("StatementList"), { NT("Statement"), T("SEMICOLON"), NT("StatementList") });
+		myLang.AddRule(NT("StatementList"), { NT("Statement"), T("SEMICOLON") });
 
-		table.Print();
+		myLang.AddRule(NT("Statement"), { T("IDENTIFIER"), T("OP_ASSIGN"), T("INT") });
+
+		const SLRTableBuilder builder(myLang);
+
+		const std::string code = "x = 42; y = 100;";
+		Lexer lexer(code);
+
+		const Parser parser(builder, lexer);
+		const auto astRoot = parser.Parse();
+
+		std::cout << "Success! Tree built." << std::endl;
+
+		PrintAST(astRoot, 0, builder);
 	}
 	catch (const std::exception& e)
 	{
-		std::cerr << e.what() << std::endl;
+		std::cerr << "Compiler Error: " << e.what() << std::endl;
 		return 1;
 	}
+	return 0;
 }
 
-Grammar GetZeroOneGrammar()
+void PrintAST(const std::shared_ptr<AstNode>& node, int indent, const SLRTableBuilder& builder)
 {
-	Grammar grammar;
+	if (!node)
+		return;
 
-	grammar.AddRule(NT("S"), { T("0"), NT("S"), T("1") });
-	grammar.AddRule(NT("S"), { T("0"), T("1") });
+	for (int i = 0; i < indent; ++i)
+	{
+		std::cout << "  ";
+	}
 
-	return grammar;
-}
+	if (node->token.has_value())
+	{
+		// Лист дерева (терминал)
+		std::cout << "TERM: " << node->token->value << " (" << TOKEN_NAMES.at(node->token->type) << ")" << std::endl;
+	}
+	else
+	{
+		// Узел дерева (нетерминал)
+		// Тут можно вытащить имя нетерминала через builder.GetSymbolName(node->symbolId)
+		std::cout << "NODE: ID[" << node->symbolId << "]" << std::endl;
+	}
 
-Grammar GetSimpleGrammar()
-{
-	Grammar grammar;
-
-	grammar.AddRule(NT("S"), { T("a"), NT("S"), T("b") }, true);
-	grammar.AddRule(NT("S"), { T("c") }, true);
-
-	return grammar;
-}
-
-Grammar GetWithLeftRecursion()
-{
-	Grammar grammar;
-
-	grammar.AddRule(NT("S"), { NT("A"), NT("B") }, true);
-	grammar.AddRule(NT("A"), { T("a") });
-	grammar.AddRule(NT("A"), { NT("A"), T("c") });
-	grammar.AddRule(NT("B"), { T("b"), NT("A") });
-
-	return grammar;
-}
-
-Grammar GetJustAnotherGrammar()
-{
-	Grammar grammar;
-
-	grammar.AddRule(NT("S"), { T("a"), NT("A"), T("b") }, true);
-	grammar.AddRule(NT("S"), { T("c"), NT("B"), T("b") }, true);
-
-	grammar.AddRule(NT("A"), { T("x"), NT("A"), T("y") });
-	grammar.AddRule(NT("A"), { T("a") });
-
-	grammar.AddRule(NT("B"), { T("y"), NT("B"), T("x") });
-	grammar.AddRule(NT("B"), { T("b") });
-
-	return grammar;
-}
-
-Grammar GetGrammarWithEpsilon()
-{
-	Grammar grammar;
-
-	grammar.AddRule(NT("S"), { NT("A"), NT("B"), NT("C") }, true);
-
-	grammar.AddRule(NT("A"), { NT("A"), T("a") });
-	grammar.AddRule(NT("A"), { EPS });
-
-	grammar.AddRule(NT("B"), { T("b"), NT("B") });
-	grammar.AddRule(NT("B"), { EPS });
-
-	grammar.AddRule(NT("C"), { NT("C"), T("c") });
-	grammar.AddRule(NT("C"), { EPS });
-
-	return grammar;
+	for (auto& child : node->children)
+	{
+		PrintAST(child, indent + 1, builder);
+	}
 }

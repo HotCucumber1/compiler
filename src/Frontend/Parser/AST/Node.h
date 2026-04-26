@@ -2,6 +2,7 @@
 #include "../../Common/Token.h"
 
 #include <memory>
+#include <optional>
 #include <tuple>
 #include <vector>
 
@@ -26,15 +27,18 @@ struct Symbol
 
 struct AstNode
 {
-	TokenType type;
-	std::string value;
-	std::vector<std::unique_ptr<AstNode>> children;
+	SymbolId symbolId;
+	std::optional<Token> token;
+	std::vector<std::shared_ptr<AstNode>> children;
 
-	explicit AstNode(
-		const TokenType type,
-		const std::string& value = "")
-		: type(type)
-		, value(value)
+	explicit AstNode(const SymbolId id)
+		: symbolId(id)
+	{
+	}
+
+	AstNode(const SymbolId id, Token t)
+		: symbolId(id)
+		, token(std::move(t))
 	{
 	}
 };
