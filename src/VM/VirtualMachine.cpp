@@ -3,7 +3,6 @@
 
 #include <algorithm>
 #include <iostream>
-#include <pstl/glue_execution_defs.h>
 
 constexpr int BYTE_SIZE = 8;
 
@@ -19,6 +18,7 @@ Value NativePrint(const std::vector<Value>& args)
 VirtualMachine::VirtualMachine()
 {
 	RegisterNativeFunction("print", 1, NativePrint);
+	// TODO чтение
 }
 
 void VirtualMachine::Interpret(std::unique_ptr<Chunk> chunk)
@@ -176,13 +176,11 @@ void VirtualMachine::OpReturn()
 	{
 		std::cout << "Returned: ";
 		PrintValue(returnValue);
-		std::cout << std::endl;
 	}
 	else
 	{
-		std::cout << "\nProgram finished. Result: ";
+		std::cout << "\nProgram finished.\nResult: \n";
 		PrintValue(returnValue);
-		std::cout << std::endl;
 	}
 }
 

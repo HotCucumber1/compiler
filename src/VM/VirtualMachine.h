@@ -88,6 +88,4 @@ private:
 	std::vector<Value> m_valueStack;
 
 	std::unordered_map<std::string, Value> m_globals;
-	// std::stack<Value> m_constLiterals;
-	// std::vector<Value> m_localVars;
 };
