@@ -18,6 +18,8 @@ private:
 
 	void PushBinaryOp(const std::shared_ptr<AstNode>& node);
 
+	void PushUnaryOp(const std::shared_ptr<AstNode>& node);
+
 	void PushVarDecl(const std::shared_ptr<AstNode>& node);
 
 	void PushLiteral(const std::shared_ptr<AstNode>& node);

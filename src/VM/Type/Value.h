@@ -17,15 +17,32 @@ using FunctionPtr = std::shared_ptr<Function>;
 struct Array;
 using ArrayPtr = std::shared_ptr<Array>;
 
-using Value = std::variant<
-	std::monostate,
-	int64_t,
-	double,
-	bool,
-	char,
-	HeapObjectPtr,
-	FunctionPtr,
-	ArrayPtr>;
+struct Value : std::variant<std::monostate, int64_t, double, bool, char, HeapObjectPtr, FunctionPtr, ArrayPtr>
+{
+	using variant::variant;
+
+	explicit operator bool() const
+	{
+		return std::visit([]<typename T>(T&& v) -> bool {
+			using Type = std::decay_t<T>;
+
+			if constexpr (std::is_same_v<Type, std::monostate>)
+			{
+				return false;
+			}
+			else if constexpr (std::is_integral_v<Type> || std::is_floating_point_v<Type>)
+			{
+				return v != 0;
+			}
+			else if constexpr (std::is_same_v<Type, bool>)
+			{
+				return v;
+			}
+			return true; // TODO расписать подробнее
+		},
+			*this);
+	}
+};
 
 struct Array final : Object
 {
@@ -463,25 +480,6 @@ inline Value operator-(const Value& value)
 			return -v;
 		}
 		throw std::runtime_error("Unsupported type for unary minus");
-	},
-		value);
-}
-
-// OP_NOT
-inline bool operator!(const Value& value)
-{
-	return std::visit([]<typename T>(T&& v) -> bool {
-		using Type = std::decay_t<T>;
-
-		if constexpr (std::is_integral_v<Type> || std::is_same_v<Type, double>)
-		{
-			return v == 0;
-		}
-		if constexpr (std::is_same_v<Type, bool>)
-		{
-			return !v;
-		}
-		throw std::runtime_error("Unsupported type for not operation");
 	},
 		value);
 }

@@ -45,6 +45,12 @@ private:
 
 	void OpLess();
 
+	void OpAnd();
+
+	void OpOr();
+
+	void OpNot();
+
 	void OpSetLocal();
 
 	void OpGetLocal();

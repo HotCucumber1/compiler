@@ -1,2 +1,5 @@
 Literal -> INT : LITERAL
 Literal -> FLOAT : LITERAL
+Literal -> true : LITERAL
+Literal -> false : LITERAL
+Literal -> STRING : LITERAL

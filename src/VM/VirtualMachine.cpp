@@ -106,6 +106,15 @@ void VirtualMachine::Run()
 		case OpCode::OP_NEG:
 			OpNeg();
 			break;
+		case OpCode::OP_AND:
+			OpAnd();
+			break;
+		case OpCode::OP_OR:
+			OpOr();
+			break;
+		case OpCode::OP_NOT:
+			OpNot();
+			break;
 		case OpCode::OP_EQUAL:
 			OpEqual();
 			break;
@@ -268,6 +277,26 @@ void VirtualMachine::OpLess()
 	const auto rhs = Pop();
 	const auto lhs = Pop();
 	Push(lhs < rhs);
+}
+
+void VirtualMachine::OpAnd()
+{
+	const auto rhs = Pop();
+	const auto lhs = Pop();
+	Push(lhs && rhs);
+}
+
+void VirtualMachine::OpOr()
+{
+	const auto rhs = Pop();
+	const auto lhs = Pop();
+	Push(lhs || rhs);
+}
+
+void VirtualMachine::OpNot()
+{
+	const auto val = Pop();
+	Push(!val);
 }
 
 void VirtualMachine::OpSetLocal()

@@ -17,7 +17,10 @@ Addition -> Multiplication : UNDEFINED
 
 Multiplication -> Multiplication * Primary : BINARY_OP
 Multiplication -> Multiplication / Primary : BINARY_OP
-Multiplication -> Primary : UNDEFINED
+Multiplication -> Unary : UNDEFINED
+Unary -> - Primary : UNARY_OP
+Unary -> not Primary : UNARY_OP
+Unary -> Primary : UNDEFINED
 
 Primary -> Call : UNDEFINED
 Primary -> not Primary : UNARY_OP

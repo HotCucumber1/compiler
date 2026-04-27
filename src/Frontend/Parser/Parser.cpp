@@ -108,10 +108,12 @@ SymbolId Parser::GetSymbolId(const Token& token) const
 		case TokenType::FLOAT:
 		case TokenType::IDENTIFIER:
 		case TokenType::STRING:
+		case TokenType::TRUE:
+		case TokenType::FALSE:
 			terminalName = TOKEN_NAMES.at(token.type);
 			break;
 		default:
-			throw std::runtime_error("Unknown token type in Parser");
+			throw std::runtime_error("Unknown token type in Parser: " + std::to_string(static_cast<int>(token.type)));
 		}
 	}
 

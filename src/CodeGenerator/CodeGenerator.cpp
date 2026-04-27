@@ -31,6 +31,13 @@ void CodeGenerator::Visit(const std::shared_ptr<AstNode>& node)
 	{
 		return;
 	}
+	if (node->type == AstNodeType::UNDEFINED
+		&& node->children.size() == 1)
+	{
+		Visit(node->children[0]);
+		return;
+	}
+
 	switch (node->type)
 	{
 	case AstNodeType::VAR_DECL:
@@ -50,6 +57,9 @@ void CodeGenerator::Visit(const std::shared_ptr<AstNode>& node)
 		return;
 	case AstNodeType::BINARY_OP:
 		PushBinaryOp(node);
+		return;
+	case AstNodeType::UNARY_OP:
+		PushUnaryOp(node);
 		return;
 	case AstNodeType::TERMINAL:
 		return;
@@ -112,6 +122,29 @@ void CodeGenerator::PushBinaryOp(const std::shared_ptr<AstNode>& node)
 	case TokenType::OP_MORE:
 		PushCode(static_cast<uint8_t>(OpCode::OP_GREATER));
 		break;
+	case TokenType::AND:
+		PushCode(static_cast<uint8_t>(OpCode::OP_AND));
+		break;
+	case TokenType::OR:
+		PushCode(static_cast<uint8_t>(OpCode::OP_OR));
+		break;
+	default:
+		break;
+	}
+}
+
+void CodeGenerator::PushUnaryOp(const std::shared_ptr<AstNode>& node)
+{
+	Visit(node->children[1]);
+	switch (node->children[0]->token->type)
+	{
+	case TokenType::OP_NEG:
+	case TokenType::OP_MINUS:
+		PushCode(static_cast<uint8_t>(OpCode::OP_NEG));
+		break;
+	case TokenType::NOT:
+		PushCode(static_cast<uint8_t>(OpCode::OP_NOT));
+		break;
 	default:
 		break;
 	}
@@ -157,7 +190,11 @@ void CodeGenerator::PushLiteral(const std::shared_ptr<AstNode>& node)
 	else if (node->token->type == TokenType::FALSE)
 		val = Value(false);
 	else if (node->token->type == TokenType::STRING)
-		val = MakeString(node->token->value);
+	{
+		const auto rawStr = node->token->value;
+		const auto cleanStr = rawStr.substr(1, rawStr.size() - 2);
+		val = MakeString(cleanStr);
+	}
 
 	PushConst(val);
 }
