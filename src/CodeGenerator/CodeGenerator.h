@@ -24,11 +24,15 @@ private:
 
 	void PushIf(const std::shared_ptr<AstNode>& node);
 
+	void PushCall(const std::shared_ptr<AstNode>& node);
+
 	void ResolveJmp();
 
 	void EnterScope();
 
 	void ExitScope();
+
+	uint8_t AddConstant(const Value& value);
 
 private:
 	Chunk m_chunk{};

@@ -21,7 +21,7 @@ VirtualMachine::VirtualMachine()
 	// TODO чтение
 }
 
-void VirtualMachine::Interpret(std::unique_ptr<Chunk> chunk)
+void VirtualMachine::Interpret(const std::unique_ptr<Chunk>& chunk)
 {
 	const auto mainFunc = std::make_shared<Function>(nullptr, 0);
 	mainFunc->chunk = std::move(*chunk);
@@ -158,8 +158,8 @@ void VirtualMachine::OpConstant()
 	const auto constant = m_currentChunk->constants[index];
 	Push(constant);
 
-	std::cout << "Pushed: ";
-	PrintValue(constant);
+	// std::cout << "Pushed: ";
+	// PrintValue(constant);
 }
 
 void VirtualMachine::OpReturn()
@@ -172,16 +172,16 @@ void VirtualMachine::OpReturn()
 
 	m_callFrames.pop_back();
 	Push(returnValue);
-	if (!m_callFrames.empty())
-	{
-		std::cout << "Returned: ";
-		PrintValue(returnValue);
-	}
-	else
-	{
-		std::cout << "\nProgram finished.\nResult: \n";
-		PrintValue(returnValue);
-	}
+	// if (!m_callFrames.empty())
+	// {
+	// 	std::cout << "Returned: ";
+	// 	PrintValue(returnValue);
+	// }
+	// else
+	// {
+	// 	std::cout << "\nProgram finished.\nResult: \n";
+	// 	PrintValue(returnValue);
+	// }
 }
 
 void VirtualMachine::OpAdd()

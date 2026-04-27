@@ -82,7 +82,7 @@ int main(int argc, char* argv[])
 		auto astRoot = parser.Parse();
 		std::cout << "[3/5] Parsing finished. AST created." << std::endl;
 
-		PrintAST(astRoot, 0, slrBuilder);
+		// PrintAST(astRoot, 0, slrBuilder);
 
 		CodeGenerator generator;
 		auto chunk = generator.Generate(astRoot);

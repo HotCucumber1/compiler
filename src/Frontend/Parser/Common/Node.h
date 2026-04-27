@@ -17,6 +17,7 @@ enum class AstNodeType : int
 	BINARY_OP,
 	LITERAL,
 	TERMINAL,
+	CALL,
 };
 
 using SymbolId = int32_t;
@@ -53,4 +54,5 @@ static const std::unordered_map<std::string, AstNodeType> AST_NODE_TYPES = {
 	{ "BINARY_OP", AstNodeType::BINARY_OP },
 	{ "LITERAL", AstNodeType::LITERAL },
 	{ "TERMINAL", AstNodeType::TERMINAL },
+	{ "CALL", AstNodeType::CALL }
 };

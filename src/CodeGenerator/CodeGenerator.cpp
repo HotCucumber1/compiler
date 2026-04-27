@@ -53,6 +53,10 @@ void CodeGenerator::Visit(const std::shared_ptr<AstNode>& node)
 	case AstNodeType::TERMINAL:
 		return;
 
+	case AstNodeType::CALL:
+		PushCall(node);
+		return;
+
 	default:
 		for (auto& child : node->children)
 		{
@@ -69,9 +73,9 @@ void CodeGenerator::PushCode(const uint8_t code)
 
 void CodeGenerator::PushConst(const Value& value)
 {
-	m_chunk.constants.push_back(value);
+	const auto index = AddConstant(value);
 	PushCode(static_cast<uint8_t>(OpCode::OP_CONSTANT));
-	PushCode(m_chunk.constants.size() - 1);
+	PushCode(index);
 }
 
 void CodeGenerator::PushBinaryOp(const std::shared_ptr<AstNode>& node)
@@ -174,6 +178,25 @@ void CodeGenerator::PushIf(const std::shared_ptr<AstNode>& node)
 	}
 }
 
+void CodeGenerator::PushCall(const std::shared_ptr<AstNode>& node)
+{
+	if (node->children.size() < 3)
+	{
+		return;
+	}
+
+	const auto funcName = node->children[0]->token->value;
+
+	const uint8_t nameIdx = AddConstant(MakeString(funcName));
+	PushCode(static_cast<uint8_t>(OpCode::OP_GET_GLOBAL));
+	PushCode(nameIdx);
+
+	Visit(node->children[2]);
+
+	PushCode(static_cast<uint8_t>(OpCode::OP_CALL));
+	PushCode(1); // TODO кол во аргументов
+}
+
 void CodeGenerator::ResolveJmp()
 {
 	for (auto& [pos, labelName] : m_chunk.pendingJumps)
@@ -195,6 +218,11 @@ void CodeGenerator::EnterScope()
 void CodeGenerator::ExitScope()
 {
 	m_scopes.pop_back();
+}
+uint8_t CodeGenerator::AddConstant(const Value& value)
+{
+	m_chunk.constants.push_back(value);
+	return static_cast<uint8_t>(m_chunk.constants.size() - 1);
 }
 
 bool IsBinaryOp(const std::shared_ptr<AstNode>& node)

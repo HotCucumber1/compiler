@@ -4,5 +4,11 @@ StatementList -> Statement ; StatementList : UNDEFINED
 StatementList -> Statement ; : UNDEFINED
 
 Statement -> int IDENTIFIER = Expression : VAR_DECL
+Statement -> Expression : UNDEFINED
 
+Expression -> Call : UNDEFINED
 Expression -> INT : LITERAL
+Expression -> IDENTIFIER : VAR_ACCESS
+
+Call -> IDENTIFIER ( Expression ) : CALL
+

@@ -14,7 +14,7 @@ public:
 
 	VirtualMachine();
 
-	void Interpret(std::unique_ptr<Chunk> chunk);
+	void Interpret(const std::unique_ptr<Chunk>& chunk);
 
 private:
 	void RegisterNativeFunction(const std::string& name, int arity, const NativeFunction::NativeFunc& func);
