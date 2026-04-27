@@ -11,7 +11,7 @@ class GrammarReader
 	};
 
 public:
-	static Grammar Read(const std::string& srcPath);
+	static Grammar Read(const std::string& srcDir);
 
 private:
 	static LineContent ParseLine(const std::string& line);

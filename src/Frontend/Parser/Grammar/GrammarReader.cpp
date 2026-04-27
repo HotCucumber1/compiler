@@ -1,6 +1,7 @@
 #include "GrammarReader.h"
 
 #include <algorithm>
+#include <filesystem>
 #include <fstream>
 #include <sstream>
 
@@ -8,48 +9,67 @@ AstNodeType StringToAstType(const std::string& str);
 std::string Trim(std::string s);
 bool IsTerminal(const std::string& str);
 
-Grammar GrammarReader::Read(const std::string& srcPath)
+Grammar GrammarReader::Read(const std::string& srcDir)
 {
 	Grammar g;
-	std::ifstream file(srcPath);
-	if (!file.is_open())
+	const std::string mainFileName = "main.gram";
+	bool overallFirstRule = true;
+
+	if (!std::filesystem::exists(srcDir)
+		|| !std::filesystem::is_directory(srcDir))
 	{
-		throw std::runtime_error("Failed to open file '" + srcPath + "'");
-	}
-	std::string line;
-	bool firstRule = true;
-
-	while (std::getline(file, line))
-	{
-		if (line.empty() || line[0] == '#')
-		{
-			continue;
-		}
-
-		auto [lhsStr, rhsPart, typeStr] = ParseLine(line);
-
-		RuleItem lhs = {
-			lhsStr,
-			false,
-		};
-		std::vector<RuleItem> rhs;
-
-		std::stringstream ss(rhsPart);
-		std::string word;
-		while (ss >> word)
-		{
-			rhs.push_back({
-				word,
-				IsTerminal(word),
-			});
-		}
-
-		const auto nodeType = StringToAstType(typeStr);
-
-		g.AddRule(lhs, rhs, firstRule, nodeType);
-		firstRule = false;
+		throw std::runtime_error("Directory does not exist: " + srcDir);
 	}
 
+	auto processFile = [&](const std::filesystem::path& filePath) {
+		std::ifstream file(filePath);
+		if (!file.is_open())
+		{
+			return;
+		}
+
+		std::string line;
+		while (std::getline(file, line))
+		{
+			if (line.empty() || line[0] == '#')
+				continue;
+
+			auto [lhsStr, rhsPart, typeStr] = ParseLine(line);
+			RuleItem lhs = { lhsStr, false };
+			std::vector<RuleItem> rhs;
+
+			std::stringstream ss(rhsPart);
+			std::string word;
+			while (ss >> word)
+			{
+				rhs.push_back({ word, IsTerminal(word) });
+			}
+
+			const auto nodeType = StringToAstType(typeStr);
+
+			g.AddRule(lhs, rhs, overallFirstRule, nodeType);
+			overallFirstRule = false;
+		}
+	};
+
+	const auto mainPath = std::filesystem::path(srcDir) / mainFileName;
+	if (std::filesystem::exists(mainPath))
+	{
+		processFile(mainPath);
+	}
+	else
+	{
+		throw std::runtime_error("Critical Error: " + mainFileName + " not found in " + srcDir);
+	}
+
+	for (const auto& entry : std::filesystem::directory_iterator(srcDir))
+	{
+		const auto& path = entry.path();
+		if (path.filename() != mainFileName && path.extension() == ".gram")
+		{
+			processFile(path);
+		}
+	}
 	return g;
 }
 

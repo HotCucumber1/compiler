@@ -49,7 +49,7 @@ Grammar SetupGrammar(const std::string& exePath)
 {
 	const auto binaryPath = std::filesystem::absolute(exePath);
 	const auto binaryDir = binaryPath.parent_path();
-	const auto grammarPath = binaryDir / "../grammar/rule.gram";
+	const auto grammarPath = binaryDir / "../grammar";
 
 	const auto grammar = GrammarReader::Read(grammarPath);
 
