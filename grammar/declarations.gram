@@ -1,0 +1,2 @@
+DeclStatement -> int IDENTIFIER = Expression : VAR_DECL
+DeclStatement -> float IDENTIFIER = Expression : VAR_DECL

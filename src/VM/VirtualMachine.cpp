@@ -79,7 +79,8 @@ void VirtualMachine::Run()
 			OpReturn();
 			continue;
 		}
-		switch (const auto opCode = static_cast<OpCode>(ReadByte()))
+		const auto opCode = static_cast<OpCode>(ReadByte());
+		switch (opCode)
 		{
 		case OpCode::OP_CONSTANT:
 			OpConstant();
@@ -104,6 +105,18 @@ void VirtualMachine::Run()
 			break;
 		case OpCode::OP_NEG:
 			OpNeg();
+			break;
+		case OpCode::OP_EQUAL:
+			OpEqual();
+			break;
+		case OpCode::OP_NOT_EQUAL:
+			OpNotEqual();
+			break;
+		case OpCode::OP_GREATER:
+			OpGrater();
+			break;
+		case OpCode::OP_LESS:
+			OpLess();
 			break;
 		case OpCode::OP_SET_LOCAL_VAR:
 			OpSetLocal();
@@ -158,8 +171,8 @@ void VirtualMachine::OpConstant()
 	const auto constant = m_currentChunk->constants[index];
 	Push(constant);
 
-	std::cout << "Pushed: ";
-	PrintValue(constant);
+	// std::cout << "Pushed: ";
+	// PrintValue(constant);
 }
 
 void VirtualMachine::OpReturn()
@@ -229,6 +242,34 @@ void VirtualMachine::OpNeg()
 	Push(-Pop());
 }
 
+void VirtualMachine::OpEqual()
+{
+	const auto rhs = Pop();
+	const auto lhs = Pop();
+	Push(lhs == rhs);
+}
+
+void VirtualMachine::OpNotEqual()
+{
+	const auto rhs = Pop();
+	const auto lhs = Pop();
+	Push(lhs != rhs);
+}
+
+void VirtualMachine::OpGrater()
+{
+	const auto rhs = Pop();
+	const auto lhs = Pop();
+	Push(lhs > rhs);
+}
+
+void VirtualMachine::OpLess()
+{
+	const auto rhs = Pop();
+	const auto lhs = Pop();
+	Push(lhs < rhs);
+}
+
 void VirtualMachine::OpSetLocal()
 {
 	const auto index = ReadByte();
@@ -279,6 +320,7 @@ void VirtualMachine::OpJmpIfFalse()
 		m_instructionPointer = address;
 	}
 }
+
 void VirtualMachine::OpJmpIfLess()
 {
 	const auto address = static_cast<uint16_t>(ReadByte()) << BYTE_SIZE | ReadByte();

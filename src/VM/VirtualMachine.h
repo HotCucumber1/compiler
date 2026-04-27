@@ -37,6 +37,14 @@ private:
 
 	void OpNeg();
 
+	void OpEqual();
+
+	void OpNotEqual();
+
+	void OpGrater();
+
+	void OpLess();
+
 	void OpSetLocal();
 
 	void OpGetLocal();

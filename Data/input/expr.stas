@@ -1,0 +1,8 @@
+int x = 10;
+
+if (x * 5 == 57) {
+    x = x + 1;
+    print(x);
+};
+
+print(x * 5);

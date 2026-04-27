@@ -28,6 +28,8 @@ private:
 
 	void PushVarAccess(const std::shared_ptr<AstNode>& node);
 
+	void PushAssignment(const std::shared_ptr<AstNode>& node);
+
 	void ResolveJmp();
 
 	void EnterScope();

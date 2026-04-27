@@ -91,7 +91,7 @@ int main(int argc, char* argv[])
 		std::cout << "[5/5] Starting Virtual Machine...\n"
 				  << std::endl;
 		VirtualMachine vm;
-		vm.Interpret(std::move(chunk));
+		vm.Interpret(chunk);
 
 		std::cout << "\nExecution finished successfully." << std::endl;
 	}

@@ -1,0 +1,28 @@
+Expression -> LogicalOr : UNDEFINED
+
+LogicalOr -> LogicalOr or LogicalAnd : BINARY_OP
+LogicalOr -> LogicalAnd : UNDEFINED
+
+LogicalAnd -> LogicalAnd and Comparison : BINARY_OP
+LogicalAnd -> Comparison : UNDEFINED
+
+Comparison -> Addition == Addition : BINARY_OP
+Comparison -> Addition != Addition : BINARY_OP
+Comparison -> Addition < Addition : BINARY_OP
+Comparison -> Addition > Addition : BINARY_OP
+Comparison -> Addition : UNDEFINED
+Addition -> Addition + Multiplication : BINARY_OP
+Addition -> Addition - Multiplication : BINARY_OP
+Addition -> Multiplication : UNDEFINED
+
+Multiplication -> Multiplication * Primary : BINARY_OP
+Multiplication -> Multiplication / Primary : BINARY_OP
+Multiplication -> Primary : UNDEFINED
+
+Primary -> Call : UNDEFINED
+Primary -> not Primary : UNARY_OP
+Primary -> ( Expression ) : UNDEFINED
+Primary -> IDENTIFIER : VAR_ACCESS
+Primary -> Literal : UNDEFINED
+
+Call -> IDENTIFIER ( Expression ) : CALL
