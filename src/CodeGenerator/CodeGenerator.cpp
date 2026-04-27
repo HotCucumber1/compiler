@@ -1,5 +1,7 @@
 #include "CodeGenerator.h"
 
+#include <ranges>
+
 #include "OpCode.h"
 
 bool IsBinaryOp(const std::shared_ptr<AstNode>& node);
@@ -34,6 +36,10 @@ void CodeGenerator::Visit(const std::shared_ptr<AstNode>& node)
 	{
 	case AstNodeType::VAR_DECL:
 		PushVarDecl(node);
+		return;
+
+	case AstNodeType::VAR_ACCESS:
+		PushVarAccess(node);
 		return;
 
 	case AstNodeType::LITERAL:
@@ -195,6 +201,25 @@ void CodeGenerator::PushCall(const std::shared_ptr<AstNode>& node)
 
 	PushCode(static_cast<uint8_t>(OpCode::OP_CALL));
 	PushCode(1); // TODO кол во аргументов
+}
+
+void CodeGenerator::PushVarAccess(const std::shared_ptr<AstNode>& node)
+{
+	const auto varName = node->children[0]->token->value;
+
+	for (auto& m_scope : std::ranges::reverse_view(m_scopes))
+	{
+		if (!m_scope.contains(varName))
+		{
+			continue;
+		}
+		const auto idx = m_scope[varName];
+		PushCode(static_cast<uint8_t>(OpCode::OP_GET_LOCAL_VAR));
+		PushCode(idx);
+		return;
+	}
+
+	throw std::runtime_error("Undefined variable: " + varName);
 }
 
 void CodeGenerator::ResolveJmp()

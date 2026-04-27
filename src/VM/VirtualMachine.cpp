@@ -158,8 +158,8 @@ void VirtualMachine::OpConstant()
 	const auto constant = m_currentChunk->constants[index];
 	Push(constant);
 
-	// std::cout << "Pushed: ";
-	// PrintValue(constant);
+	std::cout << "Pushed: ";
+	PrintValue(constant);
 }
 
 void VirtualMachine::OpReturn()

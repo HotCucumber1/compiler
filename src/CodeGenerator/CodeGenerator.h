@@ -26,6 +26,8 @@ private:
 
 	void PushCall(const std::shared_ptr<AstNode>& node);
 
+	void PushVarAccess(const std::shared_ptr<AstNode>& node);
+
 	void ResolveJmp();
 
 	void EnterScope();
