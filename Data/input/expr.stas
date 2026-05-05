@@ -1,9 +1,11 @@
 int x = 10;
 int b = 20;
 bool a = false;
+float c = 1.1;
 
-if ((x + b) < 20 and true and false or (x < b)) {
-    x = x + 1;
+if ((x + b) < 20 and true and false or (x < b))
+{
+    x = x + a;
     print('YES');
 }
 else

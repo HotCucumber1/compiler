@@ -1,0 +1,10 @@
+WhileStatement -> while ( Expression ) { StatementList } : WHILE_STATEMENT
+
+ForStatement -> for ( DeclStatement_For ; Expression ; ForAssignment ) { StatementList } : FOR_STATEMENT
+
+DeclStatement_For -> int IDENTIFIER = Expression : VAR_DECL
+DeclStatement_For -> float IDENTIFIER = Expression : VAR_DECL
+DeclStatement_For -> bool IDENTIFIER = Expression : VAR_DECL
+
+ForAssignment -> Expression : UNDEFINED
+ForAssignment -> IDENTIFIER = Expression : ASSIGNMENT

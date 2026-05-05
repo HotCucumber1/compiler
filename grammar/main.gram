@@ -5,5 +5,7 @@ StatementList -> Statement ; : UNDEFINED
 
 Statement -> DeclStatement : UNDEFINED
 Statement -> IfStatement : UNDEFINED
+Statement -> WhileStatement : UNDEFINED
+Statement -> ForStatement : UNDEFINED
 Statement -> Expression : UNDEFINED
 Statement -> IDENTIFIER = Expression : ASSIGNMENT

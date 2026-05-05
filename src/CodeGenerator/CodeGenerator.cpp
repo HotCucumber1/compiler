@@ -8,6 +8,7 @@ bool IsBinaryOp(const std::shared_ptr<AstNode>& node);
 bool IsLiteral(const std::shared_ptr<AstNode>& node);
 bool IsVariableDecl(const std::shared_ptr<AstNode>& node);
 bool IsIfStatement(const std::shared_ptr<AstNode>& node);
+bool IsEmptyExpression(const std::shared_ptr<AstNode>& node);
 std::string GenerateLabel(const std::string& prefix);
 
 std::unique_ptr<Chunk> CodeGenerator::Generate(const std::shared_ptr<AstNode>& root)
@@ -54,6 +55,12 @@ void CodeGenerator::Visit(const std::shared_ptr<AstNode>& node)
 		return;
 	case AstNodeType::IF_STATEMENT:
 		PushIf(node);
+		return;
+	case AstNodeType::WHILE_STATEMENT:
+		PushWhile(node);
+		return;
+	case AstNodeType::FOR_STATEMENT:
+		PushFor(node);
 		return;
 	case AstNodeType::BINARY_OP:
 		PushBinaryOp(node);
@@ -242,6 +249,83 @@ void CodeGenerator::PushIf(const std::shared_ptr<AstNode>& node)
 	}
 	m_chunk.pendingJumps.emplace_back(jumpToElseIdx, elseLabel);
 }
+void CodeGenerator::PushWhile(const std::shared_ptr<AstNode>& node)
+{
+	constexpr int exprPos = 2;
+	constexpr int bodyPos = 5;
+
+	const auto startLabel = GenerateLabel("while_start");
+	const auto endLabel = GenerateLabel("while_end");
+
+	m_chunk.labels[startLabel] = m_chunk.code.size();
+
+	Visit(node->children[exprPos]);
+
+	PushCode(static_cast<uint8_t>(OpCode::OP_JMP_IF_FALSE));
+	auto jumpToEndIdx = m_chunk.code.size();
+	PushCode(0xFF);
+	PushCode(0xFF);
+	m_chunk.pendingJumps.emplace_back(jumpToEndIdx, endLabel);
+
+	Visit(node->children[bodyPos]);
+
+	PushCode(static_cast<uint8_t>(OpCode::OP_JMP));
+	size_t jumpToStartIdx = m_chunk.code.size();
+	PushCode(0xFF);
+	PushCode(0xFF);
+	m_chunk.pendingJumps.emplace_back(jumpToStartIdx, startLabel);
+
+	m_chunk.labels[endLabel] = m_chunk.code.size();
+}
+
+void CodeGenerator::PushFor(const std::shared_ptr<AstNode>& node)
+{
+	constexpr int initPos = 2;
+	constexpr int condPos = 4;
+	constexpr int incrPos = 6;
+	constexpr int bodyPos = 9;
+
+	Visit(node->children[initPos]);
+
+	const auto startLabel = GenerateLabel("for_while_start");
+	const auto endLabel = GenerateLabel("for_while_end");
+
+	m_chunk.labels[startLabel] = m_chunk.code.size();
+
+	if (node->children.size() > condPos
+		&& !IsEmptyExpression(node->children[condPos]))
+	{
+		Visit(node->children[condPos]);
+	}
+	else
+	{
+		PushConst(Value(true));
+	}
+
+	PushCode(static_cast<uint8_t>(OpCode::OP_JMP_IF_FALSE));
+	size_t jumpToEndIdx = m_chunk.code.size();
+	PushCode(0xFF);
+	PushCode(0xFF);
+	m_chunk.pendingJumps.emplace_back(jumpToEndIdx, endLabel);
+
+	if (node->children.size() > bodyPos)
+	{
+		Visit(node->children[bodyPos]);
+	}
+
+	if (node->children.size() > incrPos && !IsEmptyExpression(node->children[incrPos]))
+	{
+		Visit(node->children[incrPos]);
+	}
+
+	PushCode(static_cast<uint8_t>(OpCode::OP_JMP));
+	size_t jumpToStartIdx = m_chunk.code.size();
+	PushCode(0xFF);
+	PushCode(0xFF);
+	m_chunk.pendingJumps.emplace_back(jumpToStartIdx, startLabel);
+
+	m_chunk.labels[endLabel] = m_chunk.code.size();
+}
 
 void CodeGenerator::PushCall(const std::shared_ptr<AstNode>& node)
 {
@@ -259,7 +343,7 @@ void CodeGenerator::PushCall(const std::shared_ptr<AstNode>& node)
 	Visit(node->children[2]);
 
 	PushCode(static_cast<uint8_t>(OpCode::OP_CALL));
-	PushCode(1); // TODO кол во аргументов
+	PushCode(1); // TODO кол-во аргументов
 }
 
 void CodeGenerator::PushVarAccess(const std::shared_ptr<AstNode>& node)
@@ -378,4 +462,9 @@ std::string GenerateLabel(const std::string& prefix)
 {
 	static int counter = 0;
 	return prefix + "_" + std::to_string(counter++);
+}
+
+bool IsEmptyExpression(const std::shared_ptr<AstNode>& node)
+{
+	return !node || node->type == AstNodeType::UNDEFINED && node->children.empty();
 }

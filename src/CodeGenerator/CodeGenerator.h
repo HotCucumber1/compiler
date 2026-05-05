@@ -7,6 +7,8 @@
 class CodeGenerator
 {
 public:
+	// TODO в m_scopes добавить типы, чтобы проверять еще до VM (проверка семантики)
+	// TODO приведение типов тоже на семантике (float -
 	std::unique_ptr<Chunk> Generate(const std::shared_ptr<AstNode>& root);
 
 private:
@@ -25,6 +27,10 @@ private:
 	void PushLiteral(const std::shared_ptr<AstNode>& node);
 
 	void PushIf(const std::shared_ptr<AstNode>& node);
+
+	void PushWhile(const std::shared_ptr<AstNode>& node);
+
+	void PushFor(const std::shared_ptr<AstNode>& node);
 
 	void PushCall(const std::shared_ptr<AstNode>& node);
 

@@ -15,6 +15,8 @@ Lexer::Lexer(const std::istream& input)
 {
 }
 
+// TODO проверять, что закрывающая кавычка равна открывающей
+
 Token Lexer::GetToken()
 {
 	if (IsEmpty())
