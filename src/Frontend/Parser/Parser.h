@@ -10,6 +10,10 @@ public:
 	std::shared_ptr<AstNode> Parse() const;
 
 private:
+	void Shift();
+
+	void Reduce(std::vector<int>& stateStack, std::vector<std::shared_ptr<AstNode>>, const Action& action) const;
+
 	SymbolId GetSymbolId(const Token& token) const;
 
 private:

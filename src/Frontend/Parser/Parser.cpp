@@ -1,4 +1,5 @@
 #include "Parser.h"
+#include "AstFactory.h"
 
 Parser::Parser(const SLRTableBuilder& tableBuilder, Lexer& lexer)
 	: m_table(tableBuilder.GetTable())
@@ -39,7 +40,7 @@ std::shared_ptr<AstNode> Parser::Parse() const
 		{
 			stateStack.push_back(action.value);
 
-			auto leaf = std::make_shared<AstNode>(currentSymbolId, currentToken, AstNodeType::TERMINAL);
+			auto leaf = std::make_shared<TerminalNode>(currentSymbolId, currentToken);
 			nodeStack.push_back(leaf);
 
 			if (!m_lexer.IsEmpty())
@@ -49,6 +50,12 @@ std::shared_ptr<AstNode> Parser::Parse() const
 			}
 			else
 			{
+				currentToken = Token{
+					currentToken.pos,
+					currentToken.line,
+					TokenType::END_OF_FILE,
+					"EOF",
+				};
 				currentSymbolId = m_builder.GetSymbolId({
 					Grammar::END_OF_FILE,
 					true,
@@ -57,32 +64,43 @@ std::shared_ptr<AstNode> Parser::Parse() const
 		}
 		else if (action.type == ActionType::Reduce)
 		{
-			const auto& rule = m_rules[action.value];
-			auto parentNode = std::make_shared<AstNode>(rule.lhsId, rule.nodeType);
-
-			for (size_t i = 0; i < rule.rhsSize; ++i)
-			{
-				parentNode->children.insert(parentNode->children.begin(), nodeStack.back());
-				nodeStack.pop_back();
-				stateStack.pop_back();
-			}
-
-			const auto stateAfterPop = stateStack.back();
-			auto gotoIt = m_table[stateAfterPop].find(rule.lhsId);
-
-			if (gotoIt == m_table[stateAfterPop].end())
-			{
-				throw std::runtime_error("Parser PANIC: GOTO transition failed after reduce!");
-			}
-
-			stateStack.push_back(gotoIt->second.value);
-			nodeStack.push_back(parentNode);
+			Reduce(stateStack, nodeStack, action);
 		}
 		else if (action.type == ActionType::Accept)
 		{
 			return nodeStack.back();
 		}
 	}
+}
+
+void Parser::Reduce(
+	std::vector<int>& stateStack,
+	std::vector<std::shared_ptr<AstNode>> nodeStack,
+	const Action& action) const
+{
+	const auto& rule = m_rules[action.value];
+
+	std::vector<std::shared_ptr<AstNode>> poppedNodes(rule.rhsSize);
+	for (int i = 0; i < rule.rhsSize; i++)
+	{
+		poppedNodes[rule.rhsSize - 1 - i] = nodeStack.back();
+		nodeStack.pop_back();
+		stateStack.pop_back();
+	}
+
+	const auto parentNode = AstFactory::CreateNode(rule.nodeType, rule.lhsId, poppedNodes);
+
+	const auto stateAfterPop = stateStack.back();
+	const auto gotoIt = m_table[stateAfterPop].find(rule.lhsId);
+
+	if (gotoIt == m_table[stateAfterPop].end())
+	{
+		throw std::runtime_error("Parser error: SLR table GOTO transition failed after reduce on state "
+			+ std::to_string(stateAfterPop));
+	}
+
+	stateStack.push_back(gotoIt->second.value);
+	nodeStack.push_back(parentNode);
 }
 
 SymbolId Parser::GetSymbolId(const Token& token) const

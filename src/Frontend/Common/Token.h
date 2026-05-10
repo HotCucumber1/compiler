@@ -87,6 +87,8 @@ enum class TokenType
 	OP_DOT,
 
 	ERROR,
+
+	END_OF_FILE,
 };
 
 struct Token
