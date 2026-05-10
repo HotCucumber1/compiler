@@ -1,6 +1,7 @@
 add_library(
         CodeGen STATIC
         CodeGenerator.cpp
+        ASM_CodeGenerator.cpp
 )
 
 target_include_directories(CodeGen PUBLIC .)
