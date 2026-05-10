@@ -104,7 +104,7 @@ std::shared_ptr<AstNode> AstFactory::CreateNode(
 				}
 			}
 		}
-		auto body = children[6];
+		auto body = children[8];
 		return std::make_shared<FunctionDeclNode>(id, name, params, body);
 	}
 

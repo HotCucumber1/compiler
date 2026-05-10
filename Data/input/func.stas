@@ -1,7 +1,14 @@
+int b = 5;
+
 func HelloWorld(int a): void {
     print("Hello world");
     print(a);
+
+    func NewOne(int a): void {
+        print(a);
+    }
+
+    NewOne(a + 1);
 }
 
-print(5);
-HelloWorld(12);
+HelloWorld(12 + 1);

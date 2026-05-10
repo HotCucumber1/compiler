@@ -66,8 +66,8 @@ int main(int argc, char* argv[])
 		auto astRoot = parser.Parse();
 		std::cout << "[3/5] Parsing finished. AST created." << std::endl;
 
-		AstPrinter printer;
-		printer.PrintAst(astRoot);
+		// AstPrinter printer;
+		// printer.PrintAst(astRoot);
 
 		CodeGenerator generator;
 		auto chunk = generator.Generate(astRoot);
