@@ -97,6 +97,14 @@ struct Token
 	int line;
 	TokenType type;
 	std::string value;
+
+	void Print(std::ostream& out = std::cout) const
+	{
+		out << "TOKEN: Pos: " << pos
+		<< " Line: " << line
+		<< " Value: " << value
+		<< std::endl;
+	}
 };
 
 static const std::unordered_map<std::string, TokenType> KEYWORDS = {

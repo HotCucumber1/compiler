@@ -1,5 +1,6 @@
 #include "CodeGenerator//CodeGenerator.h"
 #include "Frontend/Lexer/Lexer.h"
+#include "Frontend/Parser/Common/AstPrinter.h"
 #include "Frontend/Parser/Grammar/GrammarReader.h"
 #include "Frontend/Parser/Parser.h"
 #include "Frontend/Parser/SLRTableBuilder.h"
@@ -7,31 +8,6 @@
 
 #include <filesystem>
 #include <fstream>
-
-void PrintAST(const std::shared_ptr<AstNode>& node, int indent, const SLRTableBuilder& builder)
-{
-	if (!node)
-		return;
-
-	for (int i = 0; i < indent; ++i)
-	{
-		std::cout << "  ";
-	}
-
-	if (node->token.has_value())
-	{
-		std::cout << "TERM: " << node->token->value << " (" << TOKEN_NAMES.at(node->token->type) << ")" << std::endl;
-	}
-	else
-	{
-		std::cout << "NODE: ID[" << node->symbolId << "], TYPE[" << static_cast<int>(node->type) << "]" << std::endl;
-	}
-
-	for (auto& child : node->children)
-	{
-		PrintAST(child, indent + 1, builder);
-	}
-}
 
 std::string ReadFile(const std::string& path)
 {
@@ -82,7 +58,8 @@ int main(int argc, char* argv[])
 		auto astRoot = parser.Parse();
 		std::cout << "[3/5] Parsing finished. AST created." << std::endl;
 
-		// PrintAST(astRoot, 0, slrBuilder);
+		AstPrinter printer;
+		printer.PrintAst(astRoot);
 
 		CodeGenerator generator;
 		auto chunk = generator.Generate(astRoot);

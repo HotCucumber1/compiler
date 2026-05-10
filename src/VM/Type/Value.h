@@ -85,6 +85,11 @@ inline bool IsNull(const Value& value)
 	return std::holds_alternative<std::monostate>(value);
 }
 
+inline bool IsBool(const Value& value)
+{
+	return std::holds_alternative<bool>(value);
+}
+
 inline Value MakeString(std::string str)
 {
 	return {
@@ -506,6 +511,12 @@ inline void PrintValue(const Value& value)
 				{
 					PrintValue(val);
 				}
+			}
+			else if (IsBool(arg))
+			{
+				const auto isTrue = AsBool(arg);
+				const auto val = isTrue ? "true" : "false";
+				std::cout << val;
 			}
 			else
 			{

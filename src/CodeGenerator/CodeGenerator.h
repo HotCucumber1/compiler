@@ -4,39 +4,42 @@
 
 #include <map>
 
-class CodeGenerator
+class CodeGenerator : public AstVisitor
 {
 public:
 	// TODO в m_scopes добавить типы, чтобы проверять еще до VM (проверка семантики)
 	// TODO приведение типов тоже на семантике (float -
 	std::unique_ptr<Chunk> Generate(const std::shared_ptr<AstNode>& root);
 
+	void Visit(TerminalNode& node) override;
+
+	void Visit(CommonNode& node) override;
+
+	void Visit(BinaryOpNode& node) override;
+
+	void Visit(UnaryOpNode& node) override;
+
+	void Visit(VarDeclNode& node) override;
+
+	void Visit(LiteralNode& node) override;
+
+	void Visit(VarAccessNode& node) override;
+
+	void Visit(AssignmentNode& node) override;
+
+	void Visit(IfNode& node) override;
+
+	void Visit(WhileNode& node) override;
+
+	void Visit(ForNode& node) override;
+
+	void Visit(CallNode& node) override;
+
 private:
-	void Visit(const std::shared_ptr<AstNode>& node);
 
 	void PushCode(uint8_t code);
 
 	void PushConst(const Value& value);
-
-	void PushBinaryOp(const std::shared_ptr<AstNode>& node);
-
-	void PushUnaryOp(const std::shared_ptr<AstNode>& node);
-
-	void PushVarDecl(const std::shared_ptr<AstNode>& node);
-
-	void PushLiteral(const std::shared_ptr<AstNode>& node);
-
-	void PushIf(const std::shared_ptr<AstNode>& node);
-
-	void PushWhile(const std::shared_ptr<AstNode>& node);
-
-	void PushFor(const std::shared_ptr<AstNode>& node);
-
-	void PushCall(const std::shared_ptr<AstNode>& node);
-
-	void PushVarAccess(const std::shared_ptr<AstNode>& node);
-
-	void PushAssignment(const std::shared_ptr<AstNode>& node);
 
 	void ResolveJmp();
 
@@ -45,6 +48,8 @@ private:
 	void ExitScope();
 
 	uint8_t AddConstant(const Value& value);
+
+	void PushTempAddr();
 
 private:
 	struct LocalVarInfo

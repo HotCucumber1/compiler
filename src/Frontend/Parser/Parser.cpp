@@ -20,6 +20,7 @@ std::shared_ptr<AstNode> Parser::Parse() const
 	}
 
 	auto currentToken = m_lexer.GetToken();
+
 	auto currentSymbolId = GetSymbolId(currentToken);
 
 	while (true)
@@ -75,20 +76,20 @@ std::shared_ptr<AstNode> Parser::Parse() const
 
 void Parser::Reduce(
 	std::vector<int>& stateStack,
-	std::vector<std::shared_ptr<AstNode>> nodeStack,
+	std::vector<std::shared_ptr<AstNode>>& nodeStack,
 	const Action& action) const
 {
 	const auto& rule = m_rules[action.value];
 
-	std::vector<std::shared_ptr<AstNode>> poppedNodes(rule.rhsSize);
-	for (int i = 0; i < rule.rhsSize; i++)
+	std::vector<std::shared_ptr<AstNode>> children(rule.rhsSize);
+	for (int i = static_cast<int>(rule.rhsSize) - 1; i >= 0; --i)
 	{
-		poppedNodes[rule.rhsSize - 1 - i] = nodeStack.back();
+		children[i] = nodeStack.back();
 		nodeStack.pop_back();
 		stateStack.pop_back();
 	}
 
-	const auto parentNode = AstFactory::CreateNode(rule.nodeType, rule.lhsId, poppedNodes);
+	const auto parentNode = AstFactory::CreateNode(rule.nodeType, rule.lhsId, children);
 
 	const auto stateAfterPop = stateStack.back();
 	const auto gotoIt = m_table[stateAfterPop].find(rule.lhsId);

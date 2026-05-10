@@ -2,9 +2,7 @@ int a = 0;
 int maxSize = 6;
 
 while (a < maxSize) {
-    if (a != 3) {
-        a = a + 1;
-    };
+    a = a + 1;
 };
 
 print(a);

@@ -45,26 +45,6 @@ static const std::unordered_map<std::string, AstNodeType> AST_NODE_TYPES = {
 
 using SymbolId = int32_t;
 
-// struct AstNode
-// {
-// 	SymbolId symbolId;
-// 	std::optional<Token> token;
-// 	AstNodeType type = AstNodeType::UNDEFINED;
-// 	std::vector<std::shared_ptr<AstNode>> children;
-//
-// 	explicit AstNode(const SymbolId id, const AstNodeType type)
-// 		: symbolId(id)
-// 		, type(type)
-// 	{
-// 	}
-//
-// 	AstNode(const SymbolId id, Token t, const AstNodeType type)
-// 		: symbolId(id)
-// 		, token(std::move(t))
-// 		, type(type)
-// 	{
-// 	}
-// };
 
 struct AstNode
 {
