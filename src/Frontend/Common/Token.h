@@ -13,6 +13,7 @@ enum class TokenType
 	TRUE,
 	FALSE,
 	CONST,
+	VOID,
 
 	VAR,
 	MAIN,
@@ -100,10 +101,14 @@ struct Token
 
 	void Print(std::ostream& out = std::cout) const
 	{
+		if (type == TokenType::IDENTIFIER)
+		{
+			std::cout << "IDENT_";
+		}
 		out << "TOKEN: Pos: " << pos
-		<< " Line: " << line
-		<< " Value: " << value
-		<< std::endl;
+			<< " Line: " << line
+			<< " Value: " << value
+			<< std::endl;
 	}
 };
 
@@ -117,7 +122,7 @@ static const std::unordered_map<std::string, TokenType> KEYWORDS = {
 	{ "not", TokenType::NOT },
 	{ "and", TokenType::AND },
 	{ "or", TokenType::OR },
-	{ "function", TokenType::FUNCTION },
+	{ "func", TokenType::FUNCTION },
 	{ "return", TokenType::RETURN },
 	{ "public", TokenType::PUBLIC },
 	{ "private", TokenType::PRIVATE },
@@ -137,6 +142,7 @@ static const std::unordered_map<std::string, TokenType> KEYWORDS = {
 	{ "false", TokenType::FALSE },
 	{ "const", TokenType::CONST },
 	{ "bool", TokenType::TYPE_BOOL },
+	{ "void", TokenType::VOID },
 
 	{ "var", TokenType::VAR },
 	{ "main", TokenType::MAIN },
@@ -208,6 +214,7 @@ const std::unordered_map<TokenType, std::string> TOKEN_NAMES = {
 	{ TokenType::TRUE, "TRUE" },
 	{ TokenType::FALSE, "FALSE" },
 	{ TokenType::CONST, "CONST" },
+	{ TokenType::VOID, "VOID" },
 
 	// Base types
 	{ TokenType::TYPE_INT, "TYPE_INT" },
@@ -218,6 +225,7 @@ const std::unordered_map<TokenType, std::string> TOKEN_NAMES = {
 	// Delimiters
 	{ TokenType::SEMICOLON, "SEMICOLON" },
 	{ TokenType::COMMA, "COMMA" },
+	{ TokenType::COLON, "COLON" },
 
 	// Brackets
 	{ TokenType::BRACKET_BASE_OPEN, "BRACKET_BASE_OPEN" },
@@ -282,7 +290,6 @@ const std::unordered_map<TokenType, std::string> TOKEN_NAMES = {
 	{ TokenType::MAIN, "MAIN" },
 	{ TokenType::END, "END" },
 	{ TokenType::BEGIN, "BEGIN" },
-	{ TokenType::COLON, "COLON" },
 };
 
 inline void PrintToken(const Token& token)

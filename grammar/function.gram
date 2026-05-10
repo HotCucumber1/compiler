@@ -1,0 +1,15 @@
+FunctionDecl -> func IDENTIFIER ( ParamList ) : ReturnType { GlobalList } : FUNC_DECL
+
+ParamList -> ParamElement , ParamList : LIST_APPEND
+ParamList -> ParamElement : LIST_SINGLE
+
+ParamElement -> VarBase : PASS_THROUGH
+VarBase -> int IDENTIFIER : VAR_DECL
+VarBase -> float IDENTIFIER : VAR_DECL
+VarBase -> bool IDENTIFIER : VAR_DECL
+
+ReturnType -> void
+ReturnType -> int
+ReturnType -> bool
+ReturnType -> float
+ReturnType -> int

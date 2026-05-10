@@ -76,7 +76,7 @@ Grammar GrammarReader::Read(const std::string& srcDir)
 GrammarReader::LineContent GrammarReader::ParseLine(const std::string& line)
 {
 	const auto arrowPos = line.find("->");
-	const auto colonPos = line.find(':');
+	const auto colonPos = line.rfind(':');
 
 	const auto lhs = Trim(line.substr(0, arrowPos));
 	const auto rhs = (colonPos != std::string::npos)

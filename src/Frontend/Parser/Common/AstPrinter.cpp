@@ -212,18 +212,64 @@ void AstPrinter::Visit(ForNode& node)
 void AstPrinter::Visit(CallNode& node)
 {
 	PrintIndent();
-	std::cout << "[Call] " << node.funcName << "()\n";
+	std::cout << "[Call] " << node.funcName << "\n";
 
-	if (node.args)
+	m_depth++;
+	PrintIndent();
+	std::cout << "Arguments:\n";
+
+	m_depth++;
+	if (node.args.empty())
 	{
-		m_depth++;
 		PrintIndent();
-		std::cout << "Args:\n";
+		std::cout << "(none)\n";
+	}
+	else
+	{
+		for (const auto& arg : node.args)
+		{
+			if (arg)
+			{
+				arg->Accept(*this);
+			}
+		}
+	}
+	m_depth--;
+	m_depth--;
+}
+
+void AstPrinter::Visit(FunctionDeclNode& node)
+{
+	PrintIndent();
+	std::cout << "[FunctionDecl] " << node.name << "\n";
+
+	m_depth++;
+
+	PrintIndent();
+	std::cout << "Parameters: ";
+	if (node.parameters.empty())
+	{
+		std::cout << "(none)\n";
+	}
+	else
+	{
+		for (size_t i = 0; i < node.parameters.size(); ++i)
+		{
+			std::cout << node.parameters[i] << (i == node.parameters.size() - 1 ? "" : ", ");
+		}
+		std::cout << "\n";
+	}
+
+	if (node.body)
+	{
+		PrintIndent();
+		std::cout << "Body:\n";
 		m_depth++;
-		node.args->Accept(*this);
-		m_depth--;
+		node.body->Accept(*this);
 		m_depth--;
 	}
+
+	m_depth--;
 }
 
 void AstPrinter::PrintIndent() const

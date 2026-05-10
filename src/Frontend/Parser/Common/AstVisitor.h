@@ -12,6 +12,7 @@ struct IfNode;
 struct WhileNode;
 struct ForNode;
 struct CallNode;
+struct FunctionDeclNode;
 
 class AstVisitor
 {
@@ -41,4 +42,6 @@ public:
 	virtual void Visit(ForNode& node) = 0;
 
 	virtual void Visit(CallNode& node) = 0;
+
+	virtual void Visit(FunctionDeclNode& node) = 0;
 };

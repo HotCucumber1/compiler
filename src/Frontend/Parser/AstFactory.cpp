@@ -26,8 +26,10 @@ std::shared_ptr<AstNode> AstFactory::CreateNode(
 		}
 		return std::make_shared<CommonNode>(id, AstNodeType::PROGRAM, children);
 
-	case AstNodeType::VAR_DECL:
-		return std::make_shared<VarDeclNode>(id, GetToken(children[1]).value, children[3], false);
+	case AstNodeType::VAR_DECL: {
+		auto val = (children.size() < 3) ? nullptr : children[3];
+		return std::make_shared<VarDeclNode>(id, GetToken(children[1]).value, val, false);
+	}
 
 	case AstNodeType::CONST_DECL:
 		if (children.size() == 2)
@@ -77,9 +79,34 @@ std::shared_ptr<AstNode> AstFactory::CreateNode(
 		// for ( Decl ; Cond ; Incr ) { List } -> size 11
 		return std::make_shared<ForNode>(id, children[2], children[4], children[6], children[9]);
 
-	case AstNodeType::CALL:
-		// ID ( Expression )
-		return std::make_shared<CallNode>(id, GetToken(children[0]).value, children[2]);
+	case AstNodeType::CALL: {
+		std::string name = GetToken(children[0]).value;
+		std::vector<std::shared_ptr<AstNode>> args;
+
+		if (const auto argList = std::dynamic_pointer_cast<CommonNode>(children[2]))
+		{
+			args = argList->children;
+		}
+		return std::make_shared<CallNode>(id, name, args);
+	}
+
+	case AstNodeType::FUNC_DECL: {
+		std::string name = GetToken(children[1]).value;
+		std::vector<std::string> params;
+
+		if (auto paramList = std::dynamic_pointer_cast<CommonNode>(children[3]))
+		{
+			for (auto& child : paramList->children)
+			{
+				if (const auto pElem = std::dynamic_pointer_cast<VarDeclNode>(child))
+				{
+					params.push_back(pElem->varName);
+				}
+			}
+		}
+		auto body = children[6];
+		return std::make_shared<FunctionDeclNode>(id, name, params, body);
+	}
 
 	case AstNodeType::LIST_APPEND:
 	case AstNodeType::LIST_SINGLE:

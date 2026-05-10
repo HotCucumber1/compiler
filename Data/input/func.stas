@@ -1,0 +1,7 @@
+func HelloWorld(int a): void {
+    print("Hello world");
+    print(a);
+}
+
+print(5);
+HelloWorld(12);

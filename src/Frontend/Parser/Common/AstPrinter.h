@@ -31,6 +31,8 @@ public:
 
 	void Visit(CallNode& node) override;
 
+	void Visit(FunctionDeclNode& node) override;
+
 private:
 	int m_depth = 0;
 

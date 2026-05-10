@@ -34,6 +34,14 @@ Grammar SetupGrammar(const std::string& exePath)
 	return grammar;
 }
 
+void PrintConsts(const std::unique_ptr<Chunk>& chunk)
+{
+	for (const auto& val : chunk->constants)
+	{
+		PrintValue(val);
+	}
+}
+
 int main(int argc, char* argv[])
 {
 	if (argc < 2)
@@ -64,6 +72,8 @@ int main(int argc, char* argv[])
 		CodeGenerator generator;
 		auto chunk = generator.Generate(astRoot);
 		std::cout << "[4/5] Bytecode generated. Constants: " << chunk->constants.size() << std::endl;
+
+		// PrintConsts(chunk);
 
 		std::cout << "[5/5] Starting Virtual Machine...\n"
 				  << std::endl;

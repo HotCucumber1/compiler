@@ -35,6 +35,8 @@ public:
 
 	void Visit(CallNode& node) override;
 
+	void Visit(FunctionDeclNode& node) override;
+
 private:
 
 	void PushCode(uint8_t code);

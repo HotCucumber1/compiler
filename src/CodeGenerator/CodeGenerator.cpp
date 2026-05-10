@@ -320,12 +320,59 @@ void CodeGenerator::Visit(CallNode& node)
 	PushCode(static_cast<uint8_t>(OpCode::OP_GET_GLOBAL));
 	PushCode(nameIdx);
 
-	if (node.args)
+	for (const auto& arg : node.args)
 	{
-		node.args->Accept(*this);
+		if (arg)
+		{
+			arg->Accept(*this);
+		}
 	}
 	PushCode(static_cast<uint8_t>(OpCode::OP_CALL));
-	PushCode(1); // TODO: кол-во аргументов вычислять рекурсивно!
+	PushCode(node.args.size());
+}
+
+void CodeGenerator::Visit(FunctionDeclNode& node)
+{
+	auto globalChunk = std::move(m_chunk);
+	auto globalScopes = std::move(m_scopes);
+	const auto globalNextLocal = m_nextLocalIdx;
+
+	m_chunk = Chunk();
+	m_scopes.clear();
+	m_nextLocalIdx = 0;
+
+	EnterScope();
+	for (const auto& param : node.parameters)
+	{
+		m_scopes.back()[param] = { m_nextLocalIdx++, false };
+	}
+	m_chunk.localsCount = m_nextLocalIdx;
+
+	// Тело
+	if (node.body)
+	{
+		node.body->Accept(*this);
+	}
+
+	PushConst(Value{});
+	PushCode(static_cast<uint8_t>(OpCode::OP_RETURN));
+	ResolveJmp();
+
+	auto funcName = String(node.name);
+	auto functionObj = std::make_shared<Function>(&funcName, node.parameters.size());
+	functionObj->chunk = std::move(m_chunk);
+
+	m_chunk = std::move(globalChunk);
+	m_scopes = std::move(globalScopes);
+	m_nextLocalIdx = globalNextLocal;
+
+	const auto funcIdx = AddConstant(Value(functionObj));
+	const auto nameIdx = AddConstant(MakeString(node.name));
+
+	PushCode(static_cast<uint8_t>(OpCode::OP_CONSTANT));
+	PushCode(funcIdx);
+	PushCode(static_cast<uint8_t>(OpCode::OP_SET_GLOBAL));
+	PushCode(nameIdx);
 }
 
 void CodeGenerator::PushCode(const uint8_t code)

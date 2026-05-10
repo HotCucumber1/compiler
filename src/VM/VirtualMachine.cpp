@@ -179,9 +179,6 @@ void VirtualMachine::OpConstant()
 	const auto index = ReadByte();
 	const auto constant = m_currentChunk->constants[index];
 	Push(constant);
-
-	// std::cout << "Pushed: ";
-	// PrintValue(constant);
 }
 
 void VirtualMachine::OpReturn()
@@ -194,16 +191,6 @@ void VirtualMachine::OpReturn()
 
 	m_callFrames.pop_back();
 	Push(returnValue);
-	// if (!m_callFrames.empty())
-	// {
-	// 	std::cout << "Returned: ";
-	// 	PrintValue(returnValue);
-	// }
-	// else
-	// {
-	// 	std::cout << "\nProgram finished.\nResult: \n";
-	// 	PrintValue(returnValue);
-	// }
 }
 
 void VirtualMachine::OpAdd()
@@ -436,6 +423,7 @@ void VirtualMachine::OpCall()
 	currentFrame.instructionPointer = m_instructionPointer;
 
 	m_callFrames.push_back(frame);
+	m_instructionPointer = 0;
 }
 
 void VirtualMachine::OpFunc()
@@ -518,6 +506,15 @@ void VirtualMachine::OpSetEl()
 		throw std::runtime_error("Array index out of bounds");
 	}
 	arr->elements[idx] = value;
+}
+
+void PrintGlobals(const std::unordered_map<std::string, Value>& m_globals)
+{
+	for (const auto& [key, value] : m_globals)
+	{
+		std::cout << key << ' ';
+		PrintValue(value);
+	}
 }
 
 void VirtualMachine::OpGetGlobal()

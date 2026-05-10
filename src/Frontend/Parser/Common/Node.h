@@ -12,6 +12,7 @@ enum class AstNodeType : int
 	BLOCK,
 	VAR_DECL,
 	CONST_DECL,
+	FUNC_DECL,
 	IF_STATEMENT,
 	WHILE_STATEMENT,
 	FOR_STATEMENT,
@@ -47,6 +48,7 @@ static const std::unordered_map<std::string, AstNodeType> AST_NODE_TYPES = {
 	{ "LIST_APPEND", AstNodeType::LIST_APPEND },
 	{ "LIST_SINGLE", AstNodeType::LIST_SINGLE },
 	{ "PASS_THROUGH", AstNodeType::PASS_THROUGH },
+	{ "FUNC_DECL", AstNodeType::FUNC_DECL },
 };
 
 using SymbolId = int32_t;
@@ -293,15 +295,35 @@ struct ForNode final : AstNode
 struct CallNode final : AstNode
 {
 	std::string funcName;
-	std::shared_ptr<AstNode> args;
+	std::vector<std::shared_ptr<AstNode>> args;
 
 	CallNode(
 		const SymbolId id,
 		std::string name,
-		std::shared_ptr<AstNode> a)
+		std::vector<std::shared_ptr<AstNode>> a)
 		: AstNode(id, AstNodeType::CALL)
 		, funcName(std::move(name))
 		, args(std::move(a))
+	{
+	}
+
+	void Accept(AstVisitor& visitor) override
+	{
+		visitor.Visit(*this);
+	}
+};
+
+struct FunctionDeclNode final : AstNode
+{
+	std::string name;
+	std::vector<std::string> parameters;
+	std::shared_ptr<AstNode> body;
+
+	FunctionDeclNode(SymbolId id, std::string n, std::vector<std::string> p, std::shared_ptr<AstNode> b)
+		: AstNode(id, AstNodeType::FUNC_DECL)
+		, name(std::move(n))
+		, parameters(std::move(p))
+		, body(std::move(b))
 	{
 	}
 

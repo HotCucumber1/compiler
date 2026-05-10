@@ -1,4 +1,10 @@
-Program -> StatementList : PROGRAM
+Program -> GlobalList : PROGRAM
+
+GlobalList -> GlobalElement GlobalList : LIST_APPEND
+GlobalList -> GlobalElement : LIST_SINGLE
+
+GlobalElement -> FunctionDecl : PASS_THROUGH
+GlobalElement -> Statement : PASS_THROUGH
 
 StatementList -> Statement StatementList : LIST_APPEND
 StatementList -> Statement : LIST_SINGLE
@@ -10,7 +16,6 @@ SimpleStatement -> DeclStatement : UNDEFINED
 SimpleStatement -> ConstDeclStatement : UNDEFINED
 SimpleStatement -> Expression : UNDEFINED
 SimpleStatement -> IDENTIFIER = Expression : ASSIGNMENT
-SimpleStatement -> Call : UNDEFINED
 
 BlockStatement -> IfStatement : UNDEFINED
 BlockStatement -> WhileStatement : UNDEFINED

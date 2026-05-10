@@ -28,4 +28,7 @@ Primary -> ( Expression ) : UNDEFINED
 Primary -> IDENTIFIER : VAR_ACCESS
 Primary -> Literal : UNDEFINED
 
-Call -> IDENTIFIER ( Expression ) : CALL
+Call -> IDENTIFIER ( ArgList ) : CALL
+
+ArgList -> Expression , ArgList : LIST_APPEND
+ArgList -> Expression : LIST_SINGLE
