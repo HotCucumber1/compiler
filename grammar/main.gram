@@ -1,12 +1,17 @@
 Program -> StatementList : PROGRAM
 
-StatementList -> Statement ; StatementList : UNDEFINED
-StatementList -> Statement ; : UNDEFINED
+StatementList -> Statement StatementList : LIST_APPEND
+StatementList -> Statement : LIST_SINGLE
 
-Statement -> ConstDeclStatement : UNDEFINED
-Statement -> DeclStatement : UNDEFINED
-Statement -> IfStatement : UNDEFINED
-Statement -> WhileStatement : UNDEFINED
-Statement -> ForStatement : UNDEFINED
-Statement -> Expression : UNDEFINED
-Statement -> IDENTIFIER = Expression : ASSIGNMENT
+Statement -> SimpleStatement ; : PASS_THROUGH
+Statement -> BlockStatement : PASS_THROUGH
+
+SimpleStatement -> DeclStatement : UNDEFINED
+SimpleStatement -> ConstDeclStatement : UNDEFINED
+SimpleStatement -> Expression : UNDEFINED
+SimpleStatement -> IDENTIFIER = Expression : ASSIGNMENT
+SimpleStatement -> Call : UNDEFINED
+
+BlockStatement -> IfStatement : UNDEFINED
+BlockStatement -> WhileStatement : UNDEFINED
+BlockStatement -> ForStatement : UNDEFINED

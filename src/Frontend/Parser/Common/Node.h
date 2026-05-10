@@ -23,6 +23,9 @@ enum class AstNodeType : int
 	TERMINAL,
 	CALL,
 	VAR_ACCESS,
+	LIST_APPEND,
+	LIST_SINGLE,
+	PASS_THROUGH,
 };
 
 static const std::unordered_map<std::string, AstNodeType> AST_NODE_TYPES = {
@@ -41,10 +44,12 @@ static const std::unordered_map<std::string, AstNodeType> AST_NODE_TYPES = {
 	{ "TERMINAL", AstNodeType::TERMINAL },
 	{ "CALL", AstNodeType::CALL },
 	{ "VAR_ACCESS", AstNodeType::VAR_ACCESS },
+	{ "LIST_APPEND", AstNodeType::LIST_APPEND },
+	{ "LIST_SINGLE", AstNodeType::LIST_SINGLE },
+	{ "PASS_THROUGH", AstNodeType::PASS_THROUGH },
 };
 
 using SymbolId = int32_t;
-
 
 struct AstNode
 {

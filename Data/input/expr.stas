@@ -12,6 +12,6 @@ if ((x + b) < 20 and true and false or (x < b))
 else
 {
     print("NO");
-};
+}
 
 print(x * 5);

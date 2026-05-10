@@ -1,9 +1,7 @@
 #include "AstFactory.h"
 
 Token GetToken(const std::shared_ptr<AstNode>& node);
-std::shared_ptr<AstNode> ProcessUndefinedNode(
-	SymbolId id,
-	const std::vector<std::shared_ptr<AstNode>>& children);
+std::shared_ptr<AstNode> AppendToList(SymbolId id, const std::vector<std::shared_ptr<AstNode>>& children);
 
 // TODO все индексы в константы
 
@@ -14,46 +12,19 @@ std::shared_ptr<AstNode> AstFactory::CreateNode(
 {
 	if (type == AstNodeType::UNDEFINED)
 	{
-		return ProcessUndefinedNode(id, children);
+		return children.empty() ? nullptr : children[0];
 	}
 	switch (type)
 	{
 	case AstNodeType::PROGRAM:
-		return std::make_shared<CommonNode>(
-			id, AstNodeType::PROGRAM,
-			std::dynamic_pointer_cast<CommonNode>(children[0])
-				? std::dynamic_pointer_cast<CommonNode>(children[0])->children
-				: children);
-		// case AstNodeType::BLOCK: {
-		// 	auto container = std::make_shared<CommonNode>(id, type, std::vector<std::shared_ptr<AstNode>>{});
-		// 	for (auto& child : children)
-		// 	{
-		// 		if (!child)
-		// 		{
-		// 			continue;
-		// 		}
-		// 		if (const auto commonChild = std::dynamic_pointer_cast<CommonNode>(child))
-		// 		{
-		// 			if (commonChild->type == type)
-		// 			{
-		// 				container->children.insert(
-		// 					container->children.end(),
-		// 					commonChild->children.begin(),
-		// 					commonChild->children.end());
-		// 				continue;
-		// 			}
-		// 		}
-		// 		if (const auto term = std::dynamic_pointer_cast<TerminalNode>(child))
-		// 		{
-		// 			if (term->token.value == ";")
-		// 			{
-		// 				continue;
-		// 			}
-		// 		}
-		// 		container->children.push_back(child);
-		// 	}
-		// 	return container;
-		// }
+		if (!children.empty())
+		{
+			if (auto block = std::dynamic_pointer_cast<CommonNode>(children[0]))
+			{
+				return std::make_shared<CommonNode>(id, AstNodeType::PROGRAM, block->children);
+			}
+		}
+		return std::make_shared<CommonNode>(id, AstNodeType::PROGRAM, children);
 
 	case AstNodeType::VAR_DECL:
 		return std::make_shared<VarDeclNode>(id, GetToken(children[1]).value, children[3], false);
@@ -110,10 +81,21 @@ std::shared_ptr<AstNode> AstFactory::CreateNode(
 		// ID ( Expression )
 		return std::make_shared<CallNode>(id, GetToken(children[0]).value, children[2]);
 
+	case AstNodeType::LIST_APPEND:
+	case AstNodeType::LIST_SINGLE:
+		return AppendToList(id, children);
+
+	case AstNodeType::PASS_THROUGH:
+		if (children.empty())
+			return nullptr;
+		if (children.size() == 3 && GetToken(children[0]).value == "(")
+		{
+			return children[1];
+		}
+		return children[0];
+
 	default:
 		throw std::runtime_error("AstFactory Error: AstNodeType is not being processed " + std::to_string(static_cast<int>(type)));
-		// default:
-		// 	return std::make_shared<CommonNode>(id, type, children);
 	}
 }
 
@@ -127,38 +109,25 @@ Token GetToken(const std::shared_ptr<AstNode>& node)
 	throw std::runtime_error("AST Builder error: Expected TerminalNode!");
 }
 
-std::shared_ptr<AstNode> ProcessUndefinedNode(
-	SymbolId id,
-	const std::vector<std::shared_ptr<AstNode>>& children)
+std::shared_ptr<AstNode> AppendToList(SymbolId id, const std::vector<std::shared_ptr<AstNode>>& children)
 {
-	if (children.empty())
+	auto block = std::make_shared<CommonNode>(id, AstNodeType::BLOCK, std::vector<std::shared_ptr<AstNode>>{});
+
+	if (children[0])
 	{
-		return nullptr;
-	}
-	if (children.size() >= 2 && children[1]->type == AstNodeType::TERMINAL && GetToken(children[1]).value == ";")
-	{
-		auto block = std::make_shared<CommonNode>(id, AstNodeType::BLOCK, std::vector<std::shared_ptr<AstNode>>{});
 		block->children.push_back(children[0]);
-
-		if (children.size() == 3 && children[2])
-		{
-			if (const auto tail = std::dynamic_pointer_cast<CommonNode>(children[2]))
-			{
-				block->children.insert(block->children.end(), tail->children.begin(), tail->children.end());
-			}
-			else
-			{
-				block->children.push_back(children[2]);
-			}
-		}
-		return block;
 	}
 
-	if (children.size() == 3
-		&& GetToken(children[0]).value == "(")
+	if (children.size() > 1 && children[1])
 	{
-		return children[1];
+		if (auto tail = std::dynamic_pointer_cast<CommonNode>(children[1]))
+		{
+			block->children.insert(block->children.end(), tail->children.begin(), tail->children.end());
+		}
+		else
+		{
+			block->children.push_back(children[1]);
+		}
 	}
-
-	return children[0];
+	return block;
 }
