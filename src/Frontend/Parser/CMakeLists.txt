@@ -3,6 +3,7 @@ add_library(
         Grammar/Grammar.cpp
         Grammar/GrammarReader.cpp
         SLRTableBuilder.cpp
+        AstFactory.cpp
         Parser.cpp
 )
 
@@ -11,6 +12,7 @@ add_executable(
         Grammar/Grammar.cpp
         Grammar/GrammarReader.cpp
         SLRTableBuilder.cpp
+        AstFactory.cpp
         Parser.cpp
         main.cpp
 )
