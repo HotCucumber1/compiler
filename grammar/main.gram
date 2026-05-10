@@ -3,6 +3,7 @@ Program -> StatementList : PROGRAM
 StatementList -> Statement ; StatementList : UNDEFINED
 StatementList -> Statement ; : UNDEFINED
 
+Statement -> ConstDeclStatement : UNDEFINED
 Statement -> DeclStatement : UNDEFINED
 Statement -> IfStatement : UNDEFINED
 Statement -> WhileStatement : UNDEFINED

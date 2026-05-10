@@ -47,8 +47,14 @@ private:
 	uint8_t AddConstant(const Value& value);
 
 private:
+	struct LocalVarInfo
+	{
+		size_t index;
+		bool isConst;
+	};
+
 	Chunk m_chunk{};
 	std::unordered_map<std::string, size_t> m_locals;
-	std::vector<std::map<std::string, size_t>> m_scopes;
+	std::vector<std::map<std::string, LocalVarInfo>> m_scopes;
 	size_t m_nextLocalIdx = 0;
 };

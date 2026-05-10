@@ -173,7 +173,8 @@ void CodeGenerator::PushVarDecl(const std::shared_ptr<AstNode>& node)
 	}
 
 	const auto idx = m_nextLocalIdx++;
-	m_scopes.back()[varName] = idx;
+	const auto isConst = (node->type == AstNodeType::CONST_DECL);
+	m_scopes.back()[varName] = { idx, isConst };
 	m_chunk.localsCount = std::max(m_chunk.localsCount, m_nextLocalIdx);
 
 	if (node->children.size() > exprPos)
@@ -356,7 +357,7 @@ void CodeGenerator::PushVarAccess(const std::shared_ptr<AstNode>& node)
 		{
 			continue;
 		}
-		const auto idx = m_scope[varName];
+		const auto idx = m_scope[varName].index;
 		PushCode(static_cast<uint8_t>(OpCode::OP_GET_LOCAL_VAR));
 		PushCode(idx);
 		return;
@@ -374,7 +375,7 @@ void CodeGenerator::PushAssignment(const std::shared_ptr<AstNode>& node)
 	{
 		if (m_scope.contains(varName))
 		{
-			varIdx = m_scope[varName];
+			varIdx = m_scope[varName].index;
 			break;
 		}
 	}
