@@ -131,7 +131,7 @@ void CodeGenerator::Visit(VarDeclNode& node)
 	}
 
 	const auto idx = m_nextLocalIdx++;
-	m_scopes.back()[node.varName] = { idx, node.isConst };
+	m_scopes.back()[node.varName] = { DataType::UNKNOWN, idx, node.isConst };
 	m_chunk.localsCount = std::max(m_chunk.localsCount, m_nextLocalIdx);
 
 	if (node.expr)
@@ -350,7 +350,7 @@ void CodeGenerator::Visit(FunctionDeclNode& node)
 	EnterScope();
 	for (const auto& param : node.parameters)
 	{
-		m_scopes.back()[param] = { m_nextLocalIdx++, false };
+		m_scopes.back()[param] = { DataType::UNKNOWN, m_nextLocalIdx++, false };
 	}
 	m_chunk.localsCount = m_nextLocalIdx;
 
