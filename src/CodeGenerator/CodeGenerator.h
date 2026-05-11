@@ -4,7 +4,7 @@
 
 #include <map>
 
-class CodeGenerator : public AstVisitor
+class CodeGenerator final : public AstVisitor
 {
 public:
 	// TODO в m_scopes добавить типы, чтобы проверять еще до VM (проверка семантики)
@@ -37,8 +37,15 @@ public:
 
 	void Visit(FunctionDeclNode& node) override;
 
-private:
+	void Visit(StructDeclNode& node) override;
 
+	void Visit(StructInitNode& node) override;
+
+	void Visit(MemberAccessNode& node) override;
+
+	void Visit(MemberAssignmentNode& node) override;
+
+private:
 	void PushCode(uint8_t code);
 
 	void PushConst(const Value& value);
@@ -63,5 +70,6 @@ private:
 	Chunk m_chunk{};
 	std::unordered_map<std::string, size_t> m_locals;
 	std::vector<std::map<std::string, LocalVarInfo>> m_scopes;
+	std::unordered_map<std::string, std::vector<std::string>> m_structs;
 	size_t m_nextLocalIdx = 0;
 };

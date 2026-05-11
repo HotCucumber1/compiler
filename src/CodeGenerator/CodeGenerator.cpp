@@ -348,7 +348,6 @@ void CodeGenerator::Visit(FunctionDeclNode& node)
 	}
 	m_chunk.localsCount = m_nextLocalIdx;
 
-	// Тело
 	if (node.body)
 	{
 		node.body->Accept(*this);
@@ -373,6 +372,75 @@ void CodeGenerator::Visit(FunctionDeclNode& node)
 	PushCode(funcIdx);
 	PushCode(static_cast<uint8_t>(OpCode::OP_SET_GLOBAL));
 	PushCode(nameIdx);
+}
+
+void CodeGenerator::Visit(StructDeclNode& node)
+{
+	std::vector<std::string> fieldNames;
+	for (const auto& fieldNode : node.fields)
+	{
+		if (const auto varDecl = std::dynamic_pointer_cast<VarDeclNode>(fieldNode))
+		{
+			fieldNames.push_back(varDecl->varName);
+		}
+	}
+	m_structs[node.name] = std::move(fieldNames);
+}
+
+void CodeGenerator::Visit(StructInitNode& node)
+{
+	if (!m_structs.contains(node.structName))
+	{
+		throw std::runtime_error("Compile error: Unknown struct '" + node.structName + "'");
+	}
+	const auto& fieldNames = m_structs[node.structName];
+	if (node.args.size() > fieldNames.size())
+	{
+		throw std::runtime_error("Compile error: Too many arguments for struct '" + node.structName + "'");
+	}
+
+	const auto nameIdx = AddConstant(MakeString(node.structName));
+	PushCode(static_cast<uint8_t>(OpCode::OP_STRUCT_INIT));
+	PushCode(nameIdx);
+
+	for (int i = 0; i < node.args.size(); i++)
+	{
+		PushCode(static_cast<uint8_t>(OpCode::OP_DUP));
+		if (node.args[i])
+		{
+			node.args[i]->Accept(*this);
+		}
+
+		const auto fieldNameIdx = AddConstant(MakeString(fieldNames[i]));
+		PushCode(static_cast<uint8_t>(OpCode::OP_SET_FIELD));
+		PushCode(fieldNameIdx);
+
+		PushCode(static_cast<uint8_t>(OpCode::OP_POP));
+	}
+}
+
+void CodeGenerator::Visit(MemberAccessNode& node)
+{
+	node.object->Accept(*this);
+
+	const auto nameIdx = AddConstant(MakeString(node.fieldName));
+	PushCode(static_cast<uint8_t>(OpCode::OP_GET_FIELD));
+	PushCode(nameIdx);
+}
+
+void CodeGenerator::Visit(MemberAssignmentNode& node)
+{
+	if (node.object)
+	{
+		node.object->Accept(*this);
+	}
+	if (node.expression)
+	{
+		node.expression->Accept(*this);
+	}
+	const auto fieldNameIdx = AddConstant(MakeString(node.fieldName));
+	PushCode(static_cast<uint8_t>(OpCode::OP_SET_FIELD));
+	PushCode(fieldNameIdx);
 }
 
 void CodeGenerator::PushCode(const uint8_t code)

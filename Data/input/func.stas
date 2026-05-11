@@ -1,8 +1,9 @@
 int b = 5;
 
-func HelloWorld(int a): void {
+func HelloWorld(int a, int b): void {
     print("Hello world");
     print(a);
+    print(b);
 
     func NewOne(int a): void {
         print(a);

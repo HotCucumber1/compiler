@@ -3,6 +3,7 @@
 #include "AstVisitor.h"
 
 #include <memory>
+#include <utility>
 #include <vector>
 
 enum class AstNodeType : int
@@ -27,6 +28,10 @@ enum class AstNodeType : int
 	LIST_APPEND,
 	LIST_SINGLE,
 	PASS_THROUGH,
+	STRUCT_DECL,
+	MEMBER_ASSIGNMENT,
+	MEMBER_ACCESS,
+	STRUCT_INIT
 };
 
 static const std::unordered_map<std::string, AstNodeType> AST_NODE_TYPES = {
@@ -49,6 +54,10 @@ static const std::unordered_map<std::string, AstNodeType> AST_NODE_TYPES = {
 	{ "LIST_SINGLE", AstNodeType::LIST_SINGLE },
 	{ "PASS_THROUGH", AstNodeType::PASS_THROUGH },
 	{ "FUNC_DECL", AstNodeType::FUNC_DECL },
+	{ "STRUCT_DECL", AstNodeType::STRUCT_DECL },
+	{ "MEMBER_ASSIGNMENT", AstNodeType::MEMBER_ASSIGNMENT },
+	{ "MEMBER_ACCESS", AstNodeType::MEMBER_ACCESS },
+	{ "STRUCT_INIT", AstNodeType::STRUCT_INIT },
 };
 
 using SymbolId = int32_t;
@@ -319,11 +328,85 @@ struct FunctionDeclNode final : AstNode
 	std::vector<std::string> parameters;
 	std::shared_ptr<AstNode> body;
 
-	FunctionDeclNode(SymbolId id, std::string n, std::vector<std::string> p, std::shared_ptr<AstNode> b)
+	FunctionDeclNode(const SymbolId id, std::string n, std::vector<std::string> p, std::shared_ptr<AstNode> b)
 		: AstNode(id, AstNodeType::FUNC_DECL)
 		, name(std::move(n))
 		, parameters(std::move(p))
 		, body(std::move(b))
+	{
+	}
+
+	void Accept(AstVisitor& visitor) override
+	{
+		visitor.Visit(*this);
+	}
+};
+
+struct StructDeclNode final : AstNode
+{
+	std::string name;
+	std::vector<std::shared_ptr<AstNode>> fields;
+
+	StructDeclNode(const SymbolId id, std::string name, std::vector<std::shared_ptr<AstNode>> fields)
+		: AstNode(id, AstNodeType::STRUCT_DECL)
+		, name(std::move(name))
+		, fields(std::move(fields))
+	{
+	}
+
+	void Accept(AstVisitor& visitor) override
+	{
+		visitor.Visit(*this);
+	}
+};
+
+struct StructInitNode final : AstNode
+{
+	std::string structName;
+	std::vector<std::shared_ptr<AstNode>> args;
+
+	StructInitNode(const SymbolId id, std::string name, std::vector<std::shared_ptr<AstNode>> args)
+		: AstNode(id, AstNodeType::STRUCT_INIT)
+		, structName(std::move(name))
+		, args(std::move(args))
+	{
+	}
+
+	void Accept(AstVisitor& visitor) override
+	{
+		visitor.Visit(*this);
+	}
+};
+
+struct MemberAccessNode final : AstNode
+{
+	std::shared_ptr<AstNode> object;
+	std::string fieldName;
+
+	MemberAccessNode(const SymbolId id, std::shared_ptr<AstNode> obj, std::string field)
+		: AstNode(id, AstNodeType::MEMBER_ACCESS)
+		, object(std::move(obj))
+		, fieldName(std::move(field))
+	{
+	}
+
+	void Accept(AstVisitor& visitor) override
+	{
+		visitor.Visit(*this);
+	}
+};
+
+struct MemberAssignmentNode final : AstNode
+{
+	std::shared_ptr<AstNode> object;
+	std::string fieldName;
+	std::shared_ptr<AstNode> expression;
+
+	MemberAssignmentNode(const SymbolId id, std::shared_ptr<AstNode> obj, std::string field, std::shared_ptr<AstNode> expr)
+		: AstNode(id, AstNodeType::MEMBER_ASSIGNMENT)
+		, object(std::move(obj))
+		, fieldName(std::move(field))
+		, expression(std::move(expr))
 	{
 	}
 

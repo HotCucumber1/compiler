@@ -4,6 +4,7 @@ GlobalList -> GlobalElement GlobalList : LIST_APPEND
 GlobalList -> GlobalElement : LIST_SINGLE
 
 GlobalElement -> FunctionDecl : PASS_THROUGH
+GlobalElement -> StructDecl : PASS_THROUGH
 GlobalElement -> Statement : PASS_THROUGH
 
 StatementList -> Statement StatementList : LIST_APPEND
@@ -15,6 +16,7 @@ Statement -> BlockStatement : PASS_THROUGH
 SimpleStatement -> DeclStatement : UNDEFINED
 SimpleStatement -> ConstDeclStatement : UNDEFINED
 SimpleStatement -> Expression : UNDEFINED
+SimpleStatement -> MemberAssignment : PASS_THROUGH
 SimpleStatement -> IDENTIFIER = Expression : ASSIGNMENT
 
 BlockStatement -> IfStatement : UNDEFINED

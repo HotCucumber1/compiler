@@ -5,6 +5,7 @@
 #include <functional>
 #include <iostream>
 #include <stdexcept>
+#include <utility>
 #include <variant>
 #include <vector>
 
@@ -17,7 +18,10 @@ using FunctionPtr = std::shared_ptr<Function>;
 struct Array;
 using ArrayPtr = std::shared_ptr<Array>;
 
-struct Value : std::variant<std::monostate, int64_t, double, bool, char, HeapObjectPtr, FunctionPtr, ArrayPtr>
+struct Instance;
+using InstancePtr = std::shared_ptr<Instance>;
+
+struct Value : std::variant<std::monostate, int64_t, double, bool, char, HeapObjectPtr, FunctionPtr, ArrayPtr, InstancePtr>
 {
 	using variant::variant;
 
@@ -58,6 +62,18 @@ struct Array final : Object
 	}
 };
 
+struct Instance final : Object
+{
+	std::string structName;
+	std::unordered_map<std::string, Value> fields;
+
+	explicit Instance(std::string name)
+		: Object(ObjectType::INSTANCE)
+		, structName(std::move(name))
+	{
+	}
+};
+
 struct NativeFunction final : Object
 {
 	using NativeFunc = std::function<Value(const std::vector<Value>&)>;
@@ -67,12 +83,12 @@ struct NativeFunction final : Object
 	int arity;
 
 	NativeFunction(
-		const std::string& name,
+		std::string name,
 		const int arity,
-		const NativeFunc& func)
+		NativeFunc func)
 		: Object(ObjectType::NATIVE_FUNC)
-		, func(func)
-		, name(name)
+		, func(std::move(func))
+		, name(std::move(name))
 		, arity(arity)
 	{
 	}
@@ -132,6 +148,20 @@ inline bool IsString(const Value& value)
 		return false;
 	},
 		value);
+}
+
+inline bool IsInstance(const Value& value)
+{
+	return std::holds_alternative<InstancePtr>(value);
+}
+
+inline InstancePtr AsInstance(const Value& value)
+{
+	if (!IsInstance(value))
+	{
+		throw std::runtime_error("VM Error: Value is not a struct instance");
+	}
+	return std::get<InstancePtr>(value);
 }
 
 inline std::string AsString(const Value& value)
@@ -282,6 +312,10 @@ inline Value operator+(const Value& lhs, const Value& rhs) // TODO добави�
 		{
 			throw std::runtime_error("Cannot add null"); // TODO
 		}
+		else if constexpr (std::is_same_v<LType, InstancePtr> || std::is_same_v<RType, InstancePtr>)
+		{
+			throw std::runtime_error("Cannot add structs"); // TODO
+		}
 		else if constexpr (std::is_same_v<LType, double> || std::is_same_v<RType, double>)
 		{
 			return static_cast<double>(l) + static_cast<double>(r);
@@ -326,6 +360,10 @@ inline Value operator-(const Value& lhs, const Value& rhs)
 		{
 			throw std::runtime_error("Cannot sub null"); // TODO
 		}
+		else if constexpr (std::is_same_v<LType, InstancePtr> || std::is_same_v<RType, InstancePtr>)
+		{
+			throw std::runtime_error("Cannot sub structs"); // TODO
+		}
 		else if constexpr (std::is_same_v<LType, double> || std::is_same_v<RType, double>)
 		{
 			return static_cast<double>(l) - static_cast<double>(r);
@@ -368,7 +406,11 @@ inline Value operator*(const Value& lhs, const Value& rhs)
 		}
 		else if constexpr (std::is_same_v<LType, std::monostate> || std::is_same_v<RType, std::monostate>)
 		{
-			throw std::runtime_error("Cannot add null"); // TODO
+			throw std::runtime_error("Cannot multiply null"); // TODO
+		}
+		else if constexpr (std::is_same_v<LType, InstancePtr> || std::is_same_v<RType, InstancePtr>)
+		{
+			throw std::runtime_error("Cannot multiply structs"); // TODO
 		}
 		else if constexpr (std::is_same_v<LType, double> || std::is_same_v<RType, double>)
 		{
@@ -416,7 +458,11 @@ inline Value operator/(const Value& lhs, const Value& rhs)
 		}
 		else if constexpr (std::is_same_v<LType, std::monostate> || std::is_same_v<RType, std::monostate>)
 		{
-			throw std::runtime_error("Cannot add null"); // TODO
+			throw std::runtime_error("Cannot div null"); // TODO
+		}
+		else if constexpr (std::is_same_v<LType, InstancePtr> || std::is_same_v<RType, InstancePtr>)
+		{
+			throw std::runtime_error("Cannot div structs"); // TODO
 		}
 		else if constexpr (std::is_same_v<LType, double> || std::is_same_v<RType, double>)
 		{
@@ -518,6 +564,11 @@ inline void PrintValue(const Value& value)
 				const auto val = isTrue ? "true" : "false";
 				std::cout << val;
 			}
+			else if (IsInstance(arg))
+			{
+				const auto inst = AsInstance(arg);
+				std::cout << "<instance of " << inst->structName << ">";
+			}
 			else
 			{
 				std::cout << arg;
@@ -530,4 +581,18 @@ inline void PrintValue(const Value& value)
 	{
 		std::cout << "Error accessing variant: " << e.what() << std::endl;
 	}
+}
+
+inline Value Read()
+{
+	std::string input;
+	if (!std::getline(std::cin, input))
+	{
+		if (std::cin.eof())
+		{
+			return {};
+		}
+		throw std::runtime_error("Failed to read input");
+	}
+	return MakeString(input);
 }

@@ -37,5 +37,12 @@ enum class OpCode : uint8_t
 	OP_GET_GLOBAL,
 	OP_SET_GLOBAL,
 
+	OP_STRUCT_INIT,
+	OP_GET_FIELD,
+	OP_SET_FIELD,
+
+	OP_POP,
+	OP_DUP,
+
 	OP_RETURN = 255,
 };

@@ -13,6 +13,10 @@ struct WhileNode;
 struct ForNode;
 struct CallNode;
 struct FunctionDeclNode;
+struct StructDeclNode;
+struct StructInitNode;
+struct MemberAccessNode;
+struct MemberAssignmentNode;
 
 class AstVisitor
 {
@@ -44,4 +48,12 @@ public:
 	virtual void Visit(CallNode& node) = 0;
 
 	virtual void Visit(FunctionDeclNode& node) = 0;
+
+	virtual void Visit(StructDeclNode& node) = 0;
+
+	virtual void Visit(StructInitNode& node) = 0;
+
+	virtual void Visit(MemberAccessNode& node) = 0;
+
+	virtual void Visit(MemberAssignmentNode& node) = 0;
 };

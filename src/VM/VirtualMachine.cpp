@@ -1,4 +1,5 @@
 #include "VirtualMachine.h"
+#include "NativeLib/NativeLib.h"
 #include "OpCode.h"
 
 #include <algorithm>
@@ -6,18 +7,10 @@
 
 constexpr int BYTE_SIZE = 8;
 
-Value NativePrint(const std::vector<Value>& args)
-{
-	for (const auto& arg : args)
-	{
-		PrintValue(arg);
-	}
-	return {};
-}
-
 VirtualMachine::VirtualMachine()
 {
 	RegisterNativeFunction("print", 1, NativePrint);
+	RegisterNativeFunction("read", 0, NativeRead);
 	// TODO чтение
 }
 
@@ -165,6 +158,21 @@ void VirtualMachine::Run()
 			break;
 		case OpCode::OP_SET_GLOBAL:
 			OpSetGlobal();
+			break;
+		case OpCode::OP_POP:
+			OpPop();
+			break;
+		case OpCode::OP_DUP:
+			OpDup();
+			break;
+		case OpCode::OP_STRUCT_INIT:
+			OpStructInit();
+			break;
+		case OpCode::OP_GET_FIELD:
+			OpGetField();
+			break;
+		case OpCode::OP_SET_FIELD:
+			OpSetField();
 			break;
 		default:
 			std::cerr << "Unknown operation: " << static_cast<int>(opCode) << std::endl;
@@ -566,6 +574,70 @@ uint16_t VirtualMachine::ReadShort()
 void VirtualMachine::Push(const Value& value)
 {
 	m_valueStack.push_back(value);
+}
+
+void VirtualMachine::OpPop()
+{
+	Pop();
+}
+
+void VirtualMachine::OpDup()
+{
+	if (m_valueStack.empty())
+	{
+		throw std::runtime_error("Const stack is empty");
+	}
+	const auto top = m_valueStack.back();
+	Push(top);
+}
+
+void VirtualMachine::OpStructInit()
+{
+	const auto nameIdx = ReadByte();
+	const auto structName = AsString(m_currentChunk->constants[nameIdx]);
+
+	auto inst = std::make_shared<Instance>(structName);
+	Push(inst);
+}
+
+void VirtualMachine::OpGetField()
+{
+	const auto nameIdx = ReadByte();
+	const auto fieldName = AsString(m_currentChunk->constants[nameIdx]);
+
+	const auto strct = Pop();
+	if (!IsInstance(strct))
+	{
+		throw std::runtime_error("Cannot get field from non-instance object");
+	}
+
+	const auto instance = AsInstance(strct);
+	auto it = instance->fields.find(fieldName);
+	if (it == instance->fields.end())
+	{
+		Push({});
+	}
+	else
+	{
+		Push(it->second);
+	}
+}
+
+void VirtualMachine::OpSetField()
+{
+	const auto nameIdx = ReadByte();
+	const auto fieldName = AsString(m_currentChunk->constants[nameIdx]);
+
+	const auto val = Pop();
+	const auto strct = Pop();
+
+	if (!IsInstance(strct))
+	{
+		throw std::runtime_error("Cannot set field on non-instance object");
+	}
+	auto instance = AsInstance(strct);
+	instance->fields[fieldName] = val;
+	Push(val);
 }
 
 Value VirtualMachine::Pop()

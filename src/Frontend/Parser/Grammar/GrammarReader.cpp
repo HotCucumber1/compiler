@@ -82,9 +82,20 @@ GrammarReader::LineContent GrammarReader::ParseLine(const std::string& line)
 	const auto rhs = (colonPos != std::string::npos)
 		? Trim(line.substr(arrowPos + 2, colonPos - (arrowPos + 2)))
 		: Trim(line.substr(arrowPos + 2));
-	const auto type = (colonPos != std::string::npos)
-		? Trim(line.substr(colonPos + 1))
-		: "UNDEFINED";
+
+	std::string type;
+	if (colonPos != std::string::npos)
+	{
+		type = Trim(line.substr(colonPos + 1));
+		if (type.empty())
+		{
+			throw std::runtime_error("Rule " + line + " has no : TYPE_FIELD");
+		}
+	}
+	else
+	{
+		throw std::runtime_error("Rule " + line + " has no : TYPE_FIELD");
+	}
 
 	return {
 		lhs,

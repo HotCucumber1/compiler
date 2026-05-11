@@ -75,6 +75,16 @@ private:
 
 	void Push(const Value& value);
 
+	void OpPop();
+
+	void OpDup();
+
+	void OpStructInit();
+
+	void OpGetField();
+
+	void OpSetField();
+
 	Value Pop();
 
 	Value Peek(int distance) const;

@@ -61,6 +61,7 @@ enum class TokenType
 	CATCH,
 	NEW,
 	FINALLY,
+	STRUCT,
 
 	// Math
 	OP_PLUS,
@@ -148,6 +149,7 @@ static const std::unordered_map<std::string, TokenType> KEYWORDS = {
 	{ "main", TokenType::MAIN },
 	{ "end", TokenType::END },
 	{ "begin", TokenType::BEGIN },
+	{ "struct", TokenType::STRUCT },
 };
 
 static const std::unordered_map<TokenType, std::string> REVERSE_KEYWORDS = [] {
@@ -257,6 +259,7 @@ const std::unordered_map<TokenType, std::string> TOKEN_NAMES = {
 	{ TokenType::CATCH, "CATCH" },
 	{ TokenType::NEW, "NEW" },
 	{ TokenType::FINALLY, "FINALLY" },
+	{ TokenType::STRUCT, "STRUCT" },
 
 	// Math
 	{ TokenType::OP_PLUS, "OP_PLUS" },

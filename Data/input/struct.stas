@@ -1,0 +1,12 @@
+struct Hello
+{
+    int a;
+    int b;
+}
+
+Hello myStruct = Hello{1, 2};
+
+myStruct.a = 100;
+
+print(myStruct.a);
+print(myStruct.b);

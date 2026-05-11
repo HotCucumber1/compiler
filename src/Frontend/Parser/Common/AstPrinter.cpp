@@ -272,6 +272,110 @@ void AstPrinter::Visit(FunctionDeclNode& node)
 	m_depth--;
 }
 
+void AstPrinter::Visit(StructDeclNode& node)
+{
+	PrintIndent();
+	std::cout << "[StructDecl] " << node.name << "\n";
+
+	m_depth++;
+	PrintIndent();
+	std::cout << "Fields:\n";
+
+	m_depth++;
+	if (node.fields.empty())
+	{
+		PrintIndent();
+		std::cout << "(none)\n";
+	}
+	else
+	{
+		for (const auto& field : node.fields)
+		{
+			if (field)
+			{
+				field->Accept(*this);
+			}
+		}
+	}
+	m_depth--;
+	m_depth--;
+}
+
+void AstPrinter::Visit(StructInitNode& node)
+{
+	PrintIndent();
+	std::cout << "[StructInit] " << node.structName << "\n";
+
+	m_depth++;
+	PrintIndent();
+	std::cout << "Arguments:\n";
+
+	m_depth++;
+	if (node.args.empty())
+	{
+		PrintIndent();
+		std::cout << "(none)\n";
+	}
+	else
+	{
+		for (const auto& arg : node.args)
+		{
+			if (arg)
+			{
+				arg->Accept(*this);
+			}
+		}
+	}
+	m_depth--;
+	m_depth--;
+}
+
+void AstPrinter::Visit(MemberAccessNode& node)
+{
+	PrintIndent();
+	std::cout << "[MemberAccess] ." << node.fieldName << "\n";
+
+	m_depth++;
+	PrintIndent();
+	std::cout << "Object:\n";
+
+	m_depth++;
+	if (node.object)
+	{
+		node.object->Accept(*this);
+	}
+	m_depth--;
+	m_depth--;
+}
+
+void AstPrinter::Visit(MemberAssignmentNode& node)
+{
+	PrintIndent();
+	std::cout << "[MemberAssignment] ." << node.fieldName << " =\n";
+
+	m_depth++;
+
+	PrintIndent();
+	std::cout << "Object:\n";
+	m_depth++;
+	if (node.object)
+	{
+		node.object->Accept(*this);
+	}
+	m_depth--;
+
+	PrintIndent();
+	std::cout << "Value:\n";
+	m_depth++;
+	if (node.expression)
+	{
+		node.expression->Accept(*this);
+	}
+	m_depth--;
+
+	m_depth--;
+}
+
 void AstPrinter::PrintIndent() const
 {
 	std::cout << std::string(m_depth * 2, ' ');

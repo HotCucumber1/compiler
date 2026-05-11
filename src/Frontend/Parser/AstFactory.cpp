@@ -2,6 +2,7 @@
 
 Token GetToken(const std::shared_ptr<AstNode>& node);
 std::shared_ptr<AstNode> AppendToList(SymbolId id, const std::vector<std::shared_ptr<AstNode>>& children);
+std::vector<std::shared_ptr<AstNode>> UnwrapList(const std::shared_ptr<AstNode>& node);
 
 // TODO все индексы в константы
 
@@ -121,6 +122,22 @@ std::shared_ptr<AstNode> AstFactory::CreateNode(
 		}
 		return children[0];
 
+	case AstNodeType::STRUCT_DECL: {
+		auto name = GetToken(children[1]).value;
+		return std::make_shared<StructDeclNode>(id, name, UnwrapList(children[3])); // TODO передавать не это
+	}
+
+	case AstNodeType::STRUCT_INIT: {
+		auto name = GetToken(children[0]).value;
+		return std::make_shared<StructInitNode>(id, name, UnwrapList(children[2]));
+	}
+
+	case AstNodeType::MEMBER_ACCESS:
+		return std::make_shared<MemberAccessNode>(id, children[0], GetToken(children[2]).value);
+
+	case AstNodeType::MEMBER_ASSIGNMENT:
+		return std::make_shared<MemberAssignmentNode>(id, children[0], GetToken(children[2]).value, children[4]);
+
 	default:
 		throw std::runtime_error("AstFactory Error: AstNodeType is not being processed " + std::to_string(static_cast<int>(type)));
 	}
@@ -140,21 +157,37 @@ std::shared_ptr<AstNode> AppendToList(SymbolId id, const std::vector<std::shared
 {
 	auto block = std::make_shared<CommonNode>(id, AstNodeType::BLOCK, std::vector<std::shared_ptr<AstNode>>{});
 
-	if (children[0])
+	if (children.size() == 1)
 	{
-		block->children.push_back(children[0]);
+		if (children[0])
+		{
+			block->children.push_back(children[0]);
+		}
 	}
-
-	if (children.size() > 1 && children[1])
+	else if (children.size() >= 2)
 	{
-		if (auto tail = std::dynamic_pointer_cast<CommonNode>(children[1]))
+		if (children[0])
 		{
-			block->children.insert(block->children.end(), tail->children.begin(), tail->children.end());
+			block->children.push_back(children[0]);
 		}
-		else
-		{
-			block->children.push_back(children[1]);
-		}
+		auto tail = UnwrapList(children[children.size() - 1]);
+		block->children.insert(block->children.end(), tail.begin(), tail.end());
 	}
 	return block;
+}
+
+std::vector<std::shared_ptr<AstNode>> UnwrapList(const std::shared_ptr<AstNode>& node)
+{
+	if (!node)
+	{
+		return {};
+	}
+	if (const auto common = std::dynamic_pointer_cast<CommonNode>(node))
+	{
+		if (common->type == AstNodeType::BLOCK)
+		{
+			return common->children;
+		}
+	}
+	return { node };
 }

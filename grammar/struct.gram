@@ -1,0 +1,5 @@
+StructDecl -> struct IDENTIFIER { FieldList } : STRUCT_DECL
+
+FieldList -> VarBase ; FieldList : LIST_APPEND
+FieldList -> VarBase ; : LIST_SINGLE
+MemberAssignment -> Primary . IDENTIFIER = Expression : MEMBER_ASSIGNMENT

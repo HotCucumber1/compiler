@@ -8,8 +8,8 @@ VarBase -> int IDENTIFIER : VAR_DECL
 VarBase -> float IDENTIFIER : VAR_DECL
 VarBase -> bool IDENTIFIER : VAR_DECL
 
-ReturnType -> void
-ReturnType -> int
-ReturnType -> bool
-ReturnType -> float
-ReturnType -> int
+ReturnType -> void : PASS_THROUGH
+ReturnType -> int : PASS_THROUGH
+ReturnType -> bool : PASS_THROUGH
+ReturnType -> float : PASS_THROUGH
+ReturnType -> int : PASS_THROUGH
