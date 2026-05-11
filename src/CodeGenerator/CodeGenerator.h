@@ -1,6 +1,7 @@
 #pragma once
 #include "../Frontend/Parser/Common/Node.h"
 #include "../VM/Type/Chunk.h"
+#include "../Frontend/Parser/Common/DataType.h"
 
 #include <map>
 
@@ -63,6 +64,7 @@ private:
 private:
 	struct LocalVarInfo
 	{
+		DataType type;
 		size_t index;
 		bool isConst;
 	};

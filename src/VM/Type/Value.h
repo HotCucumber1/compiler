@@ -320,7 +320,7 @@ inline Value operator+(const Value& lhs, const Value& rhs) // TODO добави�
 		{
 			return static_cast<double>(l) + static_cast<double>(r);
 		}
-		throw std::runtime_error("Unsupported combination");
+		throw std::runtime_error("Unsupported add arguments combination");
 	},
 		lhs, rhs);
 }
@@ -368,7 +368,7 @@ inline Value operator-(const Value& lhs, const Value& rhs)
 		{
 			return static_cast<double>(l) - static_cast<double>(r);
 		}
-		throw std::runtime_error("Unsupported combination");
+		throw std::runtime_error("Unsupported sub arguments combination");
 	},
 		lhs, rhs);
 }
@@ -416,7 +416,7 @@ inline Value operator*(const Value& lhs, const Value& rhs)
 		{
 			return static_cast<double>(l) * static_cast<double>(r);
 		}
-		throw std::runtime_error("Unsupported combination");
+		throw std::runtime_error("Unsupported multi arguments combination");
 	},
 		lhs, rhs);
 }
@@ -468,7 +468,7 @@ inline Value operator/(const Value& lhs, const Value& rhs)
 		{
 			return static_cast<double>(l) / static_cast<double>(r);
 		}
-		throw std::runtime_error("Unsupported combination");
+		throw std::runtime_error("Unsupported div arguments combination");
 	},
 		lhs, rhs);
 }
@@ -500,7 +500,7 @@ inline Value operator%(const Value& lhs, const Value& rhs)
 		{
 			throw std::runtime_error("Cannot mod non-integers");
 		}
-		throw std::runtime_error("Unsupported combination");
+		throw std::runtime_error("Unsupported mod arguments combination");
 	},
 		lhs, rhs);
 }

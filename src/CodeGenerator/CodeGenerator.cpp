@@ -53,9 +53,15 @@ void CodeGenerator::Visit(CommonNode& node)
 void CodeGenerator::Visit(BinaryOpNode& node)
 {
 	if (node.left)
+	{
 		node.left->Accept(*this);
+	}
 	if (node.right)
+	{
 		node.right->Accept(*this);
+	}
+	auto leftType = node.left->type; // TODO где-то надо сетать
+	auto rightType = node.left->type;
 
 	switch (node.op.type)
 	{

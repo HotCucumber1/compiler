@@ -6,7 +6,7 @@ struct Hello
 
 Hello myStruct = Hello{1, 2};
 
-myStruct.a = 100;
+myStruct.b = "Hello";
 
-print(myStruct.a);
+print(myStruct.a + myStruct.b);
 print(myStruct.b);

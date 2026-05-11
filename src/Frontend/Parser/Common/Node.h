@@ -1,6 +1,7 @@
 #pragma once
 #include "../../Common/Token.h"
 #include "AstVisitor.h"
+#include "DataType.h"
 
 #include <memory>
 #include <utility>
@@ -66,6 +67,7 @@ struct AstNode
 {
 	SymbolId symbolId;
 	AstNodeType type = AstNodeType::UNDEFINED;
+	DataType evaluatedType = DataType::UNKNOWN;
 
 	AstNode(const SymbolId id, const AstNodeType t)
 		: symbolId(id)
