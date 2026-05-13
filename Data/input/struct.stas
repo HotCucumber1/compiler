@@ -1,12 +1,29 @@
 struct Hello
 {
     int a;
-    int b;
+    float b;
 }
 
 Hello myStruct = Hello{1, 2};
 
-myStruct.b = "Hello";
+myStruct.b = 1;
 
-print(myStruct.a + myStruct.b);
-print(myStruct.b);
+int a = 1;
+
+print(myStruct.b < 12);
+
+while (myStruct.b < 12)
+{
+    myStruct.b = myStruct.b + 1;
+    print(a);
+    if (0.5 + 0.6 < myStruct.b)
+    {
+        print("Yes");
+    }
+}
+
+
+int qw = "qw";
+int he = "he";
+
+print(qw + he);

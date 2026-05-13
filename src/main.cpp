@@ -1,4 +1,4 @@
-#include "CodeGenerator//CodeGenerator.h"
+#include "CodeGenerator/CodeGenerator.h"
 #include "Frontend/Lexer/Lexer.h"
 #include "Frontend/Parser/Common/AstPrinter.h"
 #include "Frontend/Parser/Grammar/GrammarReader.h"
@@ -8,6 +8,106 @@
 
 #include <filesystem>
 #include <fstream>
+
+std::string ReadFile(const std::string& path);
+Grammar SetupGrammar(const std::string& exePath);
+void PrintConsts(const std::unique_ptr<Chunk>& chunk);
+
+
+std::string GetSourceCode(const std::string& filePath);
+SLRTableBuilder SetupSLRTableBuilder(const std::string& prog);
+std::shared_ptr<AstNode> BuildAST(const std::string& sourceCode, const SLRTableBuilder& slrBuilder);
+std::unique_ptr<Chunk> GenerateCode(const std::shared_ptr<AstNode>& astRoot);
+void RunVM(const std::unique_ptr<Chunk>& chunk);
+
+int main(const int argc, char* argv[])
+{
+	if (argc < 2)
+	{
+		std::cerr << "Usage: " << argv[0] << " <source_file.my_lang>" << std::endl;
+		return 1;
+	}
+
+	try
+	{
+		const auto sourceCode = GetSourceCode(argv[1]);
+		const auto slrBuilder = SetupSLRTableBuilder(argv[0]);
+		const auto astRoot = BuildAST(sourceCode, slrBuilder);
+
+		// AstPrinter printer;
+		// printer.PrintAst(astRoot);
+
+		// TODO на AST проблема со скобками
+		// TODO в AST при объявлении поля в структуре попадает ";"
+		// TODO регистрировать встроенные функции
+
+		// TODO На 4-ку: таблица переходов
+		// TODO к пятнице написать пример на стейтах (Запрос сохранения USER)
+
+		const auto chunk = GenerateCode(astRoot);
+
+		RunVM(chunk);
+
+		std::cout << "\nExecution finished successfully." << std::endl;
+	}
+	catch (const std::exception& e)
+	{
+		std::cerr << "\n[!] COMPILATION ERROR:\n"
+				  << e.what() << std::endl;
+		return 1;
+	}
+
+	return 0;
+}
+
+std::string GetSourceCode(const std::string& filePath)
+{
+	std::string sourceCode = ReadFile(filePath);
+	std::cout << "[1/5] File read successfully." << std::endl;
+	return sourceCode;
+}
+
+SLRTableBuilder SetupSLRTableBuilder(const std::string& prog)
+{
+	const auto myGrammar = SetupGrammar(prog);
+	SLRTableBuilder slrBuilder(myGrammar);
+	std::cout << "[2/5] Grammar and SLR table built." << std::endl;
+
+	return slrBuilder;
+}
+
+std::shared_ptr<AstNode> BuildAST(const std::string& sourceCode, const SLRTableBuilder& slrBuilder)
+{
+	Lexer lexer(sourceCode);
+	const Parser parser(slrBuilder, lexer);
+	auto astRoot = parser.Parse();
+	std::cout << "[3/5] Parsing finished. AST created." << std::endl;
+
+	return astRoot;
+}
+
+std::unique_ptr<Chunk> GenerateCode(const std::shared_ptr<AstNode>& astRoot)
+{
+	CodeGenerator generator;
+	auto chunk = generator.Generate(astRoot);
+	std::cout << "[4/5] Bytecode generated. Constants: " << chunk->constants.size() << std::endl;
+
+	return chunk;
+}
+
+void RunVM(const std::unique_ptr<Chunk>& chunk)
+{
+	std::cout << "[5/5] Starting Virtual Machine...\n"
+			  << std::endl;
+	VirtualMachine vm;
+	vm.Interpret(chunk);
+}
+
+
+
+
+
+
 
 std::string ReadFile(const std::string& path)
 {
@@ -40,54 +140,4 @@ void PrintConsts(const std::unique_ptr<Chunk>& chunk)
 	{
 		PrintValue(val);
 	}
-}
-
-int main(int argc, char* argv[])
-{
-	if (argc < 2)
-	{
-		std::cerr << "Usage: " << argv[0] << " <source_file.my_lang>" << std::endl;
-		return 1;
-	}
-
-	std::string filePath = argv[1];
-
-	try
-	{
-		std::string sourceCode = ReadFile(filePath);
-		std::cout << "[1/5] File read successfully." << std::endl;
-
-		const auto myGrammar = SetupGrammar(argv[0]);
-		SLRTableBuilder slrBuilder(myGrammar);
-		std::cout << "[2/5] Grammar and SLR table built." << std::endl;
-
-		Lexer lexer(sourceCode);
-		Parser parser(slrBuilder, lexer);
-		auto astRoot = parser.Parse();
-		std::cout << "[3/5] Parsing finished. AST created." << std::endl;
-
-		// AstPrinter printer;
-		// printer.PrintAst(astRoot);
-
-		CodeGenerator generator;
-		auto chunk = generator.Generate(astRoot);
-		std::cout << "[4/5] Bytecode generated. Constants: " << chunk->constants.size() << std::endl;
-
-		// PrintConsts(chunk);
-
-		std::cout << "[5/5] Starting Virtual Machine...\n"
-				  << std::endl;
-		VirtualMachine vm;
-		vm.Interpret(chunk);
-
-		std::cout << "\nExecution finished successfully." << std::endl;
-	}
-	catch (const std::exception& e)
-	{
-		std::cerr << "\n[!] COMPILATION ERROR:\n"
-				  << e.what() << std::endl;
-		return 1;
-	}
-
-	return 0;
 }
