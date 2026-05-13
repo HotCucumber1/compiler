@@ -42,6 +42,17 @@ void PrintConsts(const std::unique_ptr<Chunk>& chunk)
 	}
 }
 
+void SaveToAsmFile(const std::string& code, const std::string& filename)
+{
+	std::ofstream outFile(filename);
+	if (outFile.is_open())
+	{
+		outFile << code;
+		outFile.close();
+		std::cout << "Assembly saved to " << filename << std::endl;
+	}
+}
+
 int main(int argc, char* argv[])
 {
 	if (argc < 2)
@@ -66,14 +77,18 @@ int main(int argc, char* argv[])
 		auto astRoot = parser.Parse();
 		std::cout << "[3/5] Parsing finished. AST created." << std::endl;
 
-		// AstPrinter printer;
-		// printer.PrintAst(astRoot);
+		// TODO на AST проблема со скобками
+		// TODO в AST при объявлении поля попадает ";"
+		// TODO регистрировать встроенные функции
+
+		AstPrinter printer;
+		printer.PrintAst(astRoot);
 
 		CodeGenerator generator;
 		auto chunk = generator.Generate(astRoot);
 		std::cout << "[4/5] Bytecode generated. Constants: " << chunk->constants.size() << std::endl;
 
-		// PrintConsts(chunk);
+		SaveToAsmFile(generator.GetFullCode(), "/home/dmitriy.rybakov/study/compiler/OUTPUT.asm");
 
 		std::cout << "[5/5] Starting Virtual Machine...\n"
 				  << std::endl;
@@ -81,6 +96,7 @@ int main(int argc, char* argv[])
 		vm.Interpret(chunk);
 
 		std::cout << "\nExecution finished successfully." << std::endl;
+		std::system("./run_asm.sh");
 	}
 	catch (const std::exception& e)
 	{

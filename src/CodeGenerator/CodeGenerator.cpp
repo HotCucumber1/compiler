@@ -1,11 +1,49 @@
 #include "CodeGenerator.h"
+#include "OpCode.h"
 
 #include <ranges>
 
-#include "OpCode.h"
-
 bool IsEmptyExpression(const std::shared_ptr<AstNode>& node);
 std::string GenerateLabel(const std::string& prefix);
+
+std::string CodeGenerator::GetFullCode() const
+{
+	std::stringstream full;
+	full << "section .data\n";
+	full << "    msg_true db '1', 10\n";
+	full << "    msg_false db '0', 10\n";
+	full << "section .text\n";
+	full << "global _start\n\n";
+	full << "_start:\n";
+
+	full << m_asm.str();
+
+	full << "    cmp rax, 0\n";
+	full << "    jne .print_1\n";
+	full << "    jmp .print_0\n\n";
+
+	full << ".print_1:\n";
+	full << "    mov rax, 1      ; sys_write\n";
+	full << "    mov rdi, 1      ; stdout\n";
+	full << "    mov rsi, msg_true\n";
+	full << "    mov rdx, 2\n";
+	full << "    syscall\n";
+	full << "    jmp .exit\n\n";
+
+	full << ".print_0:\n";
+	full << "    mov rax, 1      ; sys_write\n";
+	full << "    mov rdi, 1      ; stdout\n";
+	full << "    mov rsi, msg_false\n";
+	full << "    mov rdx, 2\n";
+	full << "    syscall\n\n";
+
+	full << ".exit:\n";
+	full << "    mov rax, 60     ; sys_exit\n";
+	full << "    xor rdi, rdi    ; code 0\n";
+	full << "    syscall\n";
+
+	return full.str();
+}
 
 std::unique_ptr<Chunk> CodeGenerator::Generate(const std::shared_ptr<AstNode>& root)
 {
@@ -60,47 +98,79 @@ void CodeGenerator::Visit(BinaryOpNode& node)
 	{
 		node.right->Accept(*this);
 	}
-	auto leftType = node.left->type; // TODO где-то надо сетать
-	auto rightType = node.left->type;
+	const auto leftType = node.left->type; // TODO где-то надо сетать
+	const auto rightType = node.left->type;
+	m_asm << "; binary operation node \n";
+
+	m_asm << "    pop rbx         ; rhs\n";
+	m_asm << "    pop rax         ; lhs\n";
 
 	switch (node.op.type)
 	{
 	case TokenType::OP_PLUS:
+		m_asm << "    add rax, rbx\n";
 		PushCode(static_cast<uint8_t>(OpCode::OP_ADD));
 		break;
 	case TokenType::OP_MINUS:
+		m_asm << "    sub rax, rbx\n";
 		PushCode(static_cast<uint8_t>(OpCode::OP_SUB));
 		break;
 	case TokenType::OP_MULTI:
+		m_asm << "    imul rax, rbx\n";
 		PushCode(static_cast<uint8_t>(OpCode::OP_MULTI));
 		break;
 	case TokenType::OP_DIV:
+		m_asm << "    cqo\n    idiv rbx\n";
 		PushCode(static_cast<uint8_t>(OpCode::OP_DIV));
 		break;
 	case TokenType::OP_MOD:
 		PushCode(static_cast<uint8_t>(OpCode::OP_MOD));
 		break;
 	case TokenType::OP_EQUAL:
+		m_asm << "    cmp rax, rbx\n";
+		m_asm << "    sete al\n";
+		m_asm << "    movzx rax, al\n";
 		PushCode(static_cast<uint8_t>(OpCode::OP_EQUAL));
 		break;
 	case TokenType::OP_NOT_EQUAL:
 		PushCode(static_cast<uint8_t>(OpCode::OP_NOT_EQUAL));
 		break;
 	case TokenType::OP_LESS:
+		m_asm << "    cmp rax, rbx\n";
+		m_asm << "    setl al\n";
+		m_asm << "    movzx rax, al\n";
 		PushCode(static_cast<uint8_t>(OpCode::OP_LESS));
 		break;
 	case TokenType::OP_MORE:
+		m_asm << "    cmp rax, rbx\n";
+		m_asm << "    setg al\n";
+		m_asm << "    movzx rax, al\n";
 		PushCode(static_cast<uint8_t>(OpCode::OP_GREATER));
 		break;
 	case TokenType::AND:
+		m_asm << "; AND\n";
+		m_asm << "    test rax, rax\n";
+		m_asm << "    setne al\n";
+		m_asm << "    test rbx, rbx\n";
+		m_asm << "    setne bl\n";
+		m_asm << "    and al, bl\n";
+		m_asm << "    movzx rax, al\n";
 		PushCode(static_cast<uint8_t>(OpCode::OP_AND));
 		break;
 	case TokenType::OR:
+		m_asm << "; OR\n";
+		m_asm << "    test rax, rax\n";
+		m_asm << "    setne al\n";
+		m_asm << "    test rbx, rbx\n";
+		m_asm << "    setne bl\n";
+		m_asm << "    or al, bl\n";
+		m_asm << "    movzx rax, al\n";
 		PushCode(static_cast<uint8_t>(OpCode::OP_OR));
 		break;
 	default:
 		break;
 	}
+	m_asm << "    push rax\n";
 }
 
 void CodeGenerator::Visit(UnaryOpNode& node)
@@ -109,13 +179,17 @@ void CodeGenerator::Visit(UnaryOpNode& node)
 	{
 		node.operand->Accept(*this);
 	}
+	m_asm << "; unary operation node \n";
+	m_asm << "    pop rax\n";
 	switch (node.op.type)
 	{
 	case TokenType::OP_NEG:
 	case TokenType::OP_MINUS:
+		m_asm << "    neg rax\n";
 		PushCode(static_cast<uint8_t>(OpCode::OP_NEG));
 		break;
 	case TokenType::NOT:
+		m_asm << "    cmp rax, 0\n    setz al\n    movzx rax, al\n";
 		PushCode(static_cast<uint8_t>(OpCode::OP_NOT));
 		break;
 	default:
@@ -145,9 +219,11 @@ void CodeGenerator::Visit(VarDeclNode& node)
 void CodeGenerator::Visit(LiteralNode& node)
 {
 	Value val;
+	m_asm << "; literal node \n";
 	if (node.token.type == TokenType::INT)
 	{
 		val = Value(std::stoi(node.token.value));
+		m_asm << "    push " << node.token.value << std::endl;
 	}
 	else if (node.token.type == TokenType::FLOAT)
 	{
@@ -156,10 +232,12 @@ void CodeGenerator::Visit(LiteralNode& node)
 	else if (node.token.type == TokenType::TRUE)
 	{
 		val = Value(true);
+		m_asm << "    push 1 ; true\n";
 	}
 	else if (node.token.type == TokenType::FALSE)
 	{
 		val = Value(false);
+		m_asm << "    push 0 ; false\n";
 	}
 	else if (node.token.type == TokenType::STRING)
 	{
@@ -213,9 +291,16 @@ void CodeGenerator::Visit(AssignmentNode& node)
 
 void CodeGenerator::Visit(IfNode& node)
 {
+	m_asm << "; if node \n";
+	const auto elseAsmLabel = NextLabel("else");
+	const auto endAsmLabel = NextLabel("endif");
+
 	if (node.condition)
 	{
 		node.condition->Accept(*this);
+		m_asm << "    pop rax\n";
+		m_asm << "    cmp rax, 0\n";
+		m_asm << "    je " << elseAsmLabel << std::endl;
 	}
 
 	PushCode(static_cast<uint8_t>(OpCode::OP_JMP_IF_FALSE));
@@ -227,6 +312,8 @@ void CodeGenerator::Visit(IfNode& node)
 	{
 		node.thenBranch->Accept(*this);
 	}
+	m_asm << "    jmp " << endAsmLabel << "\n";
+	m_asm << elseAsmLabel << ":\n";
 	if (node.elseBranch)
 	{
 		PushCode(static_cast<uint8_t>(OpCode::OP_JMP));
@@ -244,6 +331,7 @@ void CodeGenerator::Visit(IfNode& node)
 	{
 		m_chunk.labels[elseLabel] = m_chunk.code.size();
 	}
+	m_asm << endAsmLabel << ":\n";
 	m_chunk.pendingJumps.emplace_back(jumpToElseIdx, elseLabel);
 }
 

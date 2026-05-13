@@ -295,14 +295,14 @@ void SLRTableBuilder::BuildTable()
 			{
 				SymbolId followId = m_symbolToId[followSym];
 
-				if (m_table[i].contains(followId))
-				{
-					const auto [type, value] = m_table[i][followId];
-					if (type == ActionType::Shift)
-					{
-						std::cerr << "Conflict Shift/Reduce in state " << i << " on symbol " << followSym.ruleName << std::endl;
-					}
-				}
+				// if (m_table[i].contains(followId))
+				// {
+				// 	const auto [type, value] = m_table[i][followId];
+				// 	if (type == ActionType::Shift)
+				// 	{
+				// 		std::cerr << "Conflict Shift/Reduce in state " << i << " on symbol " << followSym.ruleName << std::endl;
+				// 	}
+				// }
 				m_table[i][followId] = Action{ ActionType::Reduce, static_cast<int>(item.ruleIdx) };
 			}
 		}

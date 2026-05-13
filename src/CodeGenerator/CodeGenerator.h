@@ -1,13 +1,16 @@
 #pragma once
+#include "../Frontend/Parser/Common/DataType.h"
 #include "../Frontend/Parser/Common/Node.h"
 #include "../VM/Type/Chunk.h"
-#include "../Frontend/Parser/Common/DataType.h"
 
 #include <map>
+#include <sstream>
 
 class CodeGenerator final : public AstVisitor
 {
 public:
+	std::string GetFullCode() const;
+
 	// TODO в m_scopes добавить типы, чтобы проверять еще до VM (проверка семантики)
 	// TODO приведение типов тоже на семантике (float -
 	std::unique_ptr<Chunk> Generate(const std::shared_ptr<AstNode>& root);
@@ -61,6 +64,11 @@ private:
 
 	void PushTempAddr();
 
+	std::string NextLabel(const std::string& prefix)
+	{
+		return ".METKA_" + prefix + "_" + std::to_string(m_labelCount++);
+	}
+
 private:
 	struct LocalVarInfo
 	{
@@ -74,4 +82,7 @@ private:
 	std::vector<std::map<std::string, LocalVarInfo>> m_scopes;
 	std::unordered_map<std::string, std::vector<std::string>> m_structs;
 	size_t m_nextLocalIdx = 0;
+
+	std::stringstream m_asm;
+	int m_labelCount = 0;
 };
