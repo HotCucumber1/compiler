@@ -1,34 +1,34 @@
-Expression -> LogicalOr : UNDEFINED
+Expression -> LogicalOr : PASS_THROUGH
 
 LogicalOr -> LogicalOr or LogicalAnd : BINARY_OP
-LogicalOr -> LogicalAnd : UNDEFINED
+LogicalOr -> LogicalAnd : PASS_THROUGH
 
 LogicalAnd -> LogicalAnd and Comparison : BINARY_OP
-LogicalAnd -> Comparison : UNDEFINED
+LogicalAnd -> Comparison : PASS_THROUGH
 
 Comparison -> Addition == Addition : BINARY_OP
 Comparison -> Addition != Addition : BINARY_OP
 Comparison -> Addition < Addition : BINARY_OP
 Comparison -> Addition > Addition : BINARY_OP
-Comparison -> Addition : UNDEFINED
+Comparison -> Addition : PASS_THROUGH
 Addition -> Addition + Multiplication : BINARY_OP
 Addition -> Addition - Multiplication : BINARY_OP
-Addition -> Multiplication : UNDEFINED
+Addition -> Multiplication : PASS_THROUGH
 
 Multiplication -> Multiplication * Primary : BINARY_OP
 Multiplication -> Multiplication / Primary : BINARY_OP
-Multiplication -> Unary : UNDEFINED
+Multiplication -> Unary : PASS_THROUGH
 Unary -> - Primary : UNARY_OP
 Unary -> not Primary : UNARY_OP
-Unary -> Primary : UNDEFINED
+Unary -> Primary : PASS_THROUGH
 
-Primary -> Call : UNDEFINED
+Primary -> Call : PASS_THROUGH
 Primary -> StructInit : PASS_THROUGH
 Primary -> Primary . IDENTIFIER : MEMBER_ACCESS
 Primary -> not Primary : UNARY_OP
-Primary -> ( Expression ) : UNDEFINED
+Primary -> ( Expression ) : PASS_THROUGH
 Primary -> IDENTIFIER : VAR_ACCESS
-Primary -> Literal : UNDEFINED
+Primary -> Literal : PASS_THROUGH
 
 Call -> IDENTIFIER ( ArgList ) : CALL
 StructInit -> IDENTIFIER { ArgList } : STRUCT_INIT

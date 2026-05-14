@@ -12,7 +12,12 @@ int a = 1;
 
 print(myStruct.b < 12);
 
-while (myStruct.b < 12)
+if ((a + 1 < 3) and (true or false))
+{
+    print("YES DA");
+}
+
+while ((myStruct.b < 12))
 {
     myStruct.b = myStruct.b + 1;
     print(a);

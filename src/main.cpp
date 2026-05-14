@@ -34,8 +34,8 @@ int main(const int argc, char* argv[])
 		const auto slrBuilder = SetupSLRTableBuilder(argv[0]);
 		const auto astRoot = BuildAST(sourceCode, slrBuilder);
 
-		// AstPrinter printer;
-		// printer.PrintAst(astRoot);
+		AstPrinter printer;
+		printer.PrintAst(astRoot);
 
 		// TODO на AST проблема со скобками
 		// TODO в AST при объявлении поля в структуре попадает ";"

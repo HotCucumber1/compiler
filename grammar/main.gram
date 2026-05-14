@@ -13,12 +13,12 @@ StatementList -> Statement : LIST_SINGLE
 Statement -> SimpleStatement ; : PASS_THROUGH
 Statement -> BlockStatement : PASS_THROUGH
 
-SimpleStatement -> DeclStatement : UNDEFINED
-SimpleStatement -> ConstDeclStatement : UNDEFINED
-SimpleStatement -> Expression : UNDEFINED
+SimpleStatement -> DeclStatement : PASS_THROUGH
+SimpleStatement -> ConstDeclStatement : PASS_THROUGH
+SimpleStatement -> Expression : PASS_THROUGH
 SimpleStatement -> MemberAssignment : PASS_THROUGH
 SimpleStatement -> IDENTIFIER = Expression : ASSIGNMENT
 
-BlockStatement -> IfStatement : UNDEFINED
-BlockStatement -> WhileStatement : UNDEFINED
-BlockStatement -> ForStatement : UNDEFINED
+BlockStatement -> IfStatement : PASS_THROUGH
+BlockStatement -> WhileStatement : PASS_THROUGH
+BlockStatement -> ForStatement : PASS_THROUGH

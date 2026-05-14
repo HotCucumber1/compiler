@@ -6,5 +6,5 @@ DeclStatement_For -> int IDENTIFIER = Expression : VAR_DECL
 DeclStatement_For -> float IDENTIFIER = Expression : VAR_DECL
 DeclStatement_For -> bool IDENTIFIER = Expression : VAR_DECL
 
-ForAssignment -> Expression : UNDEFINED
+ForAssignment -> Expression : PASS_THROUGH
 ForAssignment -> IDENTIFIER = Expression : ASSIGNMENT
