@@ -80,6 +80,10 @@ void VirtualMachine::Run()
 			break;
 		case OpCode::OP_RETURN:
 			OpReturn();
+			if (m_callFrames.empty())
+			{
+				return;
+			}
 			continue;
 		case OpCode::OP_ADD:
 			OpAdd();
@@ -140,7 +144,7 @@ void VirtualMachine::Run()
 			break;
 		case OpCode::OP_CALL:
 			OpCall();
-			break;
+			continue;
 		case OpCode::OP_FUNC:
 			OpFunc();
 			break;
@@ -198,7 +202,20 @@ void VirtualMachine::OpReturn()
 	}
 
 	m_callFrames.pop_back();
-	Push(returnValue);
+
+	if (m_callFrames.empty())
+	{
+		return;
+	}
+
+	auto& callerFrame = m_callFrames.back();
+	m_currentChunk = &callerFrame.function->chunk;
+	m_instructionPointer = callerFrame.instructionPointer;
+
+	if (!std::holds_alternative<std::monostate>(returnValue))
+	{
+		Push(returnValue);
+	}
 }
 
 void VirtualMachine::OpAdd()
@@ -381,7 +398,6 @@ void VirtualMachine::OpJmpIfGreater()
 void VirtualMachine::OpCall()
 {
 	const auto argCount = ReadByte();
-
 	const auto callee = Peek(argCount);
 	if (IsNativeFunction(callee))
 	{
@@ -392,9 +408,9 @@ void VirtualMachine::OpCall()
 		}
 
 		std::vector<Value> args;
-		for (int i = argCount - 1; i >= 0; --i)
+		for (int i = 0; i < argCount; ++i)
 		{
-			args.push_back(m_valueStack[m_valueStack.size() - 1 - i]);
+			args.push_back(m_valueStack[m_valueStack.size() - argCount + i]);
 		}
 
 		for (int i = 0; i <= argCount; ++i)
@@ -403,6 +419,9 @@ void VirtualMachine::OpCall()
 		}
 		Value result = native->func(args);
 		Push(result);
+
+		CallFrame& currentFrame = m_callFrames.back();
+		currentFrame.instructionPointer = m_instructionPointer;
 		return;
 	}
 	if (!IsFunction(callee))

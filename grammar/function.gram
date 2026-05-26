@@ -2,14 +2,16 @@ FunctionDecl -> func IDENTIFIER ( ParamList ) : ReturnType { GlobalList } : FUNC
 
 ParamList -> ParamElement , ParamList : LIST_APPEND
 ParamList -> ParamElement : LIST_SINGLE
+ParamList -> # : EMPTY_LIST
 
 ParamElement -> VarBase : PASS_THROUGH
 VarBase -> int IDENTIFIER : VAR_DECL
 VarBase -> float IDENTIFIER : VAR_DECL
 VarBase -> bool IDENTIFIER : VAR_DECL
+VarBase -> string IDENTIFIER : VAR_DECL
 
 ReturnType -> void : PASS_THROUGH
 ReturnType -> int : PASS_THROUGH
 ReturnType -> bool : PASS_THROUGH
 ReturnType -> float : PASS_THROUGH
-ReturnType -> int : PASS_THROUGH
+ReturnType -> string : PASS_THROUGH

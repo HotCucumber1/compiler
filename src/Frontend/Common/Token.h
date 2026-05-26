@@ -88,6 +88,8 @@ enum class TokenType
 	OP_TERN_ELSE,
 	OP_DOT,
 
+	NEXT_STATE_ARROW,
+
 	ERROR,
 
 	END_OF_FILE,
@@ -197,6 +199,7 @@ const std::unordered_map<char, std::pair<char, TokenType>> SPECIAL_CHARS_DOUBLE 
 	{ '>', { '=', TokenType::OP_MORE_OR_EQUAL } },
 	{ '+', { '+', TokenType::OP_INCREMENT } },
 	{ '-', { '-', TokenType::OP_DECREMENT } },
+	{ '-', { '>', TokenType::NEXT_STATE_ARROW } },
 };
 
 const std::unordered_map<TokenType, std::string> REVERSE_SPECIAL_CHARS_DOUBLE = {
@@ -206,6 +209,7 @@ const std::unordered_map<TokenType, std::string> REVERSE_SPECIAL_CHARS_DOUBLE = 
 	{ TokenType::OP_MORE_OR_EQUAL, ">=" },
 	{ TokenType::OP_INCREMENT, "++" },
 	{ TokenType::OP_DECREMENT, "--" },
+	{ TokenType::NEXT_STATE_ARROW, "->" },
 };
 
 const std::unordered_map<TokenType, std::string> TOKEN_NAMES = {
@@ -285,6 +289,8 @@ const std::unordered_map<TokenType, std::string> TOKEN_NAMES = {
 	{ TokenType::OP_TERN_THEN, "OP_TERN_THEN" },
 	{ TokenType::OP_TERN_ELSE, "OP_TERN_ELSE" },
 	{ TokenType::OP_DOT, "OP_DOT" },
+
+	{ TokenType::NEXT_STATE_ARROW, "NEXT_STATE_ARROW" },
 
 	// Error
 	{ TokenType::ERROR, "ERROR" },

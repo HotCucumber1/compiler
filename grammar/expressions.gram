@@ -35,3 +35,4 @@ StructInit -> IDENTIFIER { ArgList } : STRUCT_INIT
 
 ArgList -> Expression , ArgList : LIST_APPEND
 ArgList -> Expression : LIST_SINGLE
+ArgList -> # : EMPTY_LIST

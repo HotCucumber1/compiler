@@ -37,7 +37,7 @@ std::shared_ptr<AstNode> Parser::Parse() const
 
 		const auto action = it->second;
 
-		if (action.type == ActionType::Shift) // TODO Parse Tree -> AST
+		if (action.type == ActionType::Shift)
 		{
 			stateStack.push_back(action.value);
 

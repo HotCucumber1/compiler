@@ -1,15 +1,16 @@
 int b = 5;
 
-func HelloWorld(int a, int b): void {
+func HelloWorld(int a): void {
     print("Hello world");
     print(a);
-    print(b);
-
-    func NewOne(int a): void {
-        print(a);
-    }
-
-    NewOne(a + 1);
 }
 
-HelloWorld(12 + 1);
+HelloWorld(2);
+
+func Hello2(): void {
+    print("a");
+}
+
+print("b");
+Hello2();
+

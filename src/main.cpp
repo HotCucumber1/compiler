@@ -37,8 +37,6 @@ int main(const int argc, char* argv[])
 		AstPrinter printer;
 		printer.PrintAst(astRoot);
 
-		// TODO на AST проблема со скобками
-		// TODO в AST при объявлении поля в структуре попадает ";"
 		// TODO регистрировать встроенные функции
 
 		// TODO На 4-ку: таблица переходов

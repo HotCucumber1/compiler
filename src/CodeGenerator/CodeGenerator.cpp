@@ -27,7 +27,6 @@ std::unique_ptr<Chunk> CodeGenerator::Generate(const std::shared_ptr<AstNode>& r
 
 void CodeGenerator::Visit(TerminalNode& node)
 {
-	// Terminal does not generate some code. It is just a value
 }
 
 void CodeGenerator::Visit(CommonNode& node)
@@ -60,8 +59,8 @@ void CodeGenerator::Visit(BinaryOpNode& node)
 	{
 		node.right->Accept(*this);
 	}
-	auto leftType = node.left->type; // TODO где-то надо сетать
-	auto rightType = node.left->type;
+	const auto leftType = node.left->type;
+	const auto rightType = node.left->type;
 
 	switch (node.op.type)
 	{
