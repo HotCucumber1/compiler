@@ -1,7 +1,4 @@
-DeclStatement -> int IDENTIFIER = Expression : VAR_DECL
-DeclStatement -> float IDENTIFIER = Expression : VAR_DECL
-DeclStatement -> bool IDENTIFIER = Expression : VAR_DECL
-DeclStatement -> string IDENTIFIER = Expression : VAR_DECL
+DeclStatement -> Type IDENTIFIER = Expression : VAR_DECL
 DeclStatement -> IDENTIFIER IDENTIFIER = StructInit : VAR_DECL
 
 ConstDeclStatement -> const DeclStatement : CONST_DECL

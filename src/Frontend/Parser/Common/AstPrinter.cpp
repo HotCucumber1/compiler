@@ -376,6 +376,93 @@ void AstPrinter::Visit(MemberAssignmentNode& node)
 	m_depth--;
 }
 
+void AstPrinter::Visit(ArrayLiteralNode& node)
+{
+	PrintIndent();
+	std::cout << "[ArrayLiteral]\n";
+
+	m_depth++;
+	if (node.elements.empty())
+	{
+		PrintIndent();
+		std::cout << "(empty)\n";
+	}
+	else
+	{
+		for (const auto& elem : node.elements)
+		{
+			if (elem)
+			{
+				elem->Accept(*this);
+			}
+		}
+	}
+	m_depth--;
+}
+
+void AstPrinter::Visit(IndexAccessNode& node)
+{
+	PrintIndent();
+	std::cout << "[IndexAccess]\n";
+
+	m_depth++;
+
+	PrintIndent();
+	std::cout << "Target:\n";
+	m_depth++;
+	if (node.target)
+	{
+		node.target->Accept(*this);
+	}
+	m_depth--;
+
+	PrintIndent();
+	std::cout << "Index:\n";
+	m_depth++;
+	if (node.index)
+	{
+		node.index->Accept(*this);
+	}
+	m_depth--;
+	m_depth--;
+}
+
+void AstPrinter::Visit(IndexAssignmentNode& node)
+{
+	PrintIndent();
+	std::cout << "[IndexAssignment] =\n";
+
+	m_depth++;
+
+	PrintIndent();
+	std::cout << "Target:\n";
+	m_depth++;
+	if (node.target)
+	{
+		node.target->Accept(*this);
+	}
+	m_depth--;
+
+	PrintIndent();
+	std::cout << "Index:\n";
+	m_depth++;
+	if (node.index)
+	{
+		node.index->Accept(*this);
+	}
+	m_depth--;
+
+	PrintIndent();
+	std::cout << "Value:\n";
+	m_depth++;
+	if (node.value)
+	{
+		node.value->Accept(*this);
+	}
+	m_depth--;
+	m_depth--;
+}
+
 void AstPrinter::PrintIndent() const
 {
 	std::cout << std::string(m_depth * 2, ' ');

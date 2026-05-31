@@ -29,7 +29,7 @@ std::shared_ptr<AstNode> AstFactory::CreateNode(
 
 	case AstNodeType::VAR_DECL: {
 		auto val = (children.size() < 3) ? nullptr : children[3];
-		return std::make_shared<VarDeclNode>(id, GetToken(children[1]).value, val, false);
+		return std::make_shared<VarDeclNode>(id, GetToken(children[1]).value, val, false, false, DataType::INT);
 	}
 
 	case AstNodeType::CONST_DECL:
@@ -37,7 +37,7 @@ std::shared_ptr<AstNode> AstFactory::CreateNode(
 		{
 			return children[1];
 		}
-		return std::make_shared<VarDeclNode>(id, GetToken(children[1]).value, children[3], true);
+		return std::make_shared<VarDeclNode>(id, GetToken(children[1]).value, children[3], true, false, DataType::INT);
 
 	case AstNodeType::ASSIGNMENT:
 		return std::make_shared<AssignmentNode>(id, GetToken(children[0]).value, children[2]);
@@ -137,6 +137,41 @@ std::shared_ptr<AstNode> AstFactory::CreateNode(
 
 	case AstNodeType::MEMBER_ASSIGNMENT:
 		return std::make_shared<MemberAssignmentNode>(id, children[0], GetToken(children[2]).value, children[4]);
+
+	case AstNodeType::ARRAY_LITERAL: {
+		if (children.size() < 3)
+		{
+			throw std::runtime_error("AST Factory: ARRAY_LITERAL expects at least 3 children");
+		}
+
+		std::vector<std::shared_ptr<AstNode>> elements;
+		if (const auto argList = std::dynamic_pointer_cast<CommonNode>(children[1]))
+		{
+			elements = argList->children;
+		}
+		else if (children[1])
+		{
+			elements.push_back(children[1]);
+		}
+
+		return std::make_shared<ArrayLiteralNode>(id, std::move(elements));
+	}
+
+	case AstNodeType::INDEX_ACCESS: {
+		if (children.size() < 4)
+		{
+			throw std::runtime_error("AST Factory: INDEX_ACCESS expects at least 4 children");
+		}
+		return std::make_shared<IndexAccessNode>(id, children[0], children[2]);
+	}
+
+	case AstNodeType::INDEX_ASSIGN: {
+		if (children.size() < 6)
+		{
+			throw std::runtime_error("AST Factory: INDEX_ASSIGN expects at least 6 children");
+		}
+		return std::make_shared<IndexAssignmentNode>(id, children[0], children[2], children[5]);
+	}
 
 	default:
 		throw std::runtime_error("AstFactory Error: AstNodeType is not being processed " + std::to_string(static_cast<int>(type)));

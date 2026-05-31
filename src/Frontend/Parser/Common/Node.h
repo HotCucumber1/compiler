@@ -32,7 +32,10 @@ enum class AstNodeType : int
 	STRUCT_DECL,
 	MEMBER_ASSIGNMENT,
 	MEMBER_ACCESS,
-	STRUCT_INIT
+	STRUCT_INIT,
+	ARRAY_LITERAL,
+	INDEX_ACCESS,
+	INDEX_ASSIGN,
 };
 
 static const std::unordered_map<std::string, AstNodeType> AST_NODE_TYPES = {
@@ -59,6 +62,9 @@ static const std::unordered_map<std::string, AstNodeType> AST_NODE_TYPES = {
 	{ "MEMBER_ASSIGNMENT", AstNodeType::MEMBER_ASSIGNMENT },
 	{ "MEMBER_ACCESS", AstNodeType::MEMBER_ACCESS },
 	{ "STRUCT_INIT", AstNodeType::STRUCT_INIT },
+	{ "ARRAY_LITERAL", AstNodeType::ARRAY_LITERAL },
+	{ "INDEX_ACCESS", AstNodeType::INDEX_ACCESS },
+	{ "INDEX_ASSIGN", AstNodeType::INDEX_ASSIGN },
 };
 
 using SymbolId = int32_t;
@@ -161,16 +167,22 @@ struct VarDeclNode final : AstNode
 	std::string varName;
 	std::shared_ptr<AstNode> expr;
 	bool isConst;
+	bool isArray;
+	DataType varType = DataType::UNKNOWN;
 
 	VarDeclNode(
 		const SymbolId id,
 		std::string name,
 		std::shared_ptr<AstNode> e,
-		const bool c)
+		const bool isConst,
+		const bool isArray,
+		const DataType& varType)
 		: AstNode(id, AstNodeType::VAR_DECL)
 		, varName(std::move(name))
 		, expr(std::move(e))
-		, isConst(c)
+		, isConst(isConst)
+		, isArray(isArray)
+		, varType(varType)
 	{
 	}
 
@@ -409,6 +421,57 @@ struct MemberAssignmentNode final : AstNode
 		, object(std::move(obj))
 		, fieldName(std::move(field))
 		, expression(std::move(expr))
+	{
+	}
+
+	void Accept(AstVisitor& visitor) override
+	{
+		visitor.Visit(*this);
+	}
+};
+
+struct ArrayLiteralNode final : AstNode
+{
+	std::vector<std::shared_ptr<AstNode>> elements;
+	ArrayLiteralNode(const SymbolId id, std::vector<std::shared_ptr<AstNode>> elems)
+		: AstNode(id, AstNodeType::ARRAY_LITERAL)
+		, elements(std::move(elems))
+	{
+	}
+
+	void Accept(AstVisitor& visitor) override
+	{
+		visitor.Visit(*this);
+	}
+};
+
+struct IndexAccessNode final : AstNode
+{
+	std::shared_ptr<AstNode> target;
+	std::shared_ptr<AstNode> index;
+	IndexAccessNode(const SymbolId id, std::shared_ptr<AstNode> tgt, std::shared_ptr<AstNode> idx)
+		: AstNode(id, AstNodeType::INDEX_ACCESS)
+		, target(std::move(tgt))
+		, index(std::move(idx))
+	{
+	}
+
+	void Accept(AstVisitor& visitor) override
+	{
+		visitor.Visit(*this);
+	}
+};
+
+struct IndexAssignmentNode final : AstNode
+{
+	std::shared_ptr<AstNode> target;
+	std::shared_ptr<AstNode> index;
+	std::shared_ptr<AstNode> value;
+	IndexAssignmentNode(const SymbolId id, std::shared_ptr<AstNode> tgt, std::shared_ptr<AstNode> idx, std::shared_ptr<AstNode> val)
+		: AstNode(id, AstNodeType::INDEX_ASSIGN)
+		, target(std::move(tgt))
+		, index(std::move(idx))
+		, value(std::move(val))
 	{
 	}
 

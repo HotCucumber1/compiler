@@ -1,5 +1,8 @@
 int b = 5;
 
+string input = read();
+print(input);
+
 func HelloWorld(int a): void {
     print("Hello world");
     print(a);

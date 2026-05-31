@@ -448,6 +448,57 @@ void CodeGenerator::Visit(MemberAssignmentNode& node)
 	PushCode(fieldNameIdx);
 }
 
+void CodeGenerator::Visit(ArrayLiteralNode& node)
+{
+	if (node.elements.size() > 255)
+	{
+		throw std::runtime_error("Compile error: Array size cannot exceed 255 elements.");
+	}
+	for (const auto& elem : node.elements)
+	{
+		if (elem)
+		{
+			elem->Accept(*this);
+		}
+		else
+		{
+			PushConst(Value{});
+		}
+	}
+	PushCode(static_cast<uint8_t>(OpCode::OP_CREATE_ARRAY));
+	PushCode(static_cast<uint8_t>(node.elements.size()));
+}
+
+void CodeGenerator::Visit(IndexAccessNode& node)
+{
+	if (node.target)
+	{
+		node.target->Accept(*this);
+	}
+	if (node.index)
+	{
+		node.index->Accept(*this);
+	}
+	PushCode(static_cast<uint8_t>(OpCode::OP_GET_ELEMENT));
+}
+
+void CodeGenerator::Visit(IndexAssignmentNode& node)
+{
+	if (node.value)
+	{
+		node.value->Accept(*this);
+	}
+	if (node.target)
+	{
+		node.target->Accept(*this);
+	}
+	if (node.index)
+	{
+		node.index->Accept(*this);
+	}
+	PushCode(static_cast<uint8_t>(OpCode::OP_SET_ELEMENT));
+}
+
 void CodeGenerator::PushCode(const uint8_t code)
 {
 	m_chunk.code.push_back(code);

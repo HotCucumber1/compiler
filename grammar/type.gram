@@ -1,0 +1,26 @@
+Type -> int : TYPE_INT
+Type -> float : TYPE_FLOAT
+Type -> bool : TYPE_BOOL
+Type -> string : TYPE_STRING
+Type -> void : TYPE_VOID
+Type -> int [ ] : TYPE_INT_ARRAY
+Type -> float [ ] : TYPE_FLOAT_ARRAY
+Type -> bool [ ] : TYPE_BOOL_ARRAY
+Type -> string [ ] : TYPE_STRING_ARRAY
+
+ArgList -> # : EMPTY_LIST
+ArgList -> Expression , ArgList : LIST_APPEND
+ArgList -> Expression : LIST_SINGLE
+
+IndexAccess -> Primary [ Expression ] : INDEX_ACCESS
+IndexAssignment -> Primary [ Expression ] = Expression : INDEX_ASSIGN
+
+Primary -> Primary [ Expression ] : INDEX_ACCESS
+Primary -> Call : PASS_THROUGH
+Primary -> StructInit : PASS_THROUGH
+Primary -> Primary . IDENTIFIER : MEMBER_ACCESS
+Primary -> not Primary : UNARY_OP
+Primary -> ( Expression ) : PASS_THROUGH
+Primary -> IDENTIFIER : VAR_ACCESS
+Primary -> Literal : PASS_THROUGH
+Primary -> [ ArgList ] : ARRAY_LITERAL

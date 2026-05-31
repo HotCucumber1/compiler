@@ -1,5 +1,5 @@
 #pragma once
-#include "Type/Value.h"
+#include "../Type/Value.h"
 
 Value NativePrint(const std::vector<Value>& args);
 

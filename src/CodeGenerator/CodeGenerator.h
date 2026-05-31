@@ -1,7 +1,7 @@
 #pragma once
+#include "../Frontend/Parser/Common/DataType.h"
 #include "../Frontend/Parser/Common/Node.h"
 #include "../VM/Type/Chunk.h"
-#include "../Frontend/Parser/Common/DataType.h"
 
 #include <map>
 
@@ -45,6 +45,12 @@ public:
 	void Visit(MemberAccessNode& node) override;
 
 	void Visit(MemberAssignmentNode& node) override;
+
+	void Visit(ArrayLiteralNode& node) override;
+
+	void Visit(IndexAccessNode& node) override;
+
+	void Visit(IndexAssignmentNode& node) override;
 
 private:
 	void PushCode(uint8_t code);

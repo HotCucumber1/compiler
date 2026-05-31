@@ -32,7 +32,7 @@ public:
 	void Visit(CallNode& node) override;
 
 	void Visit(FunctionDeclNode& node) override;
-	
+
 	void Visit(StructDeclNode& node) override;
 
 	void Visit(StructInitNode& node) override;
@@ -40,6 +40,12 @@ public:
 	void Visit(MemberAccessNode& node) override;
 
 	void Visit(MemberAssignmentNode& node) override;
+
+	void Visit(ArrayLiteralNode& node) override;
+
+	void Visit(IndexAccessNode& node) override;
+
+	void Visit(IndexAssignmentNode& node) override;
 
 private:
 	int m_depth = 0;

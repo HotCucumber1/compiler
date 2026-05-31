@@ -11,7 +11,6 @@ VirtualMachine::VirtualMachine()
 {
 	RegisterNativeFunction("print", 1, NativePrint);
 	RegisterNativeFunction("read", 0, NativeRead);
-	// TODO чтение
 }
 
 void VirtualMachine::Interpret(const std::unique_ptr<Chunk>& chunk)

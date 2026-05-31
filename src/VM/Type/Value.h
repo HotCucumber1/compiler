@@ -535,7 +535,7 @@ inline Value operator-(const Value& value)
 		value);
 }
 
-inline void PrintValue(const Value& value)
+inline void PrintValue(const Value& value, bool newLine = true)
 {
 	try
 	{
@@ -552,11 +552,22 @@ inline void PrintValue(const Value& value)
 			}
 			else if (IsArray(arg))
 			{
+				bool isStart = true;
 				const auto arr = AsArray(arg)->elements;
+				std::cout << "Array (" << arr.size() << ") => [";
 				for (const auto& val : arr)
 				{
-					PrintValue(val);
+					if (!isStart)
+					{
+						std::cout << ", ";
+					}
+					else
+					{
+						isStart = false;
+					}
+					PrintValue(val, false);
 				}
+				std::cout << "]";
 			}
 			else if (IsBool(arg))
 			{
@@ -575,7 +586,10 @@ inline void PrintValue(const Value& value)
 			}
 		},
 			value);
-		std::cout << std::endl;
+		if (newLine)
+		{
+			std::cout << std::endl;
+		}
 	}
 	catch (const std::bad_variant_access& e)
 	{
