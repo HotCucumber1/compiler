@@ -18,6 +18,8 @@ SimpleStatement -> ConstDeclStatement : PASS_THROUGH
 SimpleStatement -> Expression : PASS_THROUGH
 SimpleStatement -> MemberAssignment : PASS_THROUGH
 SimpleStatement -> IDENTIFIER = Expression : ASSIGNMENT
+SimpleStatement -> return Expression : RETURN_STATEMENT
+SimpleStatement -> return : RETURN_STATEMENT
 
 BlockStatement -> IfStatement : PASS_THROUGH
 BlockStatement -> WhileStatement : PASS_THROUGH

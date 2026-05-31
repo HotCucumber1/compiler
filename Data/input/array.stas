@@ -1,0 +1,10 @@
+int[] myArr = [1, 2, 3, 4, 5];
+print(myArr);
+
+
+func getArr(): int[] {
+    return [1, 2];
+}
+
+
+print(getArr()[2]);

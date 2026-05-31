@@ -36,6 +36,7 @@ enum class AstNodeType : int
 	ARRAY_LITERAL,
 	INDEX_ACCESS,
 	INDEX_ASSIGN,
+	RETURN_STATEMENT,
 };
 
 static const std::unordered_map<std::string, AstNodeType> AST_NODE_TYPES = {
@@ -65,6 +66,7 @@ static const std::unordered_map<std::string, AstNodeType> AST_NODE_TYPES = {
 	{ "ARRAY_LITERAL", AstNodeType::ARRAY_LITERAL },
 	{ "INDEX_ACCESS", AstNodeType::INDEX_ACCESS },
 	{ "INDEX_ASSIGN", AstNodeType::INDEX_ASSIGN },
+	{ "RETURN_STATEMENT", AstNodeType::RETURN_STATEMENT },
 };
 
 using SymbolId = int32_t;
@@ -472,6 +474,22 @@ struct IndexAssignmentNode final : AstNode
 		, target(std::move(tgt))
 		, index(std::move(idx))
 		, value(std::move(val))
+	{
+	}
+
+	void Accept(AstVisitor& visitor) override
+	{
+		visitor.Visit(*this);
+	}
+};
+
+struct ReturnNode final : AstNode
+{
+	std::shared_ptr<AstNode> expr;
+
+	explicit ReturnNode(const SymbolId id, std::shared_ptr<AstNode> e = nullptr)
+		: AstNode(id, AstNodeType::RETURN_STATEMENT)
+		, expr(std::move(e))
 	{
 	}
 

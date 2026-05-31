@@ -173,6 +173,15 @@ std::shared_ptr<AstNode> AstFactory::CreateNode(
 		return std::make_shared<IndexAssignmentNode>(id, children[0], children[2], children[5]);
 	}
 
+	case AstNodeType::RETURN_STATEMENT: {
+		std::shared_ptr<AstNode> expr = nullptr;
+		if (children.size() == 2)
+		{
+			expr = children[1];
+		}
+		return std::make_shared<ReturnNode>(id, expr);
+	}
+
 	default:
 		throw std::runtime_error("AstFactory Error: AstNodeType is not being processed " + std::to_string(static_cast<int>(type)));
 	}

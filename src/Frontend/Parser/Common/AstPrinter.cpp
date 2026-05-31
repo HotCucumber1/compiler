@@ -463,6 +463,19 @@ void AstPrinter::Visit(IndexAssignmentNode& node)
 	m_depth--;
 }
 
+void AstPrinter::Visit(ReturnNode& node)
+{
+	PrintIndent();
+	std::cout << "[Return]" << std::endl;
+
+	if (node.expr)
+	{
+		m_depth++;
+		node.expr->Accept(*this);
+		m_depth--;
+	}
+}
+
 void AstPrinter::PrintIndent() const
 {
 	std::cout << std::string(m_depth * 2, ' ');

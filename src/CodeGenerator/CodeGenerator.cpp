@@ -499,6 +499,19 @@ void CodeGenerator::Visit(IndexAssignmentNode& node)
 	PushCode(static_cast<uint8_t>(OpCode::OP_SET_ELEMENT));
 }
 
+void CodeGenerator::Visit(ReturnNode& node)
+{
+	if (node.expr)
+	{
+		node.expr->Accept(*this);
+	}
+	else
+	{
+		PushConst(Value{});
+	}
+	PushCode(static_cast<uint8_t>(OpCode::OP_RETURN));
+}
+
 void CodeGenerator::PushCode(const uint8_t code)
 {
 	m_chunk.code.push_back(code);

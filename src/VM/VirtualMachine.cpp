@@ -501,12 +501,9 @@ void VirtualMachine::OpGetEl()
 	const auto idx = std::get<int64_t>(indexVal);
 	if (idx < 0 || idx >= static_cast<int64_t>(arr->elements.size()))
 	{
-		Push(Value{}); // null
+		throw std::runtime_error("Array index out of range");
 	}
-	else
-	{
-		Push(arr->elements[idx]);
-	}
+	Push(arr->elements[idx]);
 }
 
 void VirtualMachine::OpSetEl()

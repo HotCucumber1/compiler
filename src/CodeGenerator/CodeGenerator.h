@@ -52,6 +52,8 @@ public:
 
 	void Visit(IndexAssignmentNode& node) override;
 
+	void Visit(ReturnNode& node) override;
+
 private:
 	void PushCode(uint8_t code);
 

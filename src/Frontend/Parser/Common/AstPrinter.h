@@ -47,6 +47,8 @@ public:
 
 	void Visit(IndexAssignmentNode& node) override;
 
+	void Visit(ReturnNode& node) override;
+
 private:
 	int m_depth = 0;
 
