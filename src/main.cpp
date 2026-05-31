@@ -4,6 +4,7 @@
 #include "Frontend/Parser/Grammar/GrammarReader.h"
 #include "Frontend/Parser/Parser.h"
 #include "Frontend/Parser/SLRTableBuilder.h"
+#include "Frontend/SematicAnalyzer/SemanticAnalyzer.h"
 #include "VM/VirtualMachine.h"
 
 #include <filesystem>
@@ -39,8 +40,8 @@ int main(const int argc, char* argv[])
 
 		// TODO регистрировать встроенные функции
 
-		// TODO На 4-ку: таблица переходов
-		// TODO к пятнице написать пример на стейтах (Запрос сохранения USER)
+		SemanticAnalyzer analyser;
+		analyser.Analyze(astRoot);
 
 		const auto chunk = GenerateCode(astRoot);
 

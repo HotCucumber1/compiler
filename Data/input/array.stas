@@ -1,10 +1,10 @@
 int[] myArr = [1, 2, 3, 4, 5];
-print(myArr);
+print(myArr[0]);
 
 
 func getArr(): int[] {
-    return [1, 2];
+    return ["string"];
 }
 
 
-print(getArr()[2]);
+print(getArr()[0]);

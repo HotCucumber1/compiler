@@ -37,6 +37,15 @@ enum class AstNodeType : int
 	INDEX_ACCESS,
 	INDEX_ASSIGN,
 	RETURN_STATEMENT,
+	TYPE_INT,
+	TYPE_FLOAT,
+	TYPE_BOOL,
+	TYPE_STRING,
+	TYPE_VOID,
+	TYPE_INT_ARRAY,
+	TYPE_FLOAT_ARRAY,
+	TYPE_BOOL_ARRAY,
+	TYPE_STRING_ARRAY,
 };
 
 static const std::unordered_map<std::string, AstNodeType> AST_NODE_TYPES = {
@@ -67,6 +76,15 @@ static const std::unordered_map<std::string, AstNodeType> AST_NODE_TYPES = {
 	{ "INDEX_ACCESS", AstNodeType::INDEX_ACCESS },
 	{ "INDEX_ASSIGN", AstNodeType::INDEX_ASSIGN },
 	{ "RETURN_STATEMENT", AstNodeType::RETURN_STATEMENT },
+	{ "TYPE_INT", AstNodeType::TYPE_INT },
+	{ "TYPE_FLOAT", AstNodeType::TYPE_FLOAT },
+	{ "TYPE_BOOL", AstNodeType::TYPE_BOOL },
+	{ "TYPE_STRING", AstNodeType::TYPE_STRING },
+	{ "TYPE_VOID", AstNodeType::TYPE_VOID },
+	{ "TYPE_INT_ARRAY", AstNodeType::TYPE_INT_ARRAY },
+	{ "TYPE_FLOAT_ARRAY", AstNodeType::TYPE_FLOAT_ARRAY },
+	{ "TYPE_BOOL_ARRAY", AstNodeType::TYPE_BOOL_ARRAY },
+	{ "TYPE_STRING_ARRAY", AstNodeType::TYPE_STRING_ARRAY },
 };
 
 using SymbolId = int32_t;
@@ -76,6 +94,7 @@ struct AstNode
 	SymbolId symbolId;
 	AstNodeType type = AstNodeType::UNDEFINED;
 	DataType evaluatedType = DataType::UNKNOWN;
+	bool isArrayExpr = false;
 
 	AstNode(const SymbolId id, const AstNodeType t)
 		: symbolId(id)
@@ -343,12 +362,22 @@ struct FunctionDeclNode final : AstNode
 	std::string name;
 	std::vector<std::string> parameters;
 	std::shared_ptr<AstNode> body;
+	DataType returnType;
+	bool isReturnArray;
 
-	FunctionDeclNode(const SymbolId id, std::string n, std::vector<std::string> p, std::shared_ptr<AstNode> b)
+	FunctionDeclNode(
+		const SymbolId id,
+		std::string n,
+		std::vector<std::string> p,
+		std::shared_ptr<AstNode> b,
+		const DataType rType = DataType::UNKNOWN,
+		const bool isArr = false)
 		: AstNode(id, AstNodeType::FUNC_DECL)
 		, name(std::move(n))
 		, parameters(std::move(p))
 		, body(std::move(b))
+		, returnType(rType)
+		, isReturnArray(isArr)
 	{
 	}
 

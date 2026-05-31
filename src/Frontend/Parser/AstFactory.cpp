@@ -3,6 +3,7 @@
 Token GetToken(const std::shared_ptr<AstNode>& node);
 std::shared_ptr<AstNode> AppendToList(SymbolId id, const std::vector<std::shared_ptr<AstNode>>& children);
 std::vector<std::shared_ptr<AstNode>> UnwrapList(const std::shared_ptr<AstNode>& node);
+std::pair<DataType, bool> ExtractTypeInfo(const std::shared_ptr<AstNode>& typeNode);
 
 // TODO все индексы в константы
 
@@ -17,6 +18,17 @@ std::shared_ptr<AstNode> AstFactory::CreateNode(
 	}
 	switch (type)
 	{
+	case AstNodeType::TYPE_INT:
+	case AstNodeType::TYPE_FLOAT:
+	case AstNodeType::TYPE_BOOL:
+	case AstNodeType::TYPE_STRING:
+	case AstNodeType::TYPE_VOID:
+	case AstNodeType::TYPE_INT_ARRAY:
+	case AstNodeType::TYPE_FLOAT_ARRAY:
+	case AstNodeType::TYPE_BOOL_ARRAY:
+	case AstNodeType::TYPE_STRING_ARRAY:
+		return std::make_shared<CommonNode>(id, type, children);
+
 	case AstNodeType::PROGRAM:
 		if (!children.empty())
 		{
@@ -28,16 +40,30 @@ std::shared_ptr<AstNode> AstFactory::CreateNode(
 		return std::make_shared<CommonNode>(id, AstNodeType::PROGRAM, children);
 
 	case AstNodeType::VAR_DECL: {
-		auto val = (children.size() < 3) ? nullptr : children[3];
-		return std::make_shared<VarDeclNode>(id, GetToken(children[1]).value, val, false, false, DataType::INT);
+		auto [dataType, isArray] = ExtractTypeInfo(children[0]);
+		auto val = (children.size() < 4)
+			? nullptr
+			: children[3];
+
+		return std::make_shared<VarDeclNode>(
+			id,
+			GetToken(children[1]).value,
+			val,
+			false,
+			isArray,
+			dataType);
 	}
 
 	case AstNodeType::CONST_DECL:
-		if (children.size() == 2)
+		if (children.size() >= 2)
 		{
-			return children[1];
+			if (auto varDecl = std::dynamic_pointer_cast<VarDeclNode>(children[1]))
+			{
+				varDecl->isConst = true;
+				return varDecl;
+			}
 		}
-		return std::make_shared<VarDeclNode>(id, GetToken(children[1]).value, children[3], true, false, DataType::INT);
+		throw std::runtime_error("AST Factory error: Invalid CONST_DECL");
 
 	case AstNodeType::ASSIGNMENT:
 		return std::make_shared<AssignmentNode>(id, GetToken(children[0]).value, children[2]);
@@ -105,8 +131,8 @@ std::shared_ptr<AstNode> AstFactory::CreateNode(
 				}
 			}
 		}
-		auto body = children[8];
-		return std::make_shared<FunctionDeclNode>(id, name, params, body);
+		auto [dataType, isArray] = ExtractTypeInfo(children[6]);
+		return std::make_shared<FunctionDeclNode>(id, name, params, children[8], dataType, isArray);
 	}
 
 	case AstNodeType::LIST_APPEND:
@@ -234,4 +260,42 @@ std::vector<std::shared_ptr<AstNode>> UnwrapList(const std::shared_ptr<AstNode>&
 		}
 	}
 	return { node };
+}
+
+/**
+ *
+ * @return <DataType, isArray>
+ */
+std::pair<DataType, bool> ExtractTypeInfo(const std::shared_ptr<AstNode>& typeNode)
+{
+	if (!typeNode)
+	{
+		return { DataType::UNKNOWN, false };
+	}
+
+	switch (typeNode->type)
+	{
+	case AstNodeType::TYPE_INT:
+		return { DataType::INT, false };
+	case AstNodeType::TYPE_FLOAT:
+		return { DataType::FLOAT, false };
+	case AstNodeType::TYPE_BOOL:
+		return { DataType::BOOL, false };
+	case AstNodeType::TYPE_STRING:
+		return { DataType::STRING, false };
+	case AstNodeType::TYPE_VOID:
+		return { DataType::VOID, false };
+
+	case AstNodeType::TYPE_INT_ARRAY:
+		return { DataType::INT, true };
+	case AstNodeType::TYPE_FLOAT_ARRAY:
+		return { DataType::FLOAT, true };
+	case AstNodeType::TYPE_BOOL_ARRAY:
+		return { DataType::BOOL, true };
+	case AstNodeType::TYPE_STRING_ARRAY:
+		return { DataType::STRING, true };
+
+	default:
+		return { DataType::UNKNOWN, false };
+	}
 }
