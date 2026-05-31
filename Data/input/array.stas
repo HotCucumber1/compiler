@@ -5,8 +5,17 @@ print(myArr[0]);
 
 
 func getArr(): int[] {
-    return ["string"];
+    return [123];
+}
+
+func getNumbers(): Number[] {
+    return [
+        Number{1, 2},
+        Number{3, 4}
+    ];
 }
 
 print(Add(1, 16));
 print(getArr()[0]);
+
+print(getNumbers());

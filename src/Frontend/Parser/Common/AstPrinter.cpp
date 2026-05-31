@@ -241,24 +241,34 @@ void AstPrinter::Visit(CallNode& node)
 void AstPrinter::Visit(FunctionDeclNode& node)
 {
 	PrintIndent();
-	std::cout << "[FunctionDecl] " << node.name << "\n";
+	std::cout << "[FunctionDecl] " << node.name;
+	if (node.arrayDepth > 0)
+	{
+		std::cout << " (Return Array depth: " << node.arrayDepth << ")";
+	}
+	std::cout << "\n";
 
 	m_depth++;
 
 	PrintIndent();
-	std::cout << "Parameters: ";
+	std::cout << "Parameters:\n";
+	m_depth++;
 	if (node.parameters.empty())
 	{
+		PrintIndent();
 		std::cout << "(none)\n";
 	}
 	else
 	{
-		for (size_t i = 0; i < node.parameters.size(); ++i)
+		for (const auto& param : node.parameters)
 		{
-			std::cout << node.parameters[i] << (i == node.parameters.size() - 1 ? "" : ", ");
+			if (param)
+			{
+				param->Accept(*this);
+			}
 		}
-		std::cout << "\n";
 	}
+	m_depth--;
 
 	if (node.body)
 	{

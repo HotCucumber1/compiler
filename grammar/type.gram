@@ -1,12 +1,12 @@
-Type -> int : TYPE_INT
-Type -> float : TYPE_FLOAT
-Type -> bool : TYPE_BOOL
-Type -> string : TYPE_STRING
-Type -> void : TYPE_VOID
-Type -> int [ ] : TYPE_INT_ARRAY
-Type -> float [ ] : TYPE_FLOAT_ARRAY
-Type -> bool [ ] : TYPE_BOOL_ARRAY
-Type -> string [ ] : TYPE_STRING_ARRAY
+BaseType -> int : TYPE_INT
+BaseType -> float : TYPE_FLOAT
+BaseType -> bool : TYPE_BOOL
+BaseType -> string : TYPE_STRING
+BaseType -> void : TYPE_VOID
+BaseType -> IDENTIFIER : TYPE_CUSTOM
+
+Type -> BaseType : PASS_THROUGH
+Type -> Type [ ] : TYPE_ARRAY
 
 ArgList -> # : EMPTY_LIST
 ArgList -> Expression , ArgList : LIST_APPEND

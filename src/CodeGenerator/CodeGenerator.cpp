@@ -349,7 +349,10 @@ void CodeGenerator::Visit(FunctionDeclNode& node)
 	EnterScope();
 	for (const auto& param : node.parameters)
 	{
-		m_scopes.back()[param] = { DataType::UNKNOWN, m_nextLocalIdx++, false };
+		if (param)
+		{
+			m_scopes.back()[param->varName] = { DataType::UNKNOWN, m_nextLocalIdx++, false };
+		}
 	}
 	m_chunk.localsCount = m_nextLocalIdx;
 

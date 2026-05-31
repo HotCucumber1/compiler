@@ -42,10 +42,8 @@ enum class AstNodeType : int
 	TYPE_BOOL,
 	TYPE_STRING,
 	TYPE_VOID,
-	TYPE_INT_ARRAY,
-	TYPE_FLOAT_ARRAY,
-	TYPE_BOOL_ARRAY,
-	TYPE_STRING_ARRAY,
+	TYPE_CUSTOM,
+	TYPE_ARRAY,
 	IMPORT_DECL,
 };
 
@@ -82,10 +80,8 @@ static const std::unordered_map<std::string, AstNodeType> AST_NODE_TYPES = {
 	{ "TYPE_BOOL", AstNodeType::TYPE_BOOL },
 	{ "TYPE_STRING", AstNodeType::TYPE_STRING },
 	{ "TYPE_VOID", AstNodeType::TYPE_VOID },
-	{ "TYPE_INT_ARRAY", AstNodeType::TYPE_INT_ARRAY },
-	{ "TYPE_FLOAT_ARRAY", AstNodeType::TYPE_FLOAT_ARRAY },
-	{ "TYPE_BOOL_ARRAY", AstNodeType::TYPE_BOOL_ARRAY },
-	{ "TYPE_STRING_ARRAY", AstNodeType::TYPE_STRING_ARRAY },
+	{ "TYPE_CUSTOM", AstNodeType::TYPE_CUSTOM },
+	{ "TYPE_ARRAY", AstNodeType::TYPE_ARRAY },
 	{ "IMPORT_DECL", AstNodeType::IMPORT_DECL },
 };
 
@@ -96,7 +92,8 @@ struct AstNode
 	SymbolId symbolId;
 	AstNodeType type = AstNodeType::UNDEFINED;
 	DataType evaluatedType = DataType::UNKNOWN;
-	bool isArrayExpr = false;
+	int arrayDepth = 0;
+	std::string structName = "";
 
 	AstNode(const SymbolId id, const AstNodeType t)
 		: symbolId(id)
@@ -190,7 +187,6 @@ struct VarDeclNode final : AstNode
 	std::string varName;
 	std::shared_ptr<AstNode> expr;
 	bool isConst;
-	bool isArray;
 	DataType varType = DataType::UNKNOWN;
 
 	VarDeclNode(
@@ -198,15 +194,17 @@ struct VarDeclNode final : AstNode
 		std::string name,
 		std::shared_ptr<AstNode> e,
 		const bool isConst,
-		const bool isArray,
-		const DataType& varType)
+		const int depth,
+		const DataType& varType,
+		std::string sName = "")
 		: AstNode(id, AstNodeType::VAR_DECL)
 		, varName(std::move(name))
 		, expr(std::move(e))
 		, isConst(isConst)
-		, isArray(isArray)
 		, varType(varType)
 	{
+		this->arrayDepth = depth;
+		this->structName = std::move(sName);
 	}
 
 	void Accept(AstVisitor& visitor) override
@@ -214,7 +212,6 @@ struct VarDeclNode final : AstNode
 		visitor.Visit(*this);
 	}
 };
-
 struct LiteralNode final : AstNode
 {
 	Token token;
@@ -362,25 +359,27 @@ struct CallNode final : AstNode
 struct FunctionDeclNode final : AstNode
 {
 	std::string name;
-	std::vector<std::string> parameters;
+	std::vector<std::shared_ptr<VarDeclNode>> parameters;
 	std::shared_ptr<AstNode> body;
+
 	DataType returnType;
-	bool isReturnArray;
 
 	FunctionDeclNode(
 		const SymbolId id,
 		std::string n,
-		std::vector<std::string> p,
+		std::vector<std::shared_ptr<VarDeclNode>> p,
 		std::shared_ptr<AstNode> b,
 		const DataType rType = DataType::UNKNOWN,
-		const bool isArr = false)
+		const int arrDepth = 0,
+		std::string sName = "")
 		: AstNode(id, AstNodeType::FUNC_DECL)
 		, name(std::move(n))
 		, parameters(std::move(p))
 		, body(std::move(b))
 		, returnType(rType)
-		, isReturnArray(isArr)
 	{
+		this->arrayDepth = arrDepth;
+		this->structName = std::move(sName);
 	}
 
 	void Accept(AstVisitor& visitor) override
@@ -409,14 +408,13 @@ struct StructDeclNode final : AstNode
 
 struct StructInitNode final : AstNode
 {
-	std::string structName;
 	std::vector<std::shared_ptr<AstNode>> args;
 
 	StructInitNode(const SymbolId id, std::string name, std::vector<std::shared_ptr<AstNode>> args)
 		: AstNode(id, AstNodeType::STRUCT_INIT)
-		, structName(std::move(name))
 		, args(std::move(args))
 	{
+		this->structName = std::move(name);
 	}
 
 	void Accept(AstVisitor& visitor) override

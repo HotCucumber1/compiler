@@ -6,7 +6,8 @@
 struct SymbolInfo
 {
 	DataType type;
-	bool isArray;
+	int arrayDepth;
+	std::string structName;
 	bool isConst;
 };
 
@@ -67,4 +68,9 @@ private:
 private:
 	std::vector<std::unordered_map<std::string, SymbolInfo>> m_symbolTable;
 	std::unordered_map<std::string, SymbolInfo> m_functions;
+	SymbolInfo m_currentFunctionSignature{
+		DataType::UNKNOWN,
+		0, "",
+		false
+	};
 };

@@ -1,3 +1,9 @@
 func Add(int a, int b): int {
     return a + b;
 }
+
+struct Number
+{
+    int first;
+    int second;
+}

@@ -1,6 +1,7 @@
 #include "SemanticAnalyzer.h"
 
 #include <ranges>
+#include <stdexcept>
 
 void SemanticAnalyzer::Analyze(const std::shared_ptr<AstNode>& root)
 {
@@ -31,26 +32,41 @@ void SemanticAnalyzer::Visit(CommonNode& node)
 
 void SemanticAnalyzer::Visit(BinaryOpNode& node)
 {
-	node.left->Accept(*this);
-	node.right->Accept(*this);
+	if (node.left)
+	{
+		node.left->Accept(*this);
+	}
+	if (node.right)
+	{
+		node.right->Accept(*this);
+	}
 
-	if (node.left->evaluatedType != node.right->evaluatedType)
+	if (node.left && node.right)
 	{
-		throw std::runtime_error("Semantic error: Cannot operate on different types!");
+		if (node.left->evaluatedType != node.right->evaluatedType)
+		{
+			throw std::runtime_error("Semantic error: Cannot operate on different types!");
+		}
+		if (node.left->arrayDepth > 0 || node.right->arrayDepth > 0)
+		{
+			throw std::runtime_error("Semantic error: Binary operations on arrays are not supported.");
+		}
+
+		if (node.op.value == "=="
+			|| node.op.value == "!="
+			|| node.op.value == "<"
+			|| node.op.value == ">")
+		{
+			node.evaluatedType = DataType::BOOL;
+		}
+		else
+		{
+			node.evaluatedType = node.left->evaluatedType;
+		}
+
+		node.arrayDepth = 0;
+		node.structName = "";
 	}
-	if (node.left->isArrayExpr || node.right->isArrayExpr)
-	{
-		throw std::runtime_error("Semantic error: Binary operations on arrays are not supported.");
-	}
-	if (node.op.value == "==" || node.op.value == "!=" || node.op.value == "<" || node.op.value == ">")
-	{
-		node.evaluatedType = DataType::BOOL;
-	}
-	else
-	{
-		node.evaluatedType = node.left->evaluatedType;
-	}
-	node.isArrayExpr = false;
 }
 
 void SemanticAnalyzer::Visit(UnaryOpNode& node)
@@ -59,13 +75,14 @@ void SemanticAnalyzer::Visit(UnaryOpNode& node)
 	{
 		node.operand->Accept(*this);
 
-		if (node.operand->isArrayExpr)
+		if (node.operand->arrayDepth > 0)
 		{
 			throw std::runtime_error("Semantic error: Unary operations on arrays are not allowed.");
 		}
 
 		node.evaluatedType = node.operand->evaluatedType;
-		node.isArrayExpr = false;
+		node.arrayDepth = 0;
+		node.structName = "";
 	}
 }
 
@@ -80,25 +97,33 @@ void SemanticAnalyzer::Visit(VarDeclNode& node)
 	{
 		node.expr->Accept(*this);
 
-		if (node.expr->evaluatedType != node.varType)
+		if (node.expr->evaluatedType != DataType::UNKNOWN && node.expr->evaluatedType != node.varType)
 		{
 			throw std::runtime_error("Semantic error: Type mismatch for " + node.varName);
 		}
-		if (node.expr->isArrayExpr != node.isArray)
+		if (node.expr->arrayDepth != node.arrayDepth)
 		{
-			throw std::runtime_error("Semantic error: Array assignment mismatch for " + node.varName);
+			throw std::runtime_error("Semantic error: Array depth mismatch for " + node.varName);
+		}
+		if (node.expr->evaluatedType == DataType::INSTANCE
+			&& node.expr->structName != node.structName)
+		{
+			throw std::runtime_error("Semantic error: Struct type mismatch for " + node.varName);
 		}
 	}
+
 	m_symbolTable.back()[node.varName] = {
 		node.varType,
-		node.isArray,
-		node.isConst,
+		node.arrayDepth,
+		node.structName,
+		node.isConst
 	};
 }
 
 void SemanticAnalyzer::Visit(LiteralNode& node)
 {
-	node.isArrayExpr = false;
+	node.arrayDepth = 0;
+	node.structName = "";
 
 	switch (node.token.type)
 	{
@@ -129,7 +154,8 @@ void SemanticAnalyzer::Visit(VarAccessNode& node)
 		{
 			const auto& varInfo = scope.at(node.varName);
 			node.evaluatedType = varInfo.type;
-			node.isArrayExpr = varInfo.isArray;
+			node.arrayDepth = varInfo.arrayDepth;
+			node.structName = varInfo.structName;
 			return;
 		}
 	}
@@ -167,9 +193,13 @@ void SemanticAnalyzer::Visit(AssignmentNode& node)
 		{
 			throw std::runtime_error("Semantic error: Type mismatch in assignment to '" + node.varName + "'");
 		}
-		if (node.expr->isArrayExpr != varInfo.isArray)
+		if (node.expr->arrayDepth != varInfo.arrayDepth)
 		{
-			throw std::runtime_error("Semantic error: Array/scalar mismatch in assignment to '" + node.varName + "'");
+			throw std::runtime_error("Semantic error: Array depth mismatch in assignment to '" + node.varName + "'");
+		}
+		if (node.expr->evaluatedType == DataType::INSTANCE && node.expr->structName != varInfo.structName)
+		{
+			throw std::runtime_error("Semantic error: Struct type mismatch in assignment to '" + node.varName + "'");
 		}
 	}
 }
@@ -179,10 +209,6 @@ void SemanticAnalyzer::Visit(IfNode& node)
 	if (node.condition)
 	{
 		node.condition->Accept(*this);
-		if (node.condition->evaluatedType != DataType::BOOL)
-		{
-			// throw std::runtime_error("Semantic error: If condition must be boolean");
-		}
 	}
 
 	EnterScope();
@@ -252,31 +278,45 @@ void SemanticAnalyzer::Visit(CallNode& node)
 	{
 		const auto& funcInfo = m_functions.at(node.funcName);
 		node.evaluatedType = funcInfo.type;
-		node.isArrayExpr = funcInfo.isArray;
+		node.arrayDepth = funcInfo.arrayDepth;
+		node.structName = funcInfo.structName;
 	}
 	else
 	{
 		node.evaluatedType = DataType::UNKNOWN;
-		node.isArrayExpr = false;
+		node.arrayDepth = 0;
+		node.structName = "";
 	}
 }
 
 void SemanticAnalyzer::Visit(FunctionDeclNode& node)
 {
-	m_functions[node.name] = { node.returnType, node.isReturnArray, false };
+	m_functions[node.name] = { node.returnType, node.arrayDepth, node.structName, false };
+
+	const auto previousSignature = m_currentFunctionSignature;
+	m_currentFunctionSignature = { node.returnType, node.arrayDepth, node.structName, false };
 
 	EnterScope();
 
-	for (const auto& paramName : node.parameters)
+	for (const auto& paramNode : node.parameters)
 	{
-		m_symbolTable.back()[paramName] = { DataType::UNKNOWN, false, false };
+		if (paramNode)
+		{
+			m_symbolTable.back()[paramNode->varName] = {
+				paramNode->varType,
+				paramNode->arrayDepth,
+				paramNode->structName,
+				paramNode->isConst
+			};
+		}
 	}
+
 	if (node.body)
 	{
 		node.body->Accept(*this);
 	}
-
 	ExitScope();
+	m_currentFunctionSignature = previousSignature;
 }
 
 void SemanticAnalyzer::Visit(StructDeclNode& node)
@@ -299,8 +339,9 @@ void SemanticAnalyzer::Visit(StructInitNode& node)
 			arg->Accept(*this);
 		}
 	}
+
 	node.evaluatedType = DataType::INSTANCE;
-	node.isArrayExpr = false;
+	node.arrayDepth = 0;
 }
 
 void SemanticAnalyzer::Visit(MemberAccessNode& node)
@@ -311,7 +352,8 @@ void SemanticAnalyzer::Visit(MemberAccessNode& node)
 	}
 
 	node.evaluatedType = DataType::UNKNOWN;
-	node.isArrayExpr = false;
+	node.arrayDepth = 0;
+	node.structName = "";
 }
 
 void SemanticAnalyzer::Visit(MemberAssignmentNode& node)
@@ -328,12 +370,15 @@ void SemanticAnalyzer::Visit(MemberAssignmentNode& node)
 
 void SemanticAnalyzer::Visit(ArrayLiteralNode& node)
 {
-	node.isArrayExpr = true;
 	node.evaluatedType = DataType::UNKNOWN;
+	node.arrayDepth = 1;
+	node.structName = "";
 
 	if (!node.elements.empty())
 	{
 		auto firstType = DataType::UNKNOWN;
+		int firstDepth = 0;
+		std::string firstName = "";
 		bool first = true;
 
 		for (const auto& elem : node.elements)
@@ -345,15 +390,20 @@ void SemanticAnalyzer::Visit(ArrayLiteralNode& node)
 				if (first)
 				{
 					firstType = elem->evaluatedType;
+					firstDepth = elem->arrayDepth;
+					firstName = elem->structName;
 					first = false;
 				}
-				else if (elem->evaluatedType != DataType::UNKNOWN && elem->evaluatedType != firstType)
+				else if (elem->evaluatedType != DataType::UNKNOWN
+					&& (elem->evaluatedType != firstType || elem->arrayDepth != firstDepth || elem->structName != firstName))
 				{
-					throw std::runtime_error("Semantic error: All elements in array literal must have the same type.");
+					throw std::runtime_error("Semantic error: All elements in array literal must have the same exact type.");
 				}
 			}
 		}
 		node.evaluatedType = firstType;
+		node.arrayDepth = firstDepth + 1;
+		node.structName = firstName;
 	}
 }
 
@@ -368,7 +418,9 @@ void SemanticAnalyzer::Visit(IndexAccessNode& node)
 		node.index->Accept(*this);
 	}
 
-	if (node.target && !node.target->isArrayExpr)
+	if (node.target
+		&& node.target->arrayDepth == 0
+		&& node.target->evaluatedType != DataType::UNKNOWN)
 	{
 		throw std::runtime_error("Semantic error: Cannot index a non-array target.");
 	}
@@ -377,8 +429,14 @@ void SemanticAnalyzer::Visit(IndexAccessNode& node)
 		throw std::runtime_error("Semantic error: Array index must be an integer.");
 	}
 
-	node.isArrayExpr = false;
-	node.evaluatedType = node.target ? node.target->evaluatedType : DataType::UNKNOWN;
+	if (node.target)
+	{
+		node.evaluatedType = node.target->evaluatedType;
+		node.structName = node.target->structName;
+		node.arrayDepth = node.target->arrayDepth > 0
+			? node.target->arrayDepth - 1
+			: 0;
+	}
 }
 
 void SemanticAnalyzer::Visit(IndexAssignmentNode& node)
@@ -396,7 +454,7 @@ void SemanticAnalyzer::Visit(IndexAssignmentNode& node)
 		node.value->Accept(*this);
 	}
 
-	if (node.target && !node.target->isArrayExpr)
+	if (node.target && node.target->arrayDepth == 0 && node.target->evaluatedType != DataType::UNKNOWN)
 	{
 		throw std::runtime_error("Semantic error: Cannot index a non-array target.");
 	}
@@ -405,9 +463,16 @@ void SemanticAnalyzer::Visit(IndexAssignmentNode& node)
 		throw std::runtime_error("Semantic error: Array index must be an integer.");
 	}
 
-	if (node.target && node.value && node.target->evaluatedType != DataType::UNKNOWN && node.value->evaluatedType != DataType::UNKNOWN && node.target->evaluatedType != node.value->evaluatedType)
+	if (node.target && node.value
+		&& node.target->evaluatedType != DataType::UNKNOWN
+		&& node.value->evaluatedType != DataType::UNKNOWN)
 	{
-		throw std::runtime_error("Semantic error: Type mismatch in array assignment.");
+		if (node.target->evaluatedType != node.value->evaluatedType
+			|| node.target->structName != node.value->structName
+			|| (node.target->arrayDepth - 1) != node.value->arrayDepth)
+		{
+			throw std::runtime_error("Semantic error: Type mismatch in array assignment.");
+		}
 	}
 }
 
@@ -416,9 +481,32 @@ void SemanticAnalyzer::Visit(ReturnNode& node)
 	if (node.expr)
 	{
 		node.expr->Accept(*this);
+		if (m_currentFunctionSignature.type != DataType::UNKNOWN)
+		{
+			if (node.expr->evaluatedType != m_currentFunctionSignature.type
+				|| node.expr->arrayDepth != m_currentFunctionSignature.arrayDepth
+				|| node.expr->structName != m_currentFunctionSignature.structName)
+			{
+				auto errorMsg = "Semantic error: Return type mismatch. Expected type " + DATA_TYPE_NAMES.at(m_currentFunctionSignature.type);
+				if (m_currentFunctionSignature.arrayDepth > 0)
+				{
+					for (int i = 0; i < m_currentFunctionSignature.arrayDepth; ++i)
+					{
+						errorMsg += "[]";
+					}
+				}
+				throw std::runtime_error(errorMsg);
+			}
+		}
+		return;
 	}
-	// Когда в FunctionDeclNode будет добавлен возврат типа, здесь его сверять с node.expr->evaluatedType
+	if (m_currentFunctionSignature.type != DataType::UNKNOWN
+		&& m_currentFunctionSignature.type != DataType::VOID)
+	{
+		throw std::runtime_error("Semantic error: Empty return statement in a non-void function.");
+	}
 }
+
 void SemanticAnalyzer::Visit(ImportNode& node)
 {
 }
