@@ -208,6 +208,12 @@ std::shared_ptr<AstNode> AstFactory::CreateNode(
 		return std::make_shared<ReturnNode>(id, expr);
 	}
 
+	case AstNodeType::IMPORT_DECL: {
+		auto rawPath = GetToken(children[1]).value;
+		auto cleanPath = rawPath.substr(1, rawPath.size() - 2);
+		return std::make_shared<ImportNode>(id, cleanPath);
+	}
+
 	default:
 		throw std::runtime_error("AstFactory Error: AstNodeType is not being processed " + std::to_string(static_cast<int>(type)));
 	}

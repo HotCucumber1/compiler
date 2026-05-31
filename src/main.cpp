@@ -9,17 +9,23 @@
 
 #include <filesystem>
 #include <fstream>
+#include <unordered_set>
 
 std::string ReadFile(const std::string& path);
 Grammar SetupGrammar(const std::string& exePath);
 void PrintConsts(const std::unique_ptr<Chunk>& chunk);
-
 
 std::string GetSourceCode(const std::string& filePath);
 SLRTableBuilder SetupSLRTableBuilder(const std::string& prog);
 std::shared_ptr<AstNode> BuildAST(const std::string& sourceCode, const SLRTableBuilder& slrBuilder);
 std::unique_ptr<Chunk> GenerateCode(const std::shared_ptr<AstNode>& astRoot);
 void RunVM(const std::unique_ptr<Chunk>& chunk);
+
+void ResolveImports(
+	const std::shared_ptr<AstNode>& astRoot,
+	std::unordered_set<std::string>& parsedFiles,
+	const SLRTableBuilder& slrBuilder,
+	const std::filesystem::path& currentDirPath);
 
 int main(const int argc, char* argv[])
 {
@@ -31,9 +37,16 @@ int main(const int argc, char* argv[])
 
 	try
 	{
+		const auto mainFilePath = std::filesystem::absolute(argv[1]);
 		const auto sourceCode = GetSourceCode(argv[1]);
 		const auto slrBuilder = SetupSLRTableBuilder(argv[0]);
 		const auto astRoot = BuildAST(sourceCode, slrBuilder);
+
+		std::unordered_set<std::string> parsedFiles;
+		parsedFiles.insert(mainFilePath.string());
+
+		ResolveImports(astRoot, parsedFiles, slrBuilder, mainFilePath.parent_path());
+		std::cout << "[3.5/5] AST Linking (Imports) resolved." << std::endl;
 
 		AstPrinter printer;
 		printer.PrintAst(astRoot);
@@ -102,12 +115,6 @@ void RunVM(const std::unique_ptr<Chunk>& chunk)
 	vm.Interpret(chunk);
 }
 
-
-
-
-
-
-
 std::string ReadFile(const std::string& path)
 {
 	std::ifstream file(path);
@@ -139,4 +146,62 @@ void PrintConsts(const std::unique_ptr<Chunk>& chunk)
 	{
 		PrintValue(val);
 	}
+}
+
+void ResolveImports(
+	const std::shared_ptr<AstNode>& astRoot,
+	std::unordered_set<std::string>& parsedFiles,
+	const SLRTableBuilder& slrBuilder,
+	const std::filesystem::path& currentDirPath)
+{
+	if (!astRoot)
+	{
+		return;
+	}
+
+	const auto programNode = std::dynamic_pointer_cast<CommonNode>(astRoot);
+	if (!programNode)
+	{
+		return;
+	}
+	if (programNode->type != AstNodeType::PROGRAM)
+	{
+		return;
+	}
+	std::vector<std::shared_ptr<AstNode>> resolvedChildren;
+
+	for (const auto& child : programNode->children)
+	{
+		const auto importNode = std::dynamic_pointer_cast<ImportNode>(child);
+
+		if (!importNode)
+		{
+			resolvedChildren.push_back(child);
+		}
+		else
+		{
+			const auto importPath = currentDirPath / importNode->filePath;
+			const auto importPathStr = std::filesystem::absolute(importPath).string();
+
+			if (!parsedFiles.contains(importPathStr))
+			{
+				parsedFiles.insert(importPathStr);
+				std::cout << "      -> Resolving import: " << importNode->filePath << std::endl;
+
+				std::string importedSource = ReadFile(importPathStr);
+				auto importedAst = BuildAST(importedSource, slrBuilder);
+				ResolveImports(importedAst, parsedFiles, slrBuilder, importPath.parent_path());
+
+				if (const auto importedProgram = std::dynamic_pointer_cast<CommonNode>(importedAst))
+				{
+					resolvedChildren.insert(
+						resolvedChildren.end(),
+						importedProgram->children.begin(),
+						importedProgram->children.end());
+				}
+			}
+		}
+	}
+
+	programNode->children = std::move(resolvedChildren);
 }

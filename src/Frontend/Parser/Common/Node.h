@@ -46,6 +46,7 @@ enum class AstNodeType : int
 	TYPE_FLOAT_ARRAY,
 	TYPE_BOOL_ARRAY,
 	TYPE_STRING_ARRAY,
+	IMPORT_DECL,
 };
 
 static const std::unordered_map<std::string, AstNodeType> AST_NODE_TYPES = {
@@ -85,6 +86,7 @@ static const std::unordered_map<std::string, AstNodeType> AST_NODE_TYPES = {
 	{ "TYPE_FLOAT_ARRAY", AstNodeType::TYPE_FLOAT_ARRAY },
 	{ "TYPE_BOOL_ARRAY", AstNodeType::TYPE_BOOL_ARRAY },
 	{ "TYPE_STRING_ARRAY", AstNodeType::TYPE_STRING_ARRAY },
+	{ "IMPORT_DECL", AstNodeType::IMPORT_DECL },
 };
 
 using SymbolId = int32_t;
@@ -519,6 +521,22 @@ struct ReturnNode final : AstNode
 	explicit ReturnNode(const SymbolId id, std::shared_ptr<AstNode> e = nullptr)
 		: AstNode(id, AstNodeType::RETURN_STATEMENT)
 		, expr(std::move(e))
+	{
+	}
+
+	void Accept(AstVisitor& visitor) override
+	{
+		visitor.Visit(*this);
+	}
+};
+
+struct ImportNode final : AstNode
+{
+	std::string filePath;
+
+	ImportNode(const SymbolId id, std::string path)
+		: AstNode(id, AstNodeType::IMPORT_DECL)
+		, filePath(std::move(path))
 	{
 	}
 

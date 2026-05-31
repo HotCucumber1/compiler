@@ -57,6 +57,8 @@ public:
 
 	void Visit(ReturnNode& node) override;
 
+	void Visit(ImportNode& node) override;
+
 private:
 	void EnterScope();
 

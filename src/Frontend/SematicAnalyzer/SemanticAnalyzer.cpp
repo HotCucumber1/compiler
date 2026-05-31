@@ -419,6 +419,9 @@ void SemanticAnalyzer::Visit(ReturnNode& node)
 	}
 	// Когда в FunctionDeclNode будет добавлен возврат типа, здесь его сверять с node.expr->evaluatedType
 }
+void SemanticAnalyzer::Visit(ImportNode& node)
+{
+}
 
 void SemanticAnalyzer::EnterScope()
 {

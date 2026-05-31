@@ -476,6 +476,12 @@ void AstPrinter::Visit(ReturnNode& node)
 	}
 }
 
+void AstPrinter::Visit(ImportNode& node)
+{
+	PrintIndent();
+	std::cout << "[Import] " << node.filePath << "\n";
+}
+
 void AstPrinter::PrintIndent() const
 {
 	std::cout << std::string(m_depth * 2, ' ');

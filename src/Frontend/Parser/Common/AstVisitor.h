@@ -21,6 +21,7 @@ struct ArrayLiteralNode;
 struct IndexAccessNode;
 struct IndexAssignmentNode;
 struct ReturnNode;
+struct ImportNode;
 
 class AstVisitor
 {
@@ -68,4 +69,6 @@ public:
 	virtual void Visit(IndexAssignmentNode& node) = 0;
 
 	virtual void Visit(ReturnNode& node) = 0;
+
+	virtual void Visit(ImportNode& node) = 0;
 };
