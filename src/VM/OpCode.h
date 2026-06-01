@@ -44,5 +44,7 @@ enum class OpCode : uint8_t
 	OP_POP,
 	OP_DUP,
 
+	OP_MAKE_CLOSURE,
+
 	OP_RETURN = 255,
 };

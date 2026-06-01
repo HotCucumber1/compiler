@@ -15,13 +15,16 @@ using NativeFunctionPtr = std::shared_ptr<NativeFunction>;
 struct Function;
 using FunctionPtr = std::shared_ptr<Function>;
 
+struct Closure;
+using ClosurePtr = std::shared_ptr<Closure>;
+
 struct Array;
 using ArrayPtr = std::shared_ptr<Array>;
 
 struct Instance;
 using InstancePtr = std::shared_ptr<Instance>;
 
-struct Value : std::variant<std::monostate, int64_t, double, bool, char, HeapObjectPtr, FunctionPtr, ArrayPtr, InstancePtr>
+struct Value : std::variant<std::monostate, int64_t, double, bool, char, HeapObjectPtr, FunctionPtr, ClosurePtr, ArrayPtr, InstancePtr>
 {
 	using variant::variant;
 
@@ -95,6 +98,37 @@ struct NativeFunction final : Object
 };
 
 using NativeFunctionPtr = std::shared_ptr<NativeFunction>;
+
+struct Closure final : Object
+{
+	FunctionPtr function;
+	std::vector<Value> captures;
+
+	Closure(FunctionPtr func, std::vector<Value> caps)
+		: Object(ObjectType::CLOSURE)
+		, function(std::move(func))
+		, captures(std::move(caps))
+	{
+	}
+};
+
+inline bool IsClosure(const Value& value)
+{
+	return std::visit([]<typename T0>(T0&&) {
+		using T = std::decay_t<T0>;
+		return std::is_same_v<T, ClosurePtr>;
+	},
+		value);
+}
+
+inline ClosurePtr AsClosure(const Value& value)
+{
+	if (!IsClosure(value))
+	{
+		throw std::runtime_error("VM Error: Value is not a closure");
+	}
+	return std::get<ClosurePtr>(value);
+}
 
 inline bool IsNull(const Value& value)
 {
@@ -316,6 +350,10 @@ inline Value operator+(const Value& lhs, const Value& rhs) // TODO добави�
 		{
 			throw std::runtime_error("Cannot add structs"); // TODO
 		}
+		else if constexpr (std::is_same_v<LType, ClosurePtr> || std::is_same_v<RType, ClosurePtr>)
+		{
+			throw std::runtime_error("Cannot add closure"); // TODO
+		}
 		else if constexpr (std::is_same_v<LType, double> || std::is_same_v<RType, double>)
 		{
 			return static_cast<double>(l) + static_cast<double>(r);
@@ -364,6 +402,10 @@ inline Value operator-(const Value& lhs, const Value& rhs)
 		{
 			throw std::runtime_error("Cannot sub structs"); // TODO
 		}
+		else if constexpr (std::is_same_v<LType, ClosurePtr> || std::is_same_v<RType, ClosurePtr>)
+		{
+			throw std::runtime_error("Cannot sub closure"); // TODO
+		}
 		else if constexpr (std::is_same_v<LType, double> || std::is_same_v<RType, double>)
 		{
 			return static_cast<double>(l) - static_cast<double>(r);
@@ -411,6 +453,10 @@ inline Value operator*(const Value& lhs, const Value& rhs)
 		else if constexpr (std::is_same_v<LType, InstancePtr> || std::is_same_v<RType, InstancePtr>)
 		{
 			throw std::runtime_error("Cannot multiply structs"); // TODO
+		}
+		else if constexpr (std::is_same_v<LType, ClosurePtr> || std::is_same_v<RType, ClosurePtr>)
+		{
+			throw std::runtime_error("Cannot multiply closure"); // TODO
 		}
 		else if constexpr (std::is_same_v<LType, double> || std::is_same_v<RType, double>)
 		{
@@ -463,6 +509,10 @@ inline Value operator/(const Value& lhs, const Value& rhs)
 		else if constexpr (std::is_same_v<LType, InstancePtr> || std::is_same_v<RType, InstancePtr>)
 		{
 			throw std::runtime_error("Cannot div structs"); // TODO
+		}
+		else if constexpr (std::is_same_v<LType, ClosurePtr> || std::is_same_v<RType, ClosurePtr>)
+		{
+			throw std::runtime_error("Cannot div closure"); // TODO
 		}
 		else if constexpr (std::is_same_v<LType, double> || std::is_same_v<RType, double>)
 		{
@@ -579,6 +629,11 @@ inline void PrintValue(const Value& value, bool newLine = true)
 			{
 				const auto inst = AsInstance(arg);
 				std::cout << "<instance of " << inst->structName << ">";
+			}
+			else if (IsClosure(arg))
+			{
+				const auto closure = AsClosure(arg);
+				std::cout << "<closure capturing " << closure->captures.size() << " vars>";
 			}
 			else
 			{

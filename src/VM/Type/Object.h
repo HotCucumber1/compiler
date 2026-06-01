@@ -10,6 +10,7 @@ enum class ObjectType
 	ARRAY,
 	NATIVE_FUNC,
 	INSTANCE,
+	CLOSURE,
 };
 
 struct Object

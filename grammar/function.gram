@@ -1,4 +1,7 @@
-FunctionDecl -> func IDENTIFIER ( ParamList ) : Type { GlobalList } : FUNC_DECL
+FunctionDecl -> func IDENTIFIER ( ParamList ) FunctionUseDecl : Type { GlobalList } : FUNC_DECL
+
+FunctionUseDecl -> use ( ParamList ) : USE_DECL
+FunctionUseDecl -> # : EMPTY_LIST
 
 ParamList -> ParamElement , ParamList : LIST_APPEND
 ParamList -> ParamElement : LIST_SINGLE
@@ -6,4 +9,3 @@ ParamList -> # : EMPTY_LIST
 
 ParamElement -> VarBase : PASS_THROUGH
 VarBase -> Type IDENTIFIER : VAR_DECL
-

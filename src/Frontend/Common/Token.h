@@ -64,6 +64,7 @@ enum class TokenType
 	FINALLY,
 	STRUCT,
 	IMPORT,
+	USE,
 
 	// Math
 	OP_PLUS,
@@ -155,6 +156,7 @@ static const std::unordered_map<std::string, TokenType> KEYWORDS = {
 	{ "new", TokenType::NEW },
 	{ "finally", TokenType::FINALLY },
 	{ "import", TokenType::IMPORT },
+	{ "use", TokenType::USE },
 
 	{ "int", TokenType::TYPE_INT },
 	{ "float", TokenType::TYPE_FLOAT },

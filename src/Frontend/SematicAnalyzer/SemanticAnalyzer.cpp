@@ -293,10 +293,49 @@ void SemanticAnalyzer::Visit(FunctionDeclNode& node)
 {
 	m_functions[node.name] = { node.returnType, node.arrayDepth, node.structName, false };
 
+	for (const auto& capNode : node.captures)
+	{
+		if (capNode)
+		{
+			bool found = false;
+			SymbolInfo outerVar{};
+			for (const auto& scope : std::ranges::reverse_view(m_symbolTable))
+			{
+				if (scope.contains(capNode->varName))
+				{
+					outerVar = scope.at(capNode->varName);
+					found = true;
+					break;
+				}
+			}
+			if (!found)
+			{
+				throw CompilerError(node.location, "Semantic error: Cannot capture undefined variable '" + capNode->varName + "'");
+			}
+			if (outerVar.type != capNode->varType || outerVar.arrayDepth != capNode->arrayDepth || outerVar.structName != capNode->structName)
+			{
+				throw CompilerError(node.location, "Semantic error: Type mismatch for captured variable '" + capNode->varName + "'");
+			}
+		}
+	}
+
 	const auto previousSignature = m_currentFunctionSignature;
 	m_currentFunctionSignature = { node.returnType, node.arrayDepth, node.structName, false };
 
 	EnterScope();
+
+	for (const auto& capNode : node.captures)
+	{
+		if (capNode)
+		{
+			m_symbolTable.back()[capNode->varName] = {
+				capNode->varType,
+				capNode->arrayDepth,
+				capNode->structName,
+				capNode->isConst,
+			};
+		}
+	}
 
 	for (const auto& paramNode : node.parameters)
 	{
@@ -306,7 +345,7 @@ void SemanticAnalyzer::Visit(FunctionDeclNode& node)
 				paramNode->varType,
 				paramNode->arrayDepth,
 				paramNode->structName,
-				paramNode->isConst
+				paramNode->isConst,
 			};
 		}
 	}

@@ -3,9 +3,11 @@ int b = 5;
 string input = read();
 print(input);
 
-func HelloWorld(int a): void {
+func HelloWorld(int a) use (int b, string input): void {
     print("Hello world");
     print(a);
+    print(b);
+    print(input);
 }
 
 HelloWorld(2);

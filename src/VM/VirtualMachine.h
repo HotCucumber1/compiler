@@ -85,6 +85,8 @@ private:
 
 	void OpSetField();
 
+	void OpMakeClosure();
+
 	Value Pop();
 
 	Value Peek(int distance) const;

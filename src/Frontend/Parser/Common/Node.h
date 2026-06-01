@@ -46,6 +46,7 @@ enum class AstNodeType : int
 	TYPE_CUSTOM,
 	TYPE_ARRAY,
 	IMPORT_DECL,
+	USE_DECL,
 };
 
 static const std::unordered_map<std::string, AstNodeType> AST_NODE_TYPES = {
@@ -84,6 +85,7 @@ static const std::unordered_map<std::string, AstNodeType> AST_NODE_TYPES = {
 	{ "TYPE_CUSTOM", AstNodeType::TYPE_CUSTOM },
 	{ "TYPE_ARRAY", AstNodeType::TYPE_ARRAY },
 	{ "IMPORT_DECL", AstNodeType::IMPORT_DECL },
+	{ "USE_DECL", AstNodeType::USE_DECL },
 };
 
 using SymbolId = int32_t;
@@ -367,6 +369,7 @@ struct FunctionDeclNode final : AstNode
 {
 	std::string name;
 	std::vector<std::shared_ptr<VarDeclNode>> parameters;
+	std::vector<std::shared_ptr<VarDeclNode>> captures;
 	std::shared_ptr<AstNode> body;
 
 	DataType returnType;
@@ -375,6 +378,7 @@ struct FunctionDeclNode final : AstNode
 		const SymbolId id,
 		std::string n,
 		std::vector<std::shared_ptr<VarDeclNode>> p,
+		std::vector<std::shared_ptr<VarDeclNode>> c,
 		std::shared_ptr<AstNode> b,
 		const DataType rType = DataType::UNKNOWN,
 		const int arrDepth = 0,
@@ -382,6 +386,7 @@ struct FunctionDeclNode final : AstNode
 		: AstNode(id, AstNodeType::FUNC_DECL)
 		, name(std::move(n))
 		, parameters(std::move(p))
+		, captures(std::move(c))
 		, body(std::move(b))
 		, returnType(rType)
 	{

@@ -136,9 +136,9 @@ std::shared_ptr<AstNode> AstFactory::CreateNode(
 	}
 
 	case AstNodeType::FUNC_DECL: {
-		std::string name = GetToken(children[1]).value;
-		std::vector<std::shared_ptr<VarDeclNode>> params;
+		const auto name = GetToken(children[1]).value;
 
+		std::vector<std::shared_ptr<VarDeclNode>> params;
 		if (auto paramList = std::dynamic_pointer_cast<CommonNode>(children[3]))
 		{
 			if (paramList->type == AstNodeType::BLOCK)
@@ -153,19 +153,36 @@ std::shared_ptr<AstNode> AstFactory::CreateNode(
 			}
 		}
 
-		auto [dataType, depth, structName] = ExtractTypeInfo(children[6]);
-		auto body = children[8];
+		std::vector<std::shared_ptr<VarDeclNode>> captures;
+		if (auto useList = std::dynamic_pointer_cast<CommonNode>(children[5]))
+		{
+			if (useList->type == AstNodeType::BLOCK)
+			{
+				for (auto& child : useList->children)
+				{
+					if (const auto cElem = std::dynamic_pointer_cast<VarDeclNode>(child))
+						captures.push_back(cElem);
+				}
+			}
+		}
+
+		auto [dataType, depth, structName] = ExtractTypeInfo(children[7]);
+		auto body = children[9];
 
 		result = std::make_shared<FunctionDeclNode>(
 			id,
 			name,
 			params,
+			captures,
 			body,
 			dataType,
 			depth,
 			structName);
 		break;
 	}
+
+	case AstNodeType::USE_DECL:
+		return children[2];
 
 	case AstNodeType::LIST_APPEND:
 	case AstNodeType::LIST_SINGLE:

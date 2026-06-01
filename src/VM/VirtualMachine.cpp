@@ -177,6 +177,9 @@ void VirtualMachine::Run()
 		case OpCode::OP_SET_FIELD:
 			OpSetField();
 			break;
+		case OpCode::OP_MAKE_CLOSURE:
+			OpMakeClosure();
+			break;
 		default:
 			std::cerr << "Unknown operation: " << static_cast<int>(opCode) << std::endl;
 			return;
@@ -416,29 +419,47 @@ void VirtualMachine::OpCall()
 		{
 			m_valueStack.pop_back();
 		}
-		Value result = native->func(args);
+		const auto result = native->func(args);
 		Push(result);
 
 		CallFrame& currentFrame = m_callFrames.back();
 		currentFrame.instructionPointer = m_instructionPointer;
 		return;
 	}
-	if (!IsFunction(callee))
+	std::shared_ptr<Function> function = nullptr;
+	std::vector<Value> captures;
+
+	if (IsClosure(callee))
 	{
-		throw std::runtime_error("Can only call functions");
+		const auto closure = AsClosure(callee);
+		function = closure->function;
+		captures = closure->captures;
+	}
+	else if (IsFunction(callee))
+	{
+		function = AsFunc(callee);
+	}
+	else
+	{
+		throw std::runtime_error("VM Error: Can only call functions or closures");
 	}
 
-	const auto function = AsFunc(callee);
 	if (argCount != function->arity)
 	{
 		throw std::runtime_error("Expected " + std::to_string(function->arity) + " arguments but got " + std::to_string(argCount));
 	}
 
 	CallFrame frame(function);
+	int localIdx = 0;
+	for (const auto& cap : captures)
+	{
+		frame.locals[localIdx++] = cap;
+	}
+
 	for (int i = 0; i < argCount; i++)
 	{
 		const auto arg = m_valueStack[m_valueStack.size() - argCount + i];
-		frame.locals[i] = arg;
+		frame.locals[localIdx++] = arg;
 	}
 	for (int i = 0; i <= argCount; i++)
 	{
@@ -653,6 +674,25 @@ void VirtualMachine::OpSetField()
 	auto instance = AsInstance(strct);
 	instance->fields[fieldName] = val;
 	Push(val);
+}
+
+void VirtualMachine::OpMakeClosure()
+{
+	const auto captureCount = ReadByte();
+	std::vector<Value> captures(captureCount);
+
+	for (int i = captureCount - 1; i >= 0; i--)
+	{
+		captures[i] = Pop();
+	}
+
+	const auto funcValue = Pop();
+	if (!IsFunction(funcValue))
+	{
+		throw std::runtime_error("VM Error: Expected function for OP_MAKE_CLOSURE");
+	}
+	auto closure = std::make_shared<Closure>(AsFunc(funcValue), std::move(captures));
+	Push(closure);
 }
 
 Value VirtualMachine::Pop()

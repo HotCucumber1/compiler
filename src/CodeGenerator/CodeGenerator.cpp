@@ -347,6 +347,14 @@ void CodeGenerator::Visit(FunctionDeclNode& node)
 	m_nextLocalIdx = 0;
 
 	EnterScope();
+	for (const auto& cap : node.captures)
+	{
+		if (cap)
+		{
+			m_scopes.back()[cap->varName] = { DataType::UNKNOWN, m_nextLocalIdx++, false };
+		}
+	}
+
 	for (const auto& param : node.parameters)
 	{
 		if (param)
@@ -378,6 +386,33 @@ void CodeGenerator::Visit(FunctionDeclNode& node)
 
 	PushCode(static_cast<uint8_t>(OpCode::OP_CONSTANT));
 	PushCode(funcIdx);
+
+	if (!node.captures.empty())
+	{
+		for (const auto& cap : node.captures)
+		{
+			size_t varIdx = -1;
+			for (auto& scope : std::ranges::reverse_view(m_scopes))
+			{
+				if (scope.contains(cap->varName))
+				{
+					varIdx = scope[cap->varName].index;
+					break;
+				}
+			}
+			if (varIdx == -1)
+			{
+				throw std::runtime_error("CodeGen error: Undefined capture variable '" + cap->varName + "'");
+			}
+
+			PushCode(static_cast<uint8_t>(OpCode::OP_GET_LOCAL_VAR));
+			PushCode(static_cast<uint8_t>(varIdx));
+		}
+
+		PushCode(static_cast<uint8_t>(OpCode::OP_MAKE_CLOSURE));
+		PushCode(static_cast<uint8_t>(node.captures.size()));
+	}
+
 	PushCode(static_cast<uint8_t>(OpCode::OP_SET_GLOBAL));
 	PushCode(nameIdx);
 }
