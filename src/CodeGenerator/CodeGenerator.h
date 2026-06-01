@@ -56,6 +56,12 @@ public:
 
 	void Visit(ImportNode& node) override;
 
+	void Visit(SchemaFuncNode& node) override;
+
+	void Visit(SchemaStateNode& node) override;
+
+	void Visit(SchemaDeclNode& node) override;
+
 private:
 	void PushCode(uint8_t code);
 
@@ -70,6 +76,7 @@ private:
 	uint8_t AddConstant(const Value& value);
 
 	void PushTempAddr();
+
 
 private:
 	struct LocalVarInfo

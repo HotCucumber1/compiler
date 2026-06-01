@@ -22,6 +22,9 @@ struct IndexAccessNode;
 struct IndexAssignmentNode;
 struct ReturnNode;
 struct ImportNode;
+struct SchemaFuncNode;
+struct SchemaStateNode;
+struct SchemaDeclNode;
 
 class AstVisitor
 {
@@ -71,4 +74,10 @@ public:
 	virtual void Visit(ReturnNode& node) = 0;
 
 	virtual void Visit(ImportNode& node) = 0;
+
+	virtual void Visit(SchemaFuncNode& node) = 0;
+
+	virtual void Visit(SchemaStateNode& node) = 0;
+
+	virtual void Visit(SchemaDeclNode& node) = 0;
 };

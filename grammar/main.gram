@@ -5,6 +5,7 @@ GlobalList -> GlobalElement : LIST_SINGLE
 
 GlobalElement -> FunctionDecl : PASS_THROUGH
 GlobalElement -> StructDecl : PASS_THROUGH
+GlobalElement -> SchemaDecl : PASS_THROUGH
 GlobalElement -> Statement : PASS_THROUGH
 GlobalElement -> import STRING : IMPORT_DECL
 

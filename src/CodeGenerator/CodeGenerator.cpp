@@ -554,6 +554,18 @@ void CodeGenerator::Visit(ImportNode& node)
 {
 }
 
+void CodeGenerator::Visit(SchemaFuncNode& node)
+{
+}
+
+void CodeGenerator::Visit(SchemaStateNode& node)
+{
+}
+
+void CodeGenerator::Visit(SchemaDeclNode& node)
+{
+}
+
 void CodeGenerator::PushCode(const uint8_t code)
 {
 	m_chunk.code.push_back(code);

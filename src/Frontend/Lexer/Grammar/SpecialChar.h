@@ -1,10 +1,11 @@
 #pragma once
-#include "../Reader.h"
 #include "../../Common/Token.h"
+#include "../Reader.h"
 
 inline TokenType SpecialCharGrammar(Reader& reader)
 {
-	const auto it = SPECIAL_CHARS.find(reader.GetNext());
+	const char firstChar = reader.GetNext();
+	const auto it = SPECIAL_CHARS.find(firstChar);
 
 	reader.GetCh();
 	if (reader.IsEmpty())
@@ -12,14 +13,22 @@ inline TokenType SpecialCharGrammar(Reader& reader)
 		return it->second;
 	}
 
-	const auto doubledIt = SPECIAL_CHARS_DOUBLE.find(it->first);
-	if (doubledIt == SPECIAL_CHARS_DOUBLE.end() || doubledIt->second.first != reader.GetNext())
+	const auto doubledIt = SPECIAL_CHARS_DOUBLE.find(firstChar);
+	if (doubledIt == SPECIAL_CHARS_DOUBLE.end())
+	{
+		return it->second;
+	}
+
+	const char secondChar = reader.GetNext();
+
+	const auto secondIt = doubledIt->second.find(secondChar);
+	if (secondIt == doubledIt->second.end())
 	{
 		return it->second;
 	}
 
 	reader.GetCh();
-	return doubledIt->second.second;
+	return secondIt->second;
 }
 
 inline bool IsSpecialChar(const char c)

@@ -60,6 +60,13 @@ public:
 
 	void Visit(ImportNode& node) override;
 
+	void Visit(SchemaFuncNode& node) override;
+
+	void Visit(SchemaStateNode& node) override;
+
+	void Visit(SchemaDeclNode& node) override;
+
+
 private:
 	void EnterScope();
 

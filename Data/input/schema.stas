@@ -1,0 +1,38 @@
+schema Calculator
+{
+    state Ready() {
+        func digit(int d) -> FirstNumber
+        func clear() -> Ready
+    }
+
+    state FirstNumber(int current) {
+        func digit(int d) -> FirstNumber
+        func operator(MyOperator op) -> SecondNumber
+        func clear() -> Ready
+        func equal() -> Ready
+    }
+
+    state SecondNumber(int first, MyOperator op) {
+        func digit(int d) -> SecondNumberWithValue
+        func clear() -> Ready
+    }
+
+    state SecondNumberWithValue(int first, MyOperator op, int current) {
+        func digit(int d) -> SecondNumberWithValue
+        func equal() -> Compute
+        func clear() -> Ready
+    }
+
+    state Compute(int first, MyOperator op, int second) {
+        func execute() -> Result
+    }
+
+    state Result(int value) {
+        func digit(int d) -> FirstNumber
+        func clear() -> Ready
+        func operator(MyOperator op) -> SecondNumber
+    }
+}
+
+
+print("Hello");

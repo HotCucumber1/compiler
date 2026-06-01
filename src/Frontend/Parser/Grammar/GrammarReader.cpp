@@ -32,7 +32,9 @@ Grammar GrammarReader::Read(const std::string& srcDir)
 		while (std::getline(file, line))
 		{
 			if (line.empty() || line[0] == '#')
+			{
 				continue;
+			}
 
 			auto [lhsStr, rhsPart, typeStr] = ParseLine(line);
 			RuleItem lhs = { lhsStr, false };
@@ -122,7 +124,7 @@ bool IsTerminal(const std::string& str)
 	if (str.length() == 2)
 	{
 		auto it = SPECIAL_CHARS_DOUBLE.find(str[0]);
-		if (it != SPECIAL_CHARS_DOUBLE.end() && it->second.first == str[1])
+		if (it != SPECIAL_CHARS_DOUBLE.end() && it->second.contains(str[1]))
 		{
 			return true;
 		}

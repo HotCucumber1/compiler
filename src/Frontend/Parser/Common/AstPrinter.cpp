@@ -492,6 +492,114 @@ void AstPrinter::Visit(ImportNode& node)
 	std::cout << "[Import] " << node.filePath << "\n";
 }
 
+void AstPrinter::Visit(SchemaFuncNode& node)
+{
+	PrintIndent();
+	std::cout << "[SchemaFunc] " << node.name << " -> " << node.returnState << "\n";
+
+	m_depth++;
+	PrintIndent();
+	std::cout << "Parameters:\n";
+
+	m_depth++;
+	if (node.parameters.empty())
+	{
+		PrintIndent();
+		std::cout << "(none)\n";
+	}
+	else
+	{
+		for (const auto& param : node.parameters)
+		{
+			if (param)
+			{
+				param->Accept(*this);
+			}
+		}
+	}
+	m_depth--;
+	m_depth--;
+}
+
+void AstPrinter::Visit(SchemaStateNode& node)
+{
+	PrintIndent();
+	std::cout << "[SchemaState] " << node.name << "\n";
+
+	m_depth++;
+
+	PrintIndent();
+	std::cout << "Fields:\n";
+	m_depth++;
+	if (node.fields.empty())
+	{
+		PrintIndent();
+		std::cout << "(none)\n";
+	}
+	else
+	{
+		for (const auto& field : node.fields)
+		{
+			if (field)
+			{
+				field->Accept(*this);
+			}
+		}
+	}
+	m_depth--;
+
+	PrintIndent();
+	std::cout << "Transitions:\n";
+	m_depth++;
+	if (node.methods.empty())
+	{
+		PrintIndent();
+		std::cout << "(none)\n";
+	}
+	else
+	{
+		for (const auto& method : node.methods)
+		{
+			if (method)
+			{
+				method->Accept(*this);
+			}
+		}
+	}
+	m_depth--;
+
+	m_depth--;
+}
+
+void AstPrinter::Visit(SchemaDeclNode& node)
+{
+	PrintIndent();
+	std::cout << "[SchemaDecl] " << node.name << "\n";
+
+	m_depth++;
+	PrintIndent();
+	std::cout << "States:\n";
+
+	m_depth++;
+	if (node.states.empty())
+	{
+		PrintIndent();
+		std::cout << "(none)\n";
+	}
+	else
+	{
+		for (const auto& state : node.states)
+		{
+			if (state)
+			{
+				state->Accept(*this);
+			}
+		}
+	}
+	m_depth--;
+	m_depth--;
+}
+
 void AstPrinter::PrintIndent() const
 {
 	std::cout << std::string(m_depth * 2, ' ');

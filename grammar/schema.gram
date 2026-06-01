@@ -1,0 +1,13 @@
+SchemaDecl -> schema IDENTIFIER { SchemaStateList } : SCHEMA_DECL
+
+SchemaStateList -> SchemaState SchemaStateList : LIST_APPEND
+SchemaStateList -> SchemaState : LIST_SINGLE
+SchemaStateList -> # : EMPTY_LIST
+
+SchemaState -> state IDENTIFIER ( ParamList ) { SignalDeclList } : SCHEMA_STATE
+
+SignalDeclList -> SignalDecl SignalDeclList : LIST_APPEND
+SignalDeclList -> SignalDecl : LIST_SINGLE
+SignalDeclList -> # : EMPTY_LIST
+
+SignalDecl -> func IDENTIFIER ( ParamList ) -> IDENTIFIER : SCHEMA_FUNC

@@ -550,6 +550,18 @@ void SemanticAnalyzer::Visit(ImportNode& node)
 {
 }
 
+void SemanticAnalyzer::Visit(SchemaFuncNode& node)
+{
+}
+
+void SemanticAnalyzer::Visit(SchemaStateNode& node)
+{
+}
+
+void SemanticAnalyzer::Visit(SchemaDeclNode& node)
+{
+}
+
 void SemanticAnalyzer::EnterScope()
 {
 	m_symbolTable.emplace_back();

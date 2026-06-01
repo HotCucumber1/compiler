@@ -4,7 +4,7 @@ struct TypeInfo
 {
 	DataType type = DataType::UNKNOWN;
 	int depth = 0;
-	std::string structName = "";
+	std::string structName;
 };
 
 Token GetToken(const std::shared_ptr<AstNode>& node);
@@ -287,6 +287,88 @@ std::shared_ptr<AstNode> AstFactory::CreateNode(
 		auto rawPath = GetToken(children[1]).value;
 		auto cleanPath = rawPath.substr(1, rawPath.size() - 2);
 		result = std::make_shared<ImportNode>(id, cleanPath);
+		break;
+	}
+
+	case AstNodeType::SCHEMA_FUNC: {
+		const auto name = GetToken(children[1]).value;
+
+		std::vector<std::shared_ptr<VarDeclNode>> params;
+		if (auto paramList = std::dynamic_pointer_cast<CommonNode>(children[3]))
+		{
+			if (paramList->type == AstNodeType::BLOCK)
+			{
+				for (auto& child : paramList->children)
+				{
+					if (const auto pElem = std::dynamic_pointer_cast<VarDeclNode>(child))
+					{
+						params.push_back(pElem);
+					}
+				}
+			}
+		}
+		const auto returnState = GetToken(children[6]).value;
+
+		result = std::make_shared<SchemaFuncNode>(id, name, params, returnState);
+		break;
+	}
+
+	case AstNodeType::SCHEMA_STATE: {
+		const auto name = GetToken(children[1]).value;
+
+		std::vector<std::shared_ptr<VarDeclNode>> fields;
+		if (auto paramList = std::dynamic_pointer_cast<CommonNode>(children[3]))
+		{
+			if (paramList->type == AstNodeType::BLOCK)
+			{
+				for (auto& child : paramList->children)
+				{
+					if (const auto pElem = std::dynamic_pointer_cast<VarDeclNode>(child))
+					{
+						fields.push_back(pElem);
+					}
+				}
+			}
+		}
+
+		std::vector<std::shared_ptr<SchemaFuncNode>> methods;
+		if (auto methodList = std::dynamic_pointer_cast<CommonNode>(children[6]))
+		{
+			if (methodList->type == AstNodeType::BLOCK)
+			{
+				for (auto& child : methodList->children)
+				{
+					if (const auto mElem = std::dynamic_pointer_cast<SchemaFuncNode>(child))
+					{
+						methods.push_back(mElem);
+					}
+				}
+			}
+		}
+
+		result = std::make_shared<SchemaStateNode>(id, name, fields, methods);
+		break;
+	}
+
+	case AstNodeType::SCHEMA_DECL: {
+		const auto name = GetToken(children[1]).value;
+
+		std::vector<std::shared_ptr<SchemaStateNode>> states;
+		if (auto stateList = std::dynamic_pointer_cast<CommonNode>(children[3]))
+		{
+			if (stateList->type == AstNodeType::BLOCK)
+			{
+				for (auto& child : stateList->children)
+				{
+					if (const auto sElem = std::dynamic_pointer_cast<SchemaStateNode>(child))
+					{
+						states.push_back(sElem);
+					}
+				}
+			}
+		}
+
+		result = std::make_shared<SchemaDeclNode>(id, name, states);
 		break;
 	}
 

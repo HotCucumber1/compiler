@@ -65,6 +65,8 @@ enum class TokenType
 	STRUCT,
 	IMPORT,
 	USE,
+	SCHEMA,
+	STATE,
 
 	// Math
 	OP_PLUS,
@@ -157,6 +159,8 @@ static const std::unordered_map<std::string, TokenType> KEYWORDS = {
 	{ "finally", TokenType::FINALLY },
 	{ "import", TokenType::IMPORT },
 	{ "use", TokenType::USE },
+	{ "schema", TokenType::SCHEMA },
+	{ "state", TokenType::STATE },
 
 	{ "int", TokenType::TYPE_INT },
 	{ "float", TokenType::TYPE_FLOAT },
@@ -212,14 +216,14 @@ static const std::unordered_map<TokenType, std::string> REVERSE_SPECIAL_CHARS = 
 	return reverse;
 }();
 
-const std::unordered_map<char, std::pair<char, TokenType>> SPECIAL_CHARS_DOUBLE = {
-	{ '=', { '=', TokenType::OP_EQUAL } },
-	{ '!', { '=', TokenType::OP_NOT_EQUAL } },
-	{ '<', { '=', TokenType::OP_LESS_OR_EQUAL } },
-	{ '>', { '=', TokenType::OP_MORE_OR_EQUAL } },
-	{ '+', { '+', TokenType::OP_INCREMENT } },
-	{ '-', { '-', TokenType::OP_DECREMENT } },
-	{ '-', { '>', TokenType::NEXT_STATE_ARROW } },
+const std::unordered_map<char, std::unordered_map<char, TokenType>> SPECIAL_CHARS_DOUBLE = {
+	{ '=', { { '=', TokenType::OP_EQUAL } } },
+	{ '!', { { '=', TokenType::OP_NOT_EQUAL } } },
+	{ '<', { { '=', TokenType::OP_LESS_OR_EQUAL } } },
+	{ '>', { { '=', TokenType::OP_MORE_OR_EQUAL } } },
+	{ '+', { { '+', TokenType::OP_INCREMENT } } },
+
+	{ '-', { { '-', TokenType::OP_DECREMENT }, { '>', TokenType::NEXT_STATE_ARROW } } },
 };
 
 const std::unordered_map<TokenType, std::string> REVERSE_SPECIAL_CHARS_DOUBLE = {

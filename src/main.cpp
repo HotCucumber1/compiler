@@ -50,8 +50,8 @@ int main(const int argc, char* argv[])
 		ResolveImports(astRoot, parsedFiles, slrBuilder, mainFilePath.parent_path());
 		std::cout << "[3.5/5] AST Linking (Imports) resolved." << std::endl;
 
-		// AstPrinter printer;
-		// printer.PrintAst(astRoot);
+		AstPrinter printer;
+		printer.PrintAst(astRoot);
 
 		// TODO регистрировать встроенные функции
 
@@ -66,10 +66,8 @@ int main(const int argc, char* argv[])
 	}
 	catch (const CompilerError& e)
 	{
-		std::cerr << "\n[!] COMPILATION ERROR:\n"
-				  << "    File: " << e.location.file << "\n"
-				  << "    Line: " << e.location.line << ", Col: " << e.location.col << "\n"
-				  << "    Message: " << e.what() << "\n";
+		std::cerr << "\n[!] COMPILATION ERROR: " << e.location.file << e.location.line << ':' << e.location.col << "\n"
+				  << "Message: " << e.what() << "\n";
 		return 1;
 	}
 	catch (const std::exception& e)

@@ -47,6 +47,9 @@ enum class AstNodeType : int
 	TYPE_ARRAY,
 	IMPORT_DECL,
 	USE_DECL,
+	SCHEMA_DECL,
+	SCHEMA_STATE,
+	SCHEMA_FUNC,
 };
 
 static const std::unordered_map<std::string, AstNodeType> AST_NODE_TYPES = {
@@ -86,6 +89,9 @@ static const std::unordered_map<std::string, AstNodeType> AST_NODE_TYPES = {
 	{ "TYPE_ARRAY", AstNodeType::TYPE_ARRAY },
 	{ "IMPORT_DECL", AstNodeType::IMPORT_DECL },
 	{ "USE_DECL", AstNodeType::USE_DECL },
+	{ "SCHEMA_DECL", AstNodeType::SCHEMA_DECL },
+	{ "SCHEMA_STATE", AstNodeType::SCHEMA_STATE },
+	{ "SCHEMA_FUNC", AstNodeType::SCHEMA_FUNC },
 };
 
 using SymbolId = int32_t;
@@ -547,6 +553,75 @@ struct ImportNode final : AstNode
 	ImportNode(const SymbolId id, std::string path)
 		: AstNode(id, AstNodeType::IMPORT_DECL)
 		, filePath(std::move(path))
+	{
+	}
+
+	void Accept(AstVisitor& visitor) override
+	{
+		visitor.Visit(*this);
+	}
+};
+
+struct SchemaFuncNode final : AstNode
+{
+	std::string name;
+	std::vector<std::shared_ptr<VarDeclNode>> parameters;
+	std::string returnState;
+
+	SchemaFuncNode(
+		const SymbolId id,
+		std::string n,
+		std::vector<std::shared_ptr<VarDeclNode>> params,
+		std::string retState)
+		: AstNode(id, AstNodeType::SCHEMA_FUNC)
+		, name(std::move(n))
+		, parameters(std::move(params))
+		, returnState(std::move(retState))
+	{
+	}
+
+	void Accept(AstVisitor& visitor) override
+	{
+		visitor.Visit(*this);
+	}
+};
+
+struct SchemaStateNode final : AstNode
+{
+	std::string name;
+	std::vector<std::shared_ptr<VarDeclNode>> fields;
+	std::vector<std::shared_ptr<SchemaFuncNode>> methods;
+
+	SchemaStateNode(
+		const SymbolId id,
+		std::string n,
+		std::vector<std::shared_ptr<VarDeclNode>> f,
+		std::vector<std::shared_ptr<SchemaFuncNode>> m)
+		: AstNode(id, AstNodeType::SCHEMA_STATE)
+		, name(std::move(n))
+		, fields(std::move(f))
+		, methods(std::move(m))
+	{
+	}
+
+	void Accept(AstVisitor& visitor) override
+	{
+		visitor.Visit(*this);
+	}
+};
+
+struct SchemaDeclNode final : AstNode
+{
+	std::string name;
+	std::vector<std::shared_ptr<SchemaStateNode>> states;
+
+	SchemaDeclNode(
+		const SymbolId id,
+		std::string n,
+		std::vector<std::shared_ptr<SchemaStateNode>> s)
+		: AstNode(id, AstNodeType::SCHEMA_DECL)
+		, name(std::move(n))
+		, states(std::move(s))
 	{
 	}
 
