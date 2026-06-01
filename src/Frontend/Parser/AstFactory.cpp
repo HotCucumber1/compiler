@@ -11,8 +11,10 @@ Token GetToken(const std::shared_ptr<AstNode>& node);
 std::shared_ptr<AstNode> AppendToList(SymbolId id, const std::vector<std::shared_ptr<AstNode>>& children);
 std::vector<std::shared_ptr<AstNode>> UnwrapList(const std::shared_ptr<AstNode>& node);
 TypeInfo ExtractTypeInfo(const std::shared_ptr<AstNode>& typeNode);
+SourceLocation ExtractLocation(const std::vector<std::shared_ptr<AstNode>>& children);
 
 // TODO все индексы в константы
+// TODO разбить на функции
 
 std::shared_ptr<AstNode> AstFactory::CreateNode(
 	AstNodeType type,
@@ -23,6 +25,8 @@ std::shared_ptr<AstNode> AstFactory::CreateNode(
 	{
 		return children.empty() ? nullptr : children[0];
 	}
+
+	std::shared_ptr<AstNode> result = nullptr;
 	switch (type)
 	{
 	case AstNodeType::TYPE_INT:
@@ -32,17 +36,20 @@ std::shared_ptr<AstNode> AstFactory::CreateNode(
 	case AstNodeType::TYPE_VOID:
 	case AstNodeType::TYPE_CUSTOM:
 	case AstNodeType::TYPE_ARRAY:
-		return std::make_shared<CommonNode>(id, type, children);
+		result = std::make_shared<CommonNode>(id, type, children);
+		break;
 
 	case AstNodeType::PROGRAM:
 		if (!children.empty())
 		{
 			if (auto block = std::dynamic_pointer_cast<CommonNode>(children[0]))
 			{
-				return std::make_shared<CommonNode>(id, AstNodeType::PROGRAM, block->children);
+				result = std::make_shared<CommonNode>(id, AstNodeType::PROGRAM, block->children);
+				break;
 			}
 		}
-		return std::make_shared<CommonNode>(id, AstNodeType::PROGRAM, children);
+		result = std::make_shared<CommonNode>(id, AstNodeType::PROGRAM, children);
+		break;
 
 	case AstNodeType::VAR_DECL: {
 		auto [dataType, depth, structName] = ExtractTypeInfo(children[0]);
@@ -50,7 +57,7 @@ std::shared_ptr<AstNode> AstFactory::CreateNode(
 			? nullptr
 			: children[3];
 
-		return std::make_shared<VarDeclNode>(
+		result = std::make_shared<VarDeclNode>(
 			id,
 			GetToken(children[1]).value,
 			val,
@@ -58,6 +65,7 @@ std::shared_ptr<AstNode> AstFactory::CreateNode(
 			depth,
 			dataType,
 			structName);
+		break;
 	}
 
 	case AstNodeType::CONST_DECL:
@@ -72,24 +80,26 @@ std::shared_ptr<AstNode> AstFactory::CreateNode(
 		throw std::runtime_error("AST Factory error: Invalid CONST_DECL");
 
 	case AstNodeType::ASSIGNMENT:
-		return std::make_shared<AssignmentNode>(id, GetToken(children[0]).value, children[2]);
+		result = std::make_shared<AssignmentNode>(id, GetToken(children[0]).value, children[2]);
+		break;
 
 	case AstNodeType::BINARY_OP:
-		return std::make_shared<BinaryOpNode>(id, children[0], GetToken(children[1]), children[2]);
+		result = std::make_shared<BinaryOpNode>(id, children[0], GetToken(children[1]), children[2]);
+		break;
 
 	case AstNodeType::UNARY_OP:
-		return std::make_shared<UnaryOpNode>(id, GetToken(children[0]), children[1]);
+		result = std::make_shared<UnaryOpNode>(id, GetToken(children[0]), children[1]);
+		break;
 
 	case AstNodeType::LITERAL:
-		return std::make_shared<LiteralNode>(id, GetToken(children[0]));
+		result = std::make_shared<LiteralNode>(id, GetToken(children[0]));
+		break;
 
 	case AstNodeType::VAR_ACCESS:
-		return std::make_shared<VarAccessNode>(id, GetToken(children[0]).value);
+		result = std::make_shared<VarAccessNode>(id, GetToken(children[0]).value);
+		break;
 
 	case AstNodeType::IF_STATEMENT: {
-		// if ( Exp ) { List } -> size 7
-		// if ( Exp ) { List } else { List } -> size 11
-		// if ( Exp ) { List } else IfStmt -> size 9
 		auto cond = children[2];
 		auto thenB = children[5];
 		std::shared_ptr<AstNode> elseB = nullptr;
@@ -101,16 +111,17 @@ std::shared_ptr<AstNode> AstFactory::CreateNode(
 		{
 			elseB = children[8];
 		}
-		return std::make_shared<IfNode>(id, cond, thenB, elseB);
+		result = std::make_shared<IfNode>(id, cond, thenB, elseB);
+		break;
 	}
 
 	case AstNodeType::WHILE_STATEMENT:
-		// while ( Exp ) { List }
-		return std::make_shared<WhileNode>(id, children[2], children[5]);
+		result = std::make_shared<WhileNode>(id, children[2], children[5]);
+		break;
 
 	case AstNodeType::FOR_STATEMENT:
-		// for ( Decl ; Cond ; Incr ) { List } -> size 11
-		return std::make_shared<ForNode>(id, children[2], children[4], children[6], children[9]);
+		result = std::make_shared<ForNode>(id, children[2], children[4], children[6], children[9]);
+		break;
 
 	case AstNodeType::CALL: {
 		std::string name = GetToken(children[0]).value;
@@ -120,13 +131,12 @@ std::shared_ptr<AstNode> AstFactory::CreateNode(
 		{
 			args = argList->children;
 		}
-		return std::make_shared<CallNode>(id, name, args);
+		result = std::make_shared<CallNode>(id, name, args);
+		break;
 	}
 
 	case AstNodeType::FUNC_DECL: {
 		std::string name = GetToken(children[1]).value;
-
-		// ИЗМЕНЕНО: создаем вектор правильного типа
 		std::vector<std::shared_ptr<VarDeclNode>> params;
 
 		if (auto paramList = std::dynamic_pointer_cast<CommonNode>(children[3]))
@@ -137,7 +147,7 @@ std::shared_ptr<AstNode> AstFactory::CreateNode(
 				{
 					if (const auto pElem = std::dynamic_pointer_cast<VarDeclNode>(child))
 					{
-						params.push_back(pElem); // Извлекаем узел целиком
+						params.push_back(pElem);
 					}
 				}
 			}
@@ -146,14 +156,15 @@ std::shared_ptr<AstNode> AstFactory::CreateNode(
 		auto [dataType, depth, structName] = ExtractTypeInfo(children[6]);
 		auto body = children[8];
 
-		return std::make_shared<FunctionDeclNode>(
+		result = std::make_shared<FunctionDeclNode>(
 			id,
 			name,
-			params, // Передаем новые параметры
+			params,
 			body,
 			dataType,
 			depth,
 			structName);
+		break;
 	}
 
 	case AstNodeType::LIST_APPEND:
@@ -171,19 +182,23 @@ std::shared_ptr<AstNode> AstFactory::CreateNode(
 
 	case AstNodeType::STRUCT_DECL: {
 		auto name = GetToken(children[1]).value;
-		return std::make_shared<StructDeclNode>(id, name, UnwrapList(children[3])); // TODO передавать не это
+		result = std::make_shared<StructDeclNode>(id, name, UnwrapList(children[3]));
+		break;
 	}
 
 	case AstNodeType::STRUCT_INIT: {
 		auto name = GetToken(children[0]).value;
-		return std::make_shared<StructInitNode>(id, name, UnwrapList(children[2]));
+		result = std::make_shared<StructInitNode>(id, name, UnwrapList(children[2]));
+		break;
 	}
 
 	case AstNodeType::MEMBER_ACCESS:
-		return std::make_shared<MemberAccessNode>(id, children[0], GetToken(children[2]).value);
+		result = std::make_shared<MemberAccessNode>(id, children[0], GetToken(children[2]).value);
+		break;
 
 	case AstNodeType::MEMBER_ASSIGNMENT:
-		return std::make_shared<MemberAssignmentNode>(id, children[0], GetToken(children[2]).value, children[4]);
+		result = std::make_shared<MemberAssignmentNode>(id, children[0], GetToken(children[2]).value, children[4]);
+		break;
 
 	case AstNodeType::ARRAY_LITERAL: {
 		if (children.size() < 3)
@@ -192,7 +207,7 @@ std::shared_ptr<AstNode> AstFactory::CreateNode(
 		}
 
 		std::vector<std::shared_ptr<AstNode>> elements;
-		if (auto argNode = children[1])
+		if (const auto& argNode = children[1])
 		{
 			if (auto common = std::dynamic_pointer_cast<CommonNode>(argNode))
 			{
@@ -219,7 +234,8 @@ std::shared_ptr<AstNode> AstFactory::CreateNode(
 			elements.push_back(children[1]);
 		}
 
-		return std::make_shared<ArrayLiteralNode>(id, std::move(elements));
+		result = std::make_shared<ArrayLiteralNode>(id, std::move(elements));
+		break;
 	}
 
 	case AstNodeType::INDEX_ACCESS: {
@@ -227,7 +243,8 @@ std::shared_ptr<AstNode> AstFactory::CreateNode(
 		{
 			throw std::runtime_error("AST Factory: INDEX_ACCESS expects at least 4 children");
 		}
-		return std::make_shared<IndexAccessNode>(id, children[0], children[2]);
+		result = std::make_shared<IndexAccessNode>(id, children[0], children[2]);
+		break;
 	}
 
 	case AstNodeType::INDEX_ASSIGN: {
@@ -235,7 +252,8 @@ std::shared_ptr<AstNode> AstFactory::CreateNode(
 		{
 			throw std::runtime_error("AST Factory: INDEX_ASSIGN expects at least 6 children");
 		}
-		return std::make_shared<IndexAssignmentNode>(id, children[0], children[2], children[5]);
+		result = std::make_shared<IndexAssignmentNode>(id, children[0], children[2], children[5]);
+		break;
 	}
 
 	case AstNodeType::RETURN_STATEMENT: {
@@ -244,18 +262,25 @@ std::shared_ptr<AstNode> AstFactory::CreateNode(
 		{
 			expr = children[1];
 		}
-		return std::make_shared<ReturnNode>(id, expr);
+		result = std::make_shared<ReturnNode>(id, expr);
+		break;
 	}
 
 	case AstNodeType::IMPORT_DECL: {
 		auto rawPath = GetToken(children[1]).value;
 		auto cleanPath = rawPath.substr(1, rawPath.size() - 2);
-		return std::make_shared<ImportNode>(id, cleanPath);
+		result = std::make_shared<ImportNode>(id, cleanPath);
+		break;
 	}
 
 	default:
 		throw std::runtime_error("AstFactory Error: AstNodeType is not being processed " + std::to_string(static_cast<int>(type)));
 	}
+	if (result)
+	{
+		result->location = ExtractLocation(children);
+	}
+	return result;
 }
 
 Token GetToken(const std::shared_ptr<AstNode>& node)
@@ -272,6 +297,7 @@ std::shared_ptr<AstNode> AppendToList(SymbolId id, const std::vector<std::shared
 {
 	auto block = std::make_shared<CommonNode>(id, AstNodeType::BLOCK, std::vector<std::shared_ptr<AstNode>>{});
 
+	block->location = ExtractLocation(children);
 	if (children.size() == 1)
 	{
 		if (children[0])
@@ -355,4 +381,13 @@ TypeInfo ExtractTypeInfo(const std::shared_ptr<AstNode>& typeNode)
 	default:
 		return { DataType::UNKNOWN, 0, "" };
 	}
+}
+
+SourceLocation ExtractLocation(const std::vector<std::shared_ptr<AstNode>>& children)
+{
+	if (!children.empty() && children[0])
+	{
+		return children[0]->location;
+	}
+	return {};
 }

@@ -435,9 +435,9 @@ void VirtualMachine::OpCall()
 	}
 
 	CallFrame frame(function);
-	for (int i = argCount - 1; i >= 0; i--)
+	for (int i = 0; i < argCount; i++)
 	{
-		const auto arg = m_valueStack[m_valueStack.size() - 1 - i];
+		const auto arg = m_valueStack[m_valueStack.size() - argCount + i];
 		frame.locals[i] = arg;
 	}
 	for (int i = 0; i <= argCount; i++)

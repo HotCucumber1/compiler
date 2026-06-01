@@ -1,4 +1,5 @@
 #pragma once
+#include "../../../ErrorHandler/ErrorHandler.h"
 #include "../../Common/Token.h"
 #include "AstVisitor.h"
 #include "DataType.h"
@@ -93,7 +94,8 @@ struct AstNode
 	AstNodeType type = AstNodeType::UNDEFINED;
 	DataType evaluatedType = DataType::UNKNOWN;
 	int arrayDepth = 0;
-	std::string structName = "";
+	std::string structName;
+	SourceLocation location;
 
 	AstNode(const SymbolId id, const AstNodeType t)
 		: symbolId(id)
@@ -113,6 +115,11 @@ struct TerminalNode final : AstNode
 		: AstNode(id, AstNodeType::TERMINAL)
 		, token(std::move(t))
 	{
+		this->location = {
+			token.file,
+			token.line,
+			token.pos
+		};
 	}
 
 	void Accept(AstVisitor& visitor) override

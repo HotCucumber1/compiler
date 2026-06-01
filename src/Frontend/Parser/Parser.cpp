@@ -51,12 +51,12 @@ std::shared_ptr<AstNode> Parser::Parse() const
 			}
 			else
 			{
-				currentToken = Token{
+				currentToken = Token(
 					currentToken.pos,
 					currentToken.line,
 					TokenType::END_OF_FILE,
 					"EOF",
-				};
+					currentToken.file);
 				currentSymbolId = m_builder.GetSymbolId({
 					Grammar::END_OF_FILE,
 					true,

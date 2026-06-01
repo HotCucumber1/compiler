@@ -2,6 +2,7 @@
 #include <iostream>
 #include <string>
 #include <unordered_map>
+#include <utility>
 
 enum class TokenType
 {
@@ -98,10 +99,25 @@ enum class TokenType
 
 struct Token
 {
-	int pos;
-	int line;
+	int pos = 1;
+	int line = 1;
 	TokenType type;
 	std::string value;
+	std::string file;
+
+	Token(
+		const int pos,
+		const int line,
+		const TokenType type,
+		std::string value,
+		std::string file)
+		: pos(pos)
+		, line(line)
+		, type(type)
+		, value(std::move(value))
+		, file(std::move(file))
+	{
+	}
 
 	void Print(std::ostream& out = std::cout) const
 	{

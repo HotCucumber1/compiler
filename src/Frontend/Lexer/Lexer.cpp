@@ -1,17 +1,21 @@
 #include "Lexer.h"
+
 #include "Grammar/Identifier.h"
 #include "Grammar/Keywords.h"
 #include "Grammar/Number.h"
 #include "Grammar/SpecialChar.h"
 #include "Grammar/String.h"
+#include <utility>
 
-Lexer::Lexer(const std::string& str)
+Lexer::Lexer(const std::string& str, std::string filePath)
 	: m_reader(str)
+	, m_filePath(std::move(filePath))
 {
 }
 
-Lexer::Lexer(const std::istream& input)
+Lexer::Lexer(const std::istream& input, std::string filePath)
 	: m_reader(input)
+	, m_filePath(std::move(filePath))
 {
 }
 
@@ -25,6 +29,8 @@ Token Lexer::GetToken()
 			m_reader.GetCurrentPosition(),
 			m_reader.GetCurrentLine(),
 			TokenType::ERROR,
+			"",
+			m_filePath,
 		};
 	}
 
@@ -51,6 +57,8 @@ Token Lexer::GetToken()
 		m_reader.GetCurrentPosition(),
 		m_reader.GetCurrentLine(),
 		TokenType::ERROR,
+		"",
+		m_filePath,
 	};
 }
 
@@ -71,6 +79,8 @@ Token Lexer::Identifier()
 			startPos,
 			m_reader.GetCurrentLine(),
 			TokenType::ERROR,
+			"",
+			m_filePath,
 		};
 	}
 
@@ -79,6 +89,7 @@ Token Lexer::Identifier()
 		m_reader.GetCurrentLine(),
 		TokenType::IDENTIFIER,
 		m_reader.GetBuffer(),
+		m_filePath,
 	};
 }
 
@@ -94,6 +105,8 @@ Token Lexer::Number()
 			startPos,
 			m_reader.GetCurrentLine(),
 			TokenType::ERROR,
+			"",
+			m_filePath,
 		};
 	}
 
@@ -104,6 +117,7 @@ Token Lexer::Number()
 			? TokenType::INT
 			: TokenType::FLOAT,
 		m_reader.GetBuffer(),
+		m_filePath,
 	};
 }
 
@@ -118,6 +132,8 @@ Token Lexer::String()
 			startPos,
 			m_reader.GetCurrentLine(),
 			TokenType::ERROR,
+			"",
+			m_filePath,
 		};
 	}
 
@@ -126,6 +142,7 @@ Token Lexer::String()
 		m_reader.GetCurrentLine(),
 		TokenType::STRING,
 		m_reader.GetBuffer(),
+		m_filePath,
 	};
 }
 
@@ -140,5 +157,6 @@ Token Lexer::SpecialChar()
 		m_reader.GetCurrentLine(),
 		tokenType,
 		m_reader.GetBuffer(),
+		m_filePath,
 	};
 }

@@ -17,10 +17,10 @@ inline Token CheckKeywords(const Token& token)
 	const auto it = KEYWORDS.find(value);
 	return it == KEYWORDS.end()
 		? token
-		: Token{
+		: Token(
 			  token.pos,
 			  token.line,
 			  it->second,
 			  value,
-		  };
+			  token.file);
 }

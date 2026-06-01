@@ -1,7 +1,7 @@
 #include "SemanticAnalyzer.h"
+#include "../ErrorHandler/ErrorHandler.h"
 
 #include <ranges>
-#include <stdexcept>
 
 void SemanticAnalyzer::Analyze(const std::shared_ptr<AstNode>& root)
 {
@@ -45,11 +45,11 @@ void SemanticAnalyzer::Visit(BinaryOpNode& node)
 	{
 		if (node.left->evaluatedType != node.right->evaluatedType)
 		{
-			throw std::runtime_error("Semantic error: Cannot operate on different types!");
+			throw CompilerError(node.location, "Semantic error: Cannot operate on different types!");
 		}
 		if (node.left->arrayDepth > 0 || node.right->arrayDepth > 0)
 		{
-			throw std::runtime_error("Semantic error: Binary operations on arrays are not supported.");
+			throw CompilerError(node.location, "Semantic error: Binary operations on arrays are not supported.");
 		}
 
 		if (node.op.value == "=="
@@ -77,7 +77,7 @@ void SemanticAnalyzer::Visit(UnaryOpNode& node)
 
 		if (node.operand->arrayDepth > 0)
 		{
-			throw std::runtime_error("Semantic error: Unary operations on arrays are not allowed.");
+			throw CompilerError(node.location, "Semantic error: Unary operations on arrays are not allowed.");
 		}
 
 		node.evaluatedType = node.operand->evaluatedType;
@@ -90,7 +90,7 @@ void SemanticAnalyzer::Visit(VarDeclNode& node)
 {
 	if (m_symbolTable.back().contains(node.varName))
 	{
-		throw std::runtime_error("Semantic error: Variable already declared: " + node.varName);
+		throw CompilerError(node.location, "Semantic error: Variable already declared: " + node.varName);
 	}
 
 	if (node.expr)
@@ -99,16 +99,16 @@ void SemanticAnalyzer::Visit(VarDeclNode& node)
 
 		if (node.expr->evaluatedType != DataType::UNKNOWN && node.expr->evaluatedType != node.varType)
 		{
-			throw std::runtime_error("Semantic error: Type mismatch for " + node.varName);
+			throw CompilerError(node.location, "Semantic error: Type mismatch for " + node.varName);
 		}
 		if (node.expr->arrayDepth != node.arrayDepth)
 		{
-			throw std::runtime_error("Semantic error: Array depth mismatch for " + node.varName);
+			throw CompilerError(node.location, "Semantic error: Array depth mismatch for " + node.varName);
 		}
 		if (node.expr->evaluatedType == DataType::INSTANCE
 			&& node.expr->structName != node.structName)
 		{
-			throw std::runtime_error("Semantic error: Struct type mismatch for " + node.varName);
+			throw CompilerError(node.location, "Semantic error: Struct type mismatch for " + node.varName);
 		}
 	}
 
@@ -159,7 +159,7 @@ void SemanticAnalyzer::Visit(VarAccessNode& node)
 			return;
 		}
 	}
-	throw std::runtime_error("Semantic error: Undefined variable '" + node.varName + "'");
+	throw CompilerError(node.location, "Semantic error: Undefined variable '" + node.varName + "'");
 }
 
 void SemanticAnalyzer::Visit(AssignmentNode& node)
@@ -181,25 +181,25 @@ void SemanticAnalyzer::Visit(AssignmentNode& node)
 	}
 	if (!found)
 	{
-		throw std::runtime_error("Semantic error: Assignment to undefined variable '" + node.varName + "'");
+		throw CompilerError(node.location, "Semantic error: Assignment to undefined variable '" + node.varName + "'");
 	}
 	if (varInfo.isConst)
 	{
-		throw std::runtime_error("Semantic error: Cannot assign to constant variable '" + node.varName + "'");
+		throw CompilerError(node.location, "Semantic error: Cannot assign to constant variable '" + node.varName + "'");
 	}
 	if (node.expr)
 	{
 		if (node.expr->evaluatedType != DataType::UNKNOWN && node.expr->evaluatedType != varInfo.type)
 		{
-			throw std::runtime_error("Semantic error: Type mismatch in assignment to '" + node.varName + "'");
+			throw CompilerError(node.location, "Semantic error: Type mismatch in assignment to '" + node.varName + "'");
 		}
 		if (node.expr->arrayDepth != varInfo.arrayDepth)
 		{
-			throw std::runtime_error("Semantic error: Array depth mismatch in assignment to '" + node.varName + "'");
+			throw CompilerError(node.location, "Semantic error: Array depth mismatch in assignment to '" + node.varName + "'");
 		}
 		if (node.expr->evaluatedType == DataType::INSTANCE && node.expr->structName != varInfo.structName)
 		{
-			throw std::runtime_error("Semantic error: Struct type mismatch in assignment to '" + node.varName + "'");
+			throw CompilerError(node.location, "Semantic error: Struct type mismatch in assignment to '" + node.varName + "'");
 		}
 	}
 }
@@ -378,7 +378,7 @@ void SemanticAnalyzer::Visit(ArrayLiteralNode& node)
 	{
 		auto firstType = DataType::UNKNOWN;
 		int firstDepth = 0;
-		std::string firstName = "";
+		std::string firstName;
 		bool first = true;
 
 		for (const auto& elem : node.elements)
@@ -397,7 +397,7 @@ void SemanticAnalyzer::Visit(ArrayLiteralNode& node)
 				else if (elem->evaluatedType != DataType::UNKNOWN
 					&& (elem->evaluatedType != firstType || elem->arrayDepth != firstDepth || elem->structName != firstName))
 				{
-					throw std::runtime_error("Semantic error: All elements in array literal must have the same exact type.");
+					throw CompilerError(node.location, "Semantic error: All elements in array literal must have the same exact type.");
 				}
 			}
 		}
@@ -422,11 +422,11 @@ void SemanticAnalyzer::Visit(IndexAccessNode& node)
 		&& node.target->arrayDepth == 0
 		&& node.target->evaluatedType != DataType::UNKNOWN)
 	{
-		throw std::runtime_error("Semantic error: Cannot index a non-array target.");
+		throw CompilerError(node.location, "Semantic error: Cannot index a non-array target.");
 	}
 	if (node.index && node.index->evaluatedType != DataType::UNKNOWN && node.index->evaluatedType != DataType::INT)
 	{
-		throw std::runtime_error("Semantic error: Array index must be an integer.");
+		throw CompilerError(node.location, "Semantic error: Array index must be an integer.");
 	}
 
 	if (node.target)
@@ -456,11 +456,11 @@ void SemanticAnalyzer::Visit(IndexAssignmentNode& node)
 
 	if (node.target && node.target->arrayDepth == 0 && node.target->evaluatedType != DataType::UNKNOWN)
 	{
-		throw std::runtime_error("Semantic error: Cannot index a non-array target.");
+		throw CompilerError(node.location, "Semantic error: Cannot index a non-array target.");
 	}
 	if (node.index && node.index->evaluatedType != DataType::UNKNOWN && node.index->evaluatedType != DataType::INT)
 	{
-		throw std::runtime_error("Semantic error: Array index must be an integer.");
+		throw CompilerError(node.location, "Semantic error: Array index must be an integer.");
 	}
 
 	if (node.target && node.value
@@ -471,7 +471,7 @@ void SemanticAnalyzer::Visit(IndexAssignmentNode& node)
 			|| node.target->structName != node.value->structName
 			|| (node.target->arrayDepth - 1) != node.value->arrayDepth)
 		{
-			throw std::runtime_error("Semantic error: Type mismatch in array assignment.");
+			throw CompilerError(node.location, "Semantic error: Type mismatch in array assignment.");
 		}
 	}
 }
@@ -495,7 +495,7 @@ void SemanticAnalyzer::Visit(ReturnNode& node)
 						errorMsg += "[]";
 					}
 				}
-				throw std::runtime_error(errorMsg);
+				throw CompilerError(node.location, errorMsg);
 			}
 		}
 		return;
@@ -503,7 +503,7 @@ void SemanticAnalyzer::Visit(ReturnNode& node)
 	if (m_currentFunctionSignature.type != DataType::UNKNOWN
 		&& m_currentFunctionSignature.type != DataType::VOID)
 	{
-		throw std::runtime_error("Semantic error: Empty return statement in a non-void function.");
+		throw CompilerError(node.location, "Semantic error: Empty return statement in a non-void function.");
 	}
 }
 

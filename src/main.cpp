@@ -17,7 +17,10 @@ void PrintConsts(const std::unique_ptr<Chunk>& chunk);
 
 std::string GetSourceCode(const std::string& filePath);
 SLRTableBuilder SetupSLRTableBuilder(const std::string& prog);
-std::shared_ptr<AstNode> BuildAST(const std::string& sourceCode, const SLRTableBuilder& slrBuilder);
+std::shared_ptr<AstNode> BuildAST(
+	const std::string& sourceCode,
+	const std::string& filePath,
+	const SLRTableBuilder& slrBuilder);
 std::unique_ptr<Chunk> GenerateCode(const std::shared_ptr<AstNode>& astRoot);
 void RunVM(const std::unique_ptr<Chunk>& chunk);
 
@@ -40,16 +43,15 @@ int main(const int argc, char* argv[])
 		const auto mainFilePath = std::filesystem::absolute(argv[1]);
 		const auto sourceCode = GetSourceCode(argv[1]);
 		const auto slrBuilder = SetupSLRTableBuilder(argv[0]);
-		const auto astRoot = BuildAST(sourceCode, slrBuilder);
-
+		const auto astRoot = BuildAST(sourceCode, mainFilePath.string(), slrBuilder);
 		std::unordered_set<std::string> parsedFiles;
 		parsedFiles.insert(mainFilePath.string());
 
 		ResolveImports(astRoot, parsedFiles, slrBuilder, mainFilePath.parent_path());
 		std::cout << "[3.5/5] AST Linking (Imports) resolved." << std::endl;
 
-		AstPrinter printer;
-		printer.PrintAst(astRoot);
+		// AstPrinter printer;
+		// printer.PrintAst(astRoot);
 
 		// TODO регистрировать встроенные функции
 
@@ -61,6 +63,14 @@ int main(const int argc, char* argv[])
 		RunVM(chunk);
 
 		std::cout << "\nExecution finished successfully." << std::endl;
+	}
+	catch (const CompilerError& e)
+	{
+		std::cerr << "\n[!] COMPILATION ERROR:\n"
+				  << "    File: " << e.location.file << "\n"
+				  << "    Line: " << e.location.line << ", Col: " << e.location.col << "\n"
+				  << "    Message: " << e.what() << "\n";
+		return 1;
 	}
 	catch (const std::exception& e)
 	{
@@ -88,9 +98,9 @@ SLRTableBuilder SetupSLRTableBuilder(const std::string& prog)
 	return slrBuilder;
 }
 
-std::shared_ptr<AstNode> BuildAST(const std::string& sourceCode, const SLRTableBuilder& slrBuilder)
+std::shared_ptr<AstNode> BuildAST(const std::string& sourceCode, const std::string& filePath, const SLRTableBuilder& slrBuilder)
 {
-	Lexer lexer(sourceCode);
+	Lexer lexer(sourceCode, filePath);
 	const Parser parser(slrBuilder, lexer);
 	auto astRoot = parser.Parse();
 	std::cout << "[3/5] Parsing finished. AST created." << std::endl;
@@ -189,7 +199,7 @@ void ResolveImports(
 				std::cout << "      -> Resolving import: " << importNode->filePath << std::endl;
 
 				std::string importedSource = ReadFile(importPathStr);
-				auto importedAst = BuildAST(importedSource, slrBuilder);
+				auto importedAst = BuildAST(importedSource, importPathStr, slrBuilder);
 				ResolveImports(importedAst, parsedFiles, slrBuilder, importPath.parent_path());
 
 				if (const auto importedProgram = std::dynamic_pointer_cast<CommonNode>(importedAst))

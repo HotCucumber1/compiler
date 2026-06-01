@@ -1,4 +1,4 @@
-bin/
+bin/compiler
 enternal_examples/
 cmake-build-debug/
 cmake-build-release/
