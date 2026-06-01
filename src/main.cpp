@@ -5,11 +5,13 @@
 #include "Frontend/Parser/Parser.h"
 #include "Frontend/Parser/SLRTableBuilder.h"
 #include "Frontend/SematicAnalyzer/SemanticAnalyzer.h"
+#include "Frontend/Visualizer/ConsoleSchemaVisualizer.h"
 #include "Frontend/Visualizer/SchemaVisualizer.h"
 #include "VM/VirtualMachine.h"
 
 #include <filesystem>
 #include <fstream>
+#include <iostream>
 #include <unordered_set>
 
 std::string ReadFile(const std::string& path);
@@ -31,18 +33,24 @@ void ResolveImports(
 	const SLRTableBuilder& slrBuilder,
 	const std::filesystem::path& currentDirPath);
 
+struct Params
+{
+	bool printSchema = false;
+	bool dumpSchema = false;
+	std::string dumpFilename;
+	std::string sourceFilePath;
+};
+
+Params ParseParams(int argc, char* argv[]);
+
 int main(const int argc, char* argv[])
 {
-	if (argc < 2)
-	{
-		std::cerr << "Usage: " << argv[0] << " <source_file.my_lang>" << std::endl;
-		return 1;
-	}
-
 	try
 	{
-		const auto mainFilePath = std::filesystem::absolute(argv[1]);
-		const auto sourceCode = GetSourceCode(argv[1]);
+		const auto [printSchema, dumpSchema, dumpFilename, sourceFilePath] = ParseParams(argc, argv);
+
+		const auto mainFilePath = std::filesystem::absolute(sourceFilePath);
+		const auto sourceCode = GetSourceCode(sourceFilePath);
 		const auto slrBuilder = SetupSLRTableBuilder(argv[0]);
 		const auto astRoot = BuildAST(sourceCode, mainFilePath.string(), slrBuilder);
 		std::unordered_set<std::string> parsedFiles;
@@ -59,8 +67,26 @@ int main(const int argc, char* argv[])
 		SemanticAnalyzer analyser;
 		analyser.Analyze(astRoot);
 
-		SchemaVisualizer visualizer;
-		visualizer.Generate(astRoot);
+		if (dumpSchema)
+		{
+			std::ofstream outFile(dumpFilename);
+			if (!outFile.is_open())
+			{
+				throw std::runtime_error("Не удалось создать или открыть файл: " + dumpFilename);
+			}
+
+			SchemaVisualizer visualizer(outFile);
+			visualizer.Generate(astRoot);
+
+			outFile.close();
+			std::cout << "[*] Схема успешно экспортирована в файл: " << dumpFilename << std::endl;
+		}
+
+		if (printSchema)
+		{
+			ConsoleSchemaVisualizer consoleVisualizer;
+			consoleVisualizer.Generate(astRoot);
+		}
 
 		const auto chunk = GenerateCode(astRoot);
 
@@ -149,8 +175,6 @@ Grammar SetupGrammar(const std::string& exePath)
 
 	const auto grammar = GrammarReader::Read(grammarPath);
 
-	// grammar.Print();
-
 	return grammar;
 }
 
@@ -218,4 +242,60 @@ void ResolveImports(
 	}
 
 	programNode->children = std::move(resolvedChildren);
+}
+
+Params ParseParams(const int argc, char* argv[])
+{
+	bool printSchema = false;
+	bool dumpSchema = false;
+	std::string dumpFilename;
+	std::string sourceFilePath;
+
+	for (int i = 1; i < argc; ++i)
+	{
+		const std::string arg = argv[i];
+
+		if (arg == "--print-schema")
+		{
+			printSchema = true;
+		}
+		else if (arg == "--dump-schema")
+		{
+			if (i + 1 >= argc)
+			{
+				throw std::runtime_error(
+					"Критическая ошибка: Флаг --dump-schema требует указания имени файла.\n"
+					"Использование: --dump-schema <filename.md>");
+			}
+
+			dumpFilename = argv[++i];
+
+			if (dumpFilename.length() < 3
+				|| dumpFilename.substr(dumpFilename.length() - 3) != ".md")
+			{
+				throw std::runtime_error("Ошибка валидации: Файл '" + dumpFilename + "' должен иметь расширение .md");
+			}
+			dumpSchema = true;
+		}
+		else
+		{
+			sourceFilePath = arg;
+		}
+	}
+
+	if (sourceFilePath.empty())
+	{
+		throw std::runtime_error(
+			"Использование: " + std::string(argv[0]) + " [флаги] <source_file.my_lang>\n"
+													   "Доступные флаги:\n"
+													   "  --print-schema             Вывести схему конечного автомата в консоль\n"
+													   "  --dump-schema <file.md>    Сохранить схему в формате Mermaid (.md)\n");
+	}
+
+	return {
+		printSchema,
+		dumpSchema,
+		dumpFilename,
+		sourceFilePath,
+	};
 }

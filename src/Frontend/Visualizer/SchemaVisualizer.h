@@ -5,6 +5,8 @@
 class SchemaVisualizer : public AstVisitor
 {
 public:
+	explicit SchemaVisualizer(std::ostream& out);
+
 	void Generate(const std::shared_ptr<AstNode>& root);
 
 	void Visit(SchemaDeclNode& node) override;
@@ -37,4 +39,7 @@ public:
 	void Visit(MethodDeclNode& node) override {}
 	void Visit(ImplStateNode& node) override {}
 	void Visit(TsopInitNode& node) override {}
+
+private:
+	std::ostream& m_out;
 };

@@ -1,5 +1,10 @@
 #include "SchemaVisualizer.h"
 
+SchemaVisualizer::SchemaVisualizer(std::ostream& out)
+	: m_out(out)
+{
+}
+
 void SchemaVisualizer::Generate(const std::shared_ptr<AstNode>& root)
 {
 	if (auto program = std::dynamic_pointer_cast<CommonNode>(root))
@@ -16,9 +21,9 @@ void SchemaVisualizer::Generate(const std::shared_ptr<AstNode>& root)
 
 void SchemaVisualizer::Visit(SchemaDeclNode& node)
 {
-	std::cout << "```mermaid\n";
-	std::cout << "stateDiagram-v2\n";
-	std::cout << "    direction LR\n\n";
+	m_out << "```mermaid\n";
+	m_out << "stateDiagram-v2\n";
+	m_out << "    direction LR\n\n";
 
 	for (const auto& state : node.states)
 	{
@@ -34,11 +39,11 @@ void SchemaVisualizer::Visit(SchemaDeclNode& node)
 				continue;
 			}
 
-			std::cout << "    " << state->name
-					  << " --> " << method->returnState
-					  << " : " << method->name << "\n";
+			m_out << "    " << state->name
+				  << " --> " << method->returnState
+				  << " : " << method->name << std::endl;
 		}
 	}
 
-	std::cout << "```\n";
+	m_out << "```" << std::endl;
 }

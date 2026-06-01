@@ -20,6 +20,7 @@ add_subdirectory(src/CodeGenerator)
 add_executable(
         compiler
         src/Frontend/Visualizer/SchemaVisualizer.cpp
+        src/Frontend/Visualizer/ConsoleSchemaVisualizer.cpp
         src/main.cpp)
 
 target_link_libraries(
