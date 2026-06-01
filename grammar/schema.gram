@@ -11,3 +11,17 @@ SignalDeclList -> SignalDecl : LIST_SINGLE
 SignalDeclList -> # : EMPTY_LIST
 
 SignalDecl -> func IDENTIFIER ( ParamList ) -> IDENTIFIER : SCHEMA_FUNC
+
+
+ImplDecl -> impl ImplState { MethodList } : IMPL_DECL
+
+MethodList -> MethodDecl MethodList : LIST_APPEND
+MethodList -> MethodDecl : LIST_SINGLE
+MethodList -> # : EMPTY_LIST
+
+MethodDecl -> AccessLevel func IDENTIFIER ( ParamList ) -> ImplState { GlobalList } : METHOD_DECL
+
+AccessLevel -> public : PASS_THROUGH
+AccessLevel -> private : PASS_THROUGH
+
+ImplState -> IDENTIFIER < IDENTIFIER > : IMPL_STATE_TYPE

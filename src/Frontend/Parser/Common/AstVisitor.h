@@ -25,6 +25,10 @@ struct ImportNode;
 struct SchemaFuncNode;
 struct SchemaStateNode;
 struct SchemaDeclNode;
+struct ImplDeclNode;
+struct MethodDeclNode;
+struct ImplStateNode;
+struct TsopInitNode;
 
 class AstVisitor
 {
@@ -80,4 +84,12 @@ public:
 	virtual void Visit(SchemaStateNode& node) = 0;
 
 	virtual void Visit(SchemaDeclNode& node) = 0;
+
+	virtual void Visit(ImplDeclNode& node) = 0;
+
+	virtual void Visit(MethodDeclNode& node) = 0;
+
+	virtual void Visit(ImplStateNode& node) = 0;
+
+	virtual void Visit(TsopInitNode& node) = 0;
 };

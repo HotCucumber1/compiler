@@ -57,8 +57,17 @@ public:
 
 	void Visit(SchemaDeclNode& node) override;
 
+	void Visit(ImplDeclNode& node) override;
+
+	void Visit(MethodDeclNode& node) override;
+
+	void Visit(ImplStateNode& node) override;
+
+	void Visit(TsopInitNode& node) override;
+
 private:
 	int m_depth = 0;
 
 	void PrintIndent() const;
+
 };

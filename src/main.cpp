@@ -5,6 +5,7 @@
 #include "Frontend/Parser/Parser.h"
 #include "Frontend/Parser/SLRTableBuilder.h"
 #include "Frontend/SematicAnalyzer/SemanticAnalyzer.h"
+#include "Frontend/Visualizer/SchemaVisualizer.h"
 #include "VM/VirtualMachine.h"
 
 #include <filesystem>
@@ -58,6 +59,9 @@ int main(const int argc, char* argv[])
 		SemanticAnalyzer analyser;
 		analyser.Analyze(astRoot);
 
+		SchemaVisualizer visualizer;
+		visualizer.Generate(astRoot);
+
 		const auto chunk = GenerateCode(astRoot);
 
 		RunVM(chunk);
@@ -66,7 +70,9 @@ int main(const int argc, char* argv[])
 	}
 	catch (const CompilerError& e)
 	{
-		std::cerr << "\n[!] COMPILATION ERROR: " << e.location.file << e.location.line << ':' << e.location.col << "\n"
+		std::cerr << "\n[!] COMPILATION ERROR:\n"
+				  << "File: " << e.location.file << "\n"
+				  << "Line: " << e.location.line << ", Col: " << e.location.col << "\n"
 				  << "Message: " << e.what() << "\n";
 		return 1;
 	}

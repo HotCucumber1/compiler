@@ -2,6 +2,7 @@
 #include "../ErrorHandler/ErrorHandler.h"
 
 #include <ranges>
+#include <unordered_set>
 
 void SemanticAnalyzer::Analyze(const std::shared_ptr<AstNode>& root)
 {
@@ -552,13 +553,86 @@ void SemanticAnalyzer::Visit(ImportNode& node)
 
 void SemanticAnalyzer::Visit(SchemaFuncNode& node)
 {
+	EnterScope();
+	for (const auto& param : node.parameters)
+	{
+		if (param)
+		{
+			param->Accept(*this);
+		}
+	}
+	ExitScope();
 }
 
 void SemanticAnalyzer::Visit(SchemaStateNode& node)
 {
+	EnterScope();
+	for (const auto& field : node.fields)
+	{
+		if (field)
+		{
+			field->Accept(*this);
+		}
+	}
+	ExitScope();
 }
 
 void SemanticAnalyzer::Visit(SchemaDeclNode& node)
+{
+	if (m_schemas.contains(node.name))
+	{
+		throw CompilerError(node.location, "Semantic error: Schema '" + node.name + "' is already defined.");
+	}
+
+	SchemaSignature schemaSig;
+	std::unordered_set<std::string> stateNames;
+	for (const auto& state : node.states)
+	{
+		if (state)
+		{
+			stateNames.insert(state->name);
+		}
+	}
+	for (const auto& state : node.states)
+	{
+		if (state)
+		{
+			StateSignature stateSig;
+			for (const auto& method : state->methods)
+			{
+				if (method)
+				{
+					if (!stateNames.contains(method->returnState))
+					{
+						throw CompilerError(method->location,
+							"Semantic error: Transition to undefined state '"
+								+ method->returnState + "' in schema '"
+								+ node.name + '\'');
+					}
+					stateSig.transitions[method->name] = method->returnState;
+				}
+			}
+			schemaSig.states[state->name] = stateSig;
+			state->Accept(*this);
+		}
+	}
+
+	m_schemas[node.name] = schemaSig;
+}
+
+void SemanticAnalyzer::Visit(ImplDeclNode& node)
+{
+}
+
+void SemanticAnalyzer::Visit(MethodDeclNode& node)
+{
+}
+
+void SemanticAnalyzer::Visit(TsopInitNode& node)
+{
+}
+
+void SemanticAnalyzer::Visit(ImplStateNode& node)
 {
 }
 

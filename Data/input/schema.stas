@@ -34,5 +34,16 @@ schema Calculator
     }
 }
 
+impl Calculator<Ready>
+{
+    public func digit(int d) -> Calculator<FirstNumber> {
+        return new Calculator<FirstNumber>(d);
+    }
+
+    public func clear() -> Calculator<Ready> {
+        return new Calculator<Ready>();
+    }
+}
+
 
 print("Hello");

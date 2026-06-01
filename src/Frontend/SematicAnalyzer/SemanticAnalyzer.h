@@ -11,6 +11,16 @@ struct SymbolInfo
 	bool isConst;
 };
 
+struct StateSignature
+{
+	std::unordered_map<std::string, std::string> transitions;
+};
+
+struct SchemaSignature
+{
+	std::unordered_map<std::string, StateSignature> states;
+};
+
 class SemanticAnalyzer final : public AstVisitor
 {
 public:
@@ -66,6 +76,13 @@ public:
 
 	void Visit(SchemaDeclNode& node) override;
 
+	void Visit(ImplDeclNode& node) override;
+
+	void Visit(MethodDeclNode& node) override;
+
+	void Visit(TsopInitNode& node) override;
+
+	void Visit(ImplStateNode& node) override;
 
 private:
 	void EnterScope();
@@ -73,8 +90,10 @@ private:
 	void ExitScope();
 
 private:
+	std::unordered_map<std::string, SchemaSignature> m_schemas;
 	std::vector<std::unordered_map<std::string, SymbolInfo>> m_symbolTable;
 	std::unordered_map<std::string, SymbolInfo> m_functions;
+
 	SymbolInfo m_currentFunctionSignature{
 		DataType::UNKNOWN,
 		0, "",

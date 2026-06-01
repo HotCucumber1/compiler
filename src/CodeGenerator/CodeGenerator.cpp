@@ -560,9 +560,39 @@ void CodeGenerator::Visit(SchemaFuncNode& node)
 
 void CodeGenerator::Visit(SchemaStateNode& node)
 {
+	std::vector<std::string> fieldNames;
+	for (const auto& fieldNode : node.fields)
+	{
+		if (fieldNode)
+		{
+			fieldNames.push_back(fieldNode->varName);
+		}
+	}
+	m_structs[node.name] = std::move(fieldNames);
 }
 
 void CodeGenerator::Visit(SchemaDeclNode& node)
+{
+	for (const auto& state : node.states)
+	{
+		if (state)
+		{
+			state->Accept(*this);
+		}
+	}
+}
+
+void CodeGenerator::Visit(ImplDeclNode& node)
+{
+}
+
+void CodeGenerator::Visit(MethodDeclNode& node)
+{
+}
+void CodeGenerator::Visit(ImplStateNode& node)
+{
+}
+void CodeGenerator::Visit(TsopInitNode& node)
 {
 }
 

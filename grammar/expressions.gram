@@ -29,6 +29,7 @@ Primary -> not Primary : UNARY_OP
 Primary -> ( Expression ) : PASS_THROUGH
 Primary -> IDENTIFIER : VAR_ACCESS
 Primary -> Literal : PASS_THROUGH
+Primary -> new ImplState ( ArgList ) : TSOP_INIT
 
 Call -> IDENTIFIER ( ArgList ) : CALL
 StructInit -> IDENTIFIER { ArgList } : STRUCT_INIT

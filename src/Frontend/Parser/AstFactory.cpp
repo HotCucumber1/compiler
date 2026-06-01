@@ -372,6 +372,72 @@ std::shared_ptr<AstNode> AstFactory::CreateNode(
 		break;
 	}
 
+	case AstNodeType::IMPL_STATE_TYPE: {
+		const auto schema = GetToken(children[0]).value;
+		const auto state = GetToken(children[2]).value;
+		result = std::make_shared<ImplStateNode>(id, schema, state);
+		break;
+	}
+
+	case AstNodeType::TSOP_INIT: {
+		auto stateNode = std::dynamic_pointer_cast<ImplStateNode>(children[1]);
+
+		std::vector<std::shared_ptr<AstNode>> args;
+		if (auto argList = std::dynamic_pointer_cast<CommonNode>(children[3]))
+		{
+			if (argList->type == AstNodeType::BLOCK)
+			{
+				args = argList->children;
+			}
+		}
+		result = std::make_shared<TsopInitNode>(id, stateNode->schemaName, stateNode->stateName, args);
+		break;
+	}
+
+	case AstNodeType::IMPL_DECL: {
+		auto stateNode = std::dynamic_pointer_cast<ImplStateNode>(children[1]);
+
+		std::vector<std::shared_ptr<MethodDeclNode>> methods;
+		if (auto block = std::dynamic_pointer_cast<CommonNode>(children[3]))
+		{
+			if (block->type == AstNodeType::BLOCK)
+			{
+				for (auto& child : block->children)
+				{
+					if (const auto mElem = std::dynamic_pointer_cast<MethodDeclNode>(child))
+						methods.push_back(mElem);
+				}
+			}
+		}
+		result = std::make_shared<ImplDeclNode>(id, stateNode->schemaName, stateNode->stateName, methods);
+		break;
+	}
+
+	case AstNodeType::METHOD_DECL: {
+		bool isPublic = GetToken(children[0]).value == "public";
+		std::string name = GetToken(children[2]).value;
+
+		std::vector<std::shared_ptr<VarDeclNode>> params;
+		if (auto paramList = std::dynamic_pointer_cast<CommonNode>(children[4]))
+		{
+			if (paramList->type == AstNodeType::BLOCK)
+			{
+				for (auto& child : paramList->children)
+				{
+					if (const auto pElem = std::dynamic_pointer_cast<VarDeclNode>(child))
+						params.push_back(pElem);
+				}
+			}
+		}
+
+		auto targetState = std::dynamic_pointer_cast<ImplStateNode>(children[7]);
+
+		auto body = children[9];
+
+		result = std::make_shared<MethodDeclNode>(id, isPublic, name, params, targetState, body);
+		break;
+	}
+
 	default:
 		throw std::runtime_error("AstFactory Error: AstNodeType is not being processed " + std::to_string(static_cast<int>(type)));
 	}

@@ -600,6 +600,120 @@ void AstPrinter::Visit(SchemaDeclNode& node)
 	m_depth--;
 }
 
+void AstPrinter::Visit(ImplDeclNode& node)
+{
+	PrintIndent();
+	std::cout << "[ImplDecl] Schema: " << node.schemaName << "<" << node.stateName << ">\n";
+
+	m_depth++;
+
+	PrintIndent();
+	std::cout << "Methods:\n";
+	m_depth++;
+
+	if (node.methods.empty())
+	{
+		PrintIndent();
+		std::cout << "(none)\n";
+	}
+	else
+	{
+		for (const auto& method : node.methods)
+		{
+			if (method)
+			{
+				method->Accept(*this);
+			}
+		}
+	}
+	m_depth--;
+	m_depth--;
+}
+
+void AstPrinter::Visit(MethodDeclNode& node)
+{
+	PrintIndent();
+	std::cout << "[MethodDecl] " << (node.isPublic ? "public" : "private")
+			  << " " << node.name << " -> ";
+
+	if (node.targetState)
+	{
+		std::cout << node.targetState->schemaName << "<" << node.targetState->stateName << ">\n";
+	}
+	else
+	{
+		std::cout << "UNKNOWN\n";
+	}
+
+	m_depth++;
+
+	PrintIndent();
+	std::cout << "Parameters:\n";
+	m_depth++;
+	if (node.parameters.empty())
+	{
+		PrintIndent();
+		std::cout << "(none)\n";
+	}
+	else
+	{
+		for (const auto& param : node.parameters)
+		{
+			if (param)
+			{
+				param->Accept(*this);
+			}
+		}
+	}
+	m_depth--;
+
+	if (node.body)
+	{
+		PrintIndent();
+		std::cout << "Body:\n";
+		m_depth++;
+		node.body->Accept(*this);
+		m_depth--;
+	}
+
+	m_depth--;
+}
+
+void AstPrinter::Visit(ImplStateNode& node)
+{
+	PrintIndent();
+	std::cout << "[ImplState] " << node.schemaName << "<" << node.stateName << ">\n";
+}
+
+void AstPrinter::Visit(TsopInitNode& node)
+{
+	PrintIndent();
+	std::cout << "[TsopInit] new " << node.schemaName << "<" << node.stateName << ">\n";
+
+	m_depth++;
+	PrintIndent();
+	std::cout << "Arguments:\n";
+
+	m_depth++;
+	if (node.args.empty())
+	{
+		PrintIndent();
+		std::cout << "(none)\n";
+	}
+	else
+	{
+		for (const auto& arg : node.args)
+		{
+			if (arg)
+			{
+				arg->Accept(*this);
+			}
+		}
+	}
+	m_depth--;
+	m_depth--;
+}
+
 void AstPrinter::PrintIndent() const
 {
 	std::cout << std::string(m_depth * 2, ' ');

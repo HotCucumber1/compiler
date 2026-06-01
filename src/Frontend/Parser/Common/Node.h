@@ -50,6 +50,10 @@ enum class AstNodeType : int
 	SCHEMA_DECL,
 	SCHEMA_STATE,
 	SCHEMA_FUNC,
+	IMPL_DECL,
+	METHOD_DECL,
+	TSOP_INIT,
+	IMPL_STATE_TYPE,
 };
 
 static const std::unordered_map<std::string, AstNodeType> AST_NODE_TYPES = {
@@ -92,6 +96,11 @@ static const std::unordered_map<std::string, AstNodeType> AST_NODE_TYPES = {
 	{ "SCHEMA_DECL", AstNodeType::SCHEMA_DECL },
 	{ "SCHEMA_STATE", AstNodeType::SCHEMA_STATE },
 	{ "SCHEMA_FUNC", AstNodeType::SCHEMA_FUNC },
+	{ "IMPL_DECL", AstNodeType::IMPL_DECL },
+	{ "METHOD_DECL", AstNodeType::METHOD_DECL },
+	{ "TSOP_INIT", AstNodeType::TSOP_INIT },
+	{ "IMPL_STATE_TYPE", AstNodeType::IMPL_STATE_TYPE },
+
 };
 
 using SymbolId = int32_t;
@@ -622,6 +631,98 @@ struct SchemaDeclNode final : AstNode
 		: AstNode(id, AstNodeType::SCHEMA_DECL)
 		, name(std::move(n))
 		, states(std::move(s))
+	{
+	}
+
+	void Accept(AstVisitor& visitor) override
+	{
+		visitor.Visit(*this);
+	}
+};
+
+struct MethodDeclNode final : AstNode
+{
+	bool isPublic;
+	std::string name;
+	std::vector<std::shared_ptr<VarDeclNode>> parameters;
+	std::shared_ptr<ImplStateNode> targetState;
+	std::shared_ptr<AstNode> body;
+
+	MethodDeclNode(
+		const SymbolId id,
+		const bool pub,
+		std::string n,
+		std::vector<std::shared_ptr<VarDeclNode>> params,
+		std::shared_ptr<ImplStateNode> target,
+		std::shared_ptr<AstNode> b)
+		: AstNode(id, AstNodeType::METHOD_DECL)
+		, isPublic(pub)
+		, name(std::move(n))
+		, parameters(std::move(params))
+		, targetState(std::move(target))
+		, body(std::move(b))
+	{
+	}
+
+	void Accept(AstVisitor& visitor) override
+	{
+		visitor.Visit(*this);
+	}
+};
+
+struct ImplDeclNode final : AstNode
+{
+	std::string schemaName;
+	std::string stateName;
+	std::vector<std::shared_ptr<MethodDeclNode>> methods;
+
+	ImplDeclNode(
+		const SymbolId id,
+		std::string sName,
+		std::string stName,
+		std::vector<std::shared_ptr<MethodDeclNode>> methods)
+		: AstNode(id, AstNodeType::IMPL_DECL)
+		, schemaName(std::move(sName))
+		, stateName(std::move(stName))
+		, methods(std::move(methods))
+	{
+	}
+
+	void Accept(AstVisitor& visitor) override
+	{
+		visitor.Visit(*this);
+	}
+};
+
+struct ImplStateNode final : AstNode
+{
+	std::string schemaName;
+	std::string stateName;
+
+	ImplStateNode(const SymbolId id, std::string schema, std::string state)
+		: AstNode(id, AstNodeType::IMPL_STATE_TYPE)
+		, schemaName(std::move(schema))
+		, stateName(std::move(state))
+	{
+	}
+
+	void Accept(AstVisitor& visitor) override
+	{
+		visitor.Visit(*this);
+	}
+};
+
+struct TsopInitNode final : AstNode
+{
+	std::string schemaName;
+	std::string stateName;
+	std::vector<std::shared_ptr<AstNode>> args;
+
+	TsopInitNode(const SymbolId id, std::string schema, std::string state, std::vector<std::shared_ptr<AstNode>> a)
+		: AstNode(id, AstNodeType::TSOP_INIT)
+		, schemaName(std::move(schema))
+		, stateName(std::move(state))
+		, args(std::move(a))
 	{
 	}
 

@@ -17,7 +17,10 @@ add_subdirectory(src/Frontend/Lexer)
 add_subdirectory(src/Frontend/Parser)
 add_subdirectory(src/CodeGenerator)
 
-add_executable(compiler src/main.cpp)
+add_executable(
+        compiler
+        src/Frontend/Visualizer/SchemaVisualizer.cpp
+        src/main.cpp)
 
 target_link_libraries(
         compiler PRIVATE
