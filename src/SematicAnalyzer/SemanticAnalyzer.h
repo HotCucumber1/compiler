@@ -1,7 +1,7 @@
 #pragma once
-#include "../Parser/Common/AstVisitor.h"
-#include "../Parser/Common/DataType.h"
-#include "../Parser/Common/Node.h"
+#include "../Common/AstVisitor.h"
+#include "../Common/DataType.h"
+#include "../Common/Node.h"
 
 struct SymbolInfo
 {
@@ -89,10 +89,16 @@ private:
 
 	void ExitScope();
 
+	void EnterSchemaContext(const ImplNode& node);
+
+	void DropSchemaContext();
+
 private:
 	std::unordered_map<std::string, SchemaSignature> m_schemas;
 	std::vector<std::unordered_map<std::string, SymbolInfo>> m_symbolTable;
 	std::unordered_map<std::string, SymbolInfo> m_functions;
+	std::string m_currentImplSchema;
+	std::string m_currentImplState;
 
 	SymbolInfo m_currentFunctionSignature{
 		DataType::UNKNOWN,

@@ -1,5 +1,5 @@
 #pragma once
-#include "Common/Node.h"
+#include "../Common/Node.h"
 #include "Grammar/Grammar.h"
 
 #include <iostream>

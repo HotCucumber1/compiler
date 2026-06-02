@@ -568,11 +568,13 @@ void CodeGenerator::Visit(SchemaStateNode& node)
 			fieldNames.push_back(fieldNode->varName);
 		}
 	}
-	m_structs[node.name] = std::move(fieldNames);
+	std::string mangledStructName = m_currentImplSchema + "_" + node.name;
+	m_structs[mangledStructName] = std::move(fieldNames);
 }
 
 void CodeGenerator::Visit(SchemaDeclNode& node)
 {
+	m_currentImplSchema = node.name;
 	for (const auto& state : node.states)
 	{
 		if (state)
@@ -580,20 +582,117 @@ void CodeGenerator::Visit(SchemaDeclNode& node)
 			state->Accept(*this);
 		}
 	}
+	m_currentImplSchema = "";
 }
 
 void CodeGenerator::Visit(ImplDeclNode& node)
 {
+	for (const auto& method : node.methods)
+	{
+		if (method)
+		{
+			m_currentImplSchema = node.schemaName;
+			m_currentImplState = node.stateName;
+
+			method->Accept(*this);
+		}
+	}
 }
 
 void CodeGenerator::Visit(MethodDeclNode& node)
 {
+	auto globalChunk = std::move(m_chunk);
+	auto globalScopes = std::move(m_scopes);
+	const auto globalNextLocal = m_nextLocalIdx;
+
+	m_chunk = Chunk();
+	m_scopes.clear();
+	m_nextLocalIdx = 0;
+
+	EnterScope();
+
+	m_scopes.back()["this"] = {
+		DataType::UNKNOWN,
+		m_nextLocalIdx++,
+		false,
+	};
+
+	for (const auto& param : node.parameters)
+	{
+		if (param)
+		{
+			m_scopes.back()[param->varName] = { DataType::UNKNOWN, m_nextLocalIdx++, false };
+		}
+	}
+	m_chunk.localsCount = m_nextLocalIdx;
+
+	if (node.body)
+	{
+		node.body->Accept(*this);
+	}
+
+	PushConst(Value{});
+	PushCode(static_cast<uint8_t>(OpCode::OP_RETURN));
+	ResolveJmp();
+
+	const auto mangledName = m_currentImplSchema + "_" + m_currentImplState + "_" + node.name;
+	auto funcName = String(mangledName);
+
+	auto functionObj = std::make_shared<Function>(&funcName, node.parameters.size() + 1);
+	functionObj->chunk = std::move(m_chunk);
+
+	m_chunk = std::move(globalChunk);
+	m_scopes = std::move(globalScopes);
+	m_nextLocalIdx = globalNextLocal;
+
+	const auto funcIdx = AddConstant(Value(functionObj));
+	const auto nameIdx = AddConstant(MakeString(mangledName));
+
+	PushCode(static_cast<uint8_t>(OpCode::OP_CONSTANT));
+	PushCode(funcIdx);
+
+	PushCode(static_cast<uint8_t>(OpCode::OP_SET_GLOBAL));
+	PushCode(nameIdx);
 }
+
 void CodeGenerator::Visit(ImplStateNode& node)
 {
 }
+
 void CodeGenerator::Visit(TsopInitNode& node)
 {
+	const auto mangledStructName = node.schemaName + "_" + node.stateName;
+
+	if (!m_structs.contains(mangledStructName))
+	{
+		throw std::runtime_error("CodeGen error: Unknown TSOP state '" + mangledStructName + "'");
+	}
+
+	const auto& fieldNames = m_structs[mangledStructName];
+	if (node.args.size() > fieldNames.size())
+	{
+		throw std::runtime_error("CodeGen error: Too many arguments for state '" + mangledStructName + "'");
+	}
+
+	const auto nameIdx = AddConstant(MakeString(mangledStructName));
+	PushCode(static_cast<uint8_t>(OpCode::OP_STRUCT_INIT));
+	PushCode(nameIdx);
+
+	for (int i = 0; i < node.args.size(); i++)
+	{
+		PushCode(static_cast<uint8_t>(OpCode::OP_DUP));
+
+		if (node.args[i])
+		{
+			node.args[i]->Accept(*this);
+		}
+
+		const auto fieldNameIdx = AddConstant(MakeString(fieldNames[i]));
+		PushCode(static_cast<uint8_t>(OpCode::OP_SET_FIELD));
+		PushCode(fieldNameIdx);
+
+		PushCode(static_cast<uint8_t>(OpCode::OP_POP));
+	}
 }
 
 void CodeGenerator::PushCode(const uint8_t code)

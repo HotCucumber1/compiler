@@ -1,6 +1,6 @@
 #pragma once
-#include "../Parser/Common/DataType.h"
-#include "../Parser/Common/Node.h"
+#include "../Common/DataType.h"
+#include "../Common/Node.h"
 #include "../VM/Type/Chunk.h"
 
 #include <map>
@@ -8,8 +8,6 @@
 class CodeGenerator final : public AstVisitor
 {
 public:
-	// TODO в m_scopes добавить типы, чтобы проверять еще до VM (проверка семантики)
-	// TODO приведение типов тоже на семантике (float -
 	std::unique_ptr<Chunk> Generate(const std::shared_ptr<AstNode>& root);
 
 	void Visit(TerminalNode& node) override;
@@ -99,4 +97,7 @@ private:
 	std::vector<std::map<std::string, LocalVarInfo>> m_scopes;
 	std::unordered_map<std::string, std::vector<std::string>> m_structs;
 	size_t m_nextLocalIdx = 0;
+
+	std::string m_currentImplSchema;
+	std::string m_currentImplState;
 };

@@ -1,6 +1,6 @@
 #pragma once
-#include "../Parser/Common/AstVisitor.h"
-#include "../Parser/Common/Node.h"
+#include "../Common/AstVisitor.h"
+#include "../Common/Node.h"
 
 class SchemaVisualizer : public AstVisitor
 {

@@ -46,11 +46,11 @@ void SemanticAnalyzer::Visit(BinaryOpNode& node)
 	{
 		if (node.left->evaluatedType != node.right->evaluatedType)
 		{
-			throw CompilerError(node.location, "Semantic error: Cannot operate on different types!");
+			throw SemanticError(node.location, "Cannot operate on different types!");
 		}
 		if (node.left->arrayDepth > 0 || node.right->arrayDepth > 0)
 		{
-			throw CompilerError(node.location, "Semantic error: Binary operations on arrays are not supported.");
+			throw SemanticError(node.location, "Binary operations on arrays are not supported.");
 		}
 
 		if (node.op.value == "=="
@@ -78,7 +78,7 @@ void SemanticAnalyzer::Visit(UnaryOpNode& node)
 
 		if (node.operand->arrayDepth > 0)
 		{
-			throw CompilerError(node.location, "Semantic error: Unary operations on arrays are not allowed.");
+			throw SemanticError(node.location, "Unary operations on arrays are not allowed.");
 		}
 
 		node.evaluatedType = node.operand->evaluatedType;
@@ -91,7 +91,7 @@ void SemanticAnalyzer::Visit(VarDeclNode& node)
 {
 	if (m_symbolTable.back().contains(node.varName))
 	{
-		throw CompilerError(node.location, "Semantic error: Variable already declared: " + node.varName);
+		throw SemanticError(node.location, "Variable already declared: " + node.varName);
 	}
 
 	if (node.expr)
@@ -100,16 +100,16 @@ void SemanticAnalyzer::Visit(VarDeclNode& node)
 
 		if (node.expr->evaluatedType != DataType::UNKNOWN && node.expr->evaluatedType != node.varType)
 		{
-			throw CompilerError(node.location, "Semantic error: Type mismatch for " + node.varName);
+			throw SemanticError(node.location, "Type mismatch for " + node.varName);
 		}
 		if (node.expr->arrayDepth != node.arrayDepth)
 		{
-			throw CompilerError(node.location, "Semantic error: Array depth mismatch for " + node.varName);
+			throw SemanticError(node.location, "Array depth mismatch for " + node.varName);
 		}
 		if (node.expr->evaluatedType == DataType::INSTANCE
 			&& node.expr->structName != node.structName)
 		{
-			throw CompilerError(node.location, "Semantic error: Struct type mismatch for " + node.varName);
+			throw SemanticError(node.location, "Struct type mismatch for " + node.varName);
 		}
 	}
 
@@ -160,7 +160,7 @@ void SemanticAnalyzer::Visit(VarAccessNode& node)
 			return;
 		}
 	}
-	throw CompilerError(node.location, "Semantic error: Undefined variable '" + node.varName + "'");
+	throw SemanticError(node.location, "Undefined variable '" + node.varName + "'");
 }
 
 void SemanticAnalyzer::Visit(AssignmentNode& node)
@@ -182,25 +182,25 @@ void SemanticAnalyzer::Visit(AssignmentNode& node)
 	}
 	if (!found)
 	{
-		throw CompilerError(node.location, "Semantic error: Assignment to undefined variable '" + node.varName + "'");
+		throw SemanticError(node.location, "Assignment to undefined variable '" + node.varName + "'");
 	}
 	if (varInfo.isConst)
 	{
-		throw CompilerError(node.location, "Semantic error: Cannot assign to constant variable '" + node.varName + "'");
+		throw SemanticError(node.location, "Cannot assign to constant variable '" + node.varName + "'");
 	}
 	if (node.expr)
 	{
 		if (node.expr->evaluatedType != DataType::UNKNOWN && node.expr->evaluatedType != varInfo.type)
 		{
-			throw CompilerError(node.location, "Semantic error: Type mismatch in assignment to '" + node.varName + "'");
+			throw SemanticError(node.location, "Type mismatch in assignment to '" + node.varName + "'");
 		}
 		if (node.expr->arrayDepth != varInfo.arrayDepth)
 		{
-			throw CompilerError(node.location, "Semantic error: Array depth mismatch in assignment to '" + node.varName + "'");
+			throw SemanticError(node.location, "Array depth mismatch in assignment to '" + node.varName + "'");
 		}
 		if (node.expr->evaluatedType == DataType::INSTANCE && node.expr->structName != varInfo.structName)
 		{
-			throw CompilerError(node.location, "Semantic error: Struct type mismatch in assignment to '" + node.varName + "'");
+			throw SemanticError(node.location, "Struct type mismatch in assignment to '" + node.varName + "'");
 		}
 	}
 }
@@ -311,11 +311,11 @@ void SemanticAnalyzer::Visit(FunctionDeclNode& node)
 			}
 			if (!found)
 			{
-				throw CompilerError(node.location, "Semantic error: Cannot capture undefined variable '" + capNode->varName + "'");
+				throw SemanticError(node.location, "Cannot capture undefined variable '" + capNode->varName + "'");
 			}
 			if (outerVar.type != capNode->varType || outerVar.arrayDepth != capNode->arrayDepth || outerVar.structName != capNode->structName)
 			{
-				throw CompilerError(node.location, "Semantic error: Type mismatch for captured variable '" + capNode->varName + "'");
+				throw SemanticError(node.location, "Type mismatch for captured variable '" + capNode->varName + "'");
 			}
 		}
 	}
@@ -437,7 +437,7 @@ void SemanticAnalyzer::Visit(ArrayLiteralNode& node)
 				else if (elem->evaluatedType != DataType::UNKNOWN
 					&& (elem->evaluatedType != firstType || elem->arrayDepth != firstDepth || elem->structName != firstName))
 				{
-					throw CompilerError(node.location, "Semantic error: All elements in array literal must have the same exact type.");
+					throw SemanticError(node.location, "All elements in array literal must have the same exact type.");
 				}
 			}
 		}
@@ -462,11 +462,11 @@ void SemanticAnalyzer::Visit(IndexAccessNode& node)
 		&& node.target->arrayDepth == 0
 		&& node.target->evaluatedType != DataType::UNKNOWN)
 	{
-		throw CompilerError(node.location, "Semantic error: Cannot index a non-array target.");
+		throw SemanticError(node.location, "Cannot index a non-array target.");
 	}
 	if (node.index && node.index->evaluatedType != DataType::UNKNOWN && node.index->evaluatedType != DataType::INT)
 	{
-		throw CompilerError(node.location, "Semantic error: Array index must be an integer.");
+		throw SemanticError(node.location, "Array index must be an integer.");
 	}
 
 	if (node.target)
@@ -496,11 +496,11 @@ void SemanticAnalyzer::Visit(IndexAssignmentNode& node)
 
 	if (node.target && node.target->arrayDepth == 0 && node.target->evaluatedType != DataType::UNKNOWN)
 	{
-		throw CompilerError(node.location, "Semantic error: Cannot index a non-array target.");
+		throw SemanticError(node.location, "Cannot index a non-array target.");
 	}
 	if (node.index && node.index->evaluatedType != DataType::UNKNOWN && node.index->evaluatedType != DataType::INT)
 	{
-		throw CompilerError(node.location, "Semantic error: Array index must be an integer.");
+		throw SemanticError(node.location, "Array index must be an integer.");
 	}
 
 	if (node.target && node.value
@@ -511,7 +511,7 @@ void SemanticAnalyzer::Visit(IndexAssignmentNode& node)
 			|| node.target->structName != node.value->structName
 			|| (node.target->arrayDepth - 1) != node.value->arrayDepth)
 		{
-			throw CompilerError(node.location, "Semantic error: Type mismatch in array assignment.");
+			throw SemanticError(node.location, "Type mismatch in array assignment.");
 		}
 	}
 }
@@ -527,7 +527,7 @@ void SemanticAnalyzer::Visit(ReturnNode& node)
 				|| node.expr->arrayDepth != m_currentFunctionSignature.arrayDepth
 				|| node.expr->structName != m_currentFunctionSignature.structName)
 			{
-				auto errorMsg = "Semantic error: Return type mismatch. Expected type " + DATA_TYPE_NAMES.at(m_currentFunctionSignature.type);
+				auto errorMsg = "Return type mismatch. Expected type " + DATA_TYPE_NAMES.at(m_currentFunctionSignature.type);
 				if (m_currentFunctionSignature.arrayDepth > 0)
 				{
 					for (int i = 0; i < m_currentFunctionSignature.arrayDepth; ++i)
@@ -535,7 +535,7 @@ void SemanticAnalyzer::Visit(ReturnNode& node)
 						errorMsg += "[]";
 					}
 				}
-				throw CompilerError(node.location, errorMsg);
+				throw SemanticError(node.location, errorMsg);
 			}
 		}
 		return;
@@ -543,7 +543,7 @@ void SemanticAnalyzer::Visit(ReturnNode& node)
 	if (m_currentFunctionSignature.type != DataType::UNKNOWN
 		&& m_currentFunctionSignature.type != DataType::VOID)
 	{
-		throw CompilerError(node.location, "Semantic error: Empty return statement in a non-void function.");
+		throw SemanticError(node.location, "Empty return statement in a non-void function.");
 	}
 }
 
@@ -581,7 +581,7 @@ void SemanticAnalyzer::Visit(SchemaDeclNode& node)
 {
 	if (m_schemas.contains(node.name))
 	{
-		throw CompilerError(node.location, "Semantic error: Schema '" + node.name + "' is already defined.");
+		throw SemanticError(node.location, "Schema '" + node.name + "' is already defined.");
 	}
 
 	SchemaSignature schemaSig;
@@ -604,8 +604,8 @@ void SemanticAnalyzer::Visit(SchemaDeclNode& node)
 				{
 					if (!stateNames.contains(method->returnState))
 					{
-						throw CompilerError(method->location,
-							"Semantic error: Transition to undefined state '"
+						throw SemanticError(method->location,
+							"Transition to undefined state '"
 								+ method->returnState + "' in schema '"
 								+ node.name + '\'');
 					}
@@ -622,18 +622,105 @@ void SemanticAnalyzer::Visit(SchemaDeclNode& node)
 
 void SemanticAnalyzer::Visit(ImplDeclNode& node)
 {
+	if (!m_schemas.contains(node.schemaName))
+	{
+		throw SemanticError(
+			node.location, "Schema '" + node.schemaName + "' is not declared.");
+	}
+
+	auto& [states] = m_schemas.at(node.schemaName);
+	if (!states.contains(node.stateName))
+	{
+		throw SemanticError(node.location, "State '" + node.stateName + "' does not exist in schema '" + node.schemaName + "'.");
+	}
+
+	EnterSchemaContext(node);
+
+	std::unordered_set<std::string> implementedMethods;
+	for (const auto& method : node.methods)
+	{
+		if (method)
+		{
+			implementedMethods.insert(method->name);
+			method->Accept(*this);
+		}
+	}
+
+	const auto& requiredTransitions = states.at(node.stateName).transitions;
+	for (const auto& reqName : requiredTransitions | std::views::keys)
+	{
+		if (!implementedMethods.contains(reqName))
+		{
+			throw SemanticError(node.location, "State '" + node.stateName + "' is missing implementation for function '" + reqName + "' declared in schema.");
+		}
+	}
+
+	DropSchemaContext();
 }
 
 void SemanticAnalyzer::Visit(MethodDeclNode& node)
 {
+	const auto& transitions = m_schemas
+								  .at(m_currentImplSchema)
+								  .states
+								  .at(m_currentImplState)
+								  .transitions;
+
+	if (!transitions.contains(node.name))
+	{
+		throw SemanticError(node.location, "Method '" + node.name + "' is not declared in schema state '" + m_currentImplState + "'.");
+	}
+	if (transitions.at(node.name) != node.targetState->stateName)
+	{
+		throw SemanticError(node.location, "Semantic error: Method '" + node.name + "' must return state '" + transitions.at(node.name) + "', but returns '" + node.targetState->stateName + "'.");
+	}
+
+	EnterScope();
+	// TODO: Зарегистрировать неявно переменную `this` в Scope, чтобы можно было обращаться к полям текущего стейта
+	for (const auto& param : node.parameters)
+	{
+		if (param)
+		{
+			param->Accept(*this);
+		}
+	}
+
+	if (node.body)
+	{
+		node.body->Accept(*this);
+	}
+	ExitScope();
 }
 
 void SemanticAnalyzer::Visit(TsopInitNode& node)
 {
+	if (!m_schemas.contains(node.schemaName)
+		|| !m_schemas.at(node.schemaName).states.contains(node.stateName))
+	{
+		throw SemanticError(node.location, "Cannot initialize unknown TSOP state '" + node.schemaName + "<" + node.stateName + ">'.");
+	}
+
+	// TODO: Достать из m_schemas количество полей для node.stateName и сверить с node.args.size()
+	// (так же, как ты делал это для StructInitNode)
+	for (const auto& arg : node.args)
+	{
+		if (arg)
+		{
+			arg->Accept(*this);
+		}
+	}
 }
 
 void SemanticAnalyzer::Visit(ImplStateNode& node)
 {
+	if (!m_schemas.contains(node.schemaName)
+		|| !m_schemas
+			.at(node.schemaName)
+			.states
+			.contains(node.stateName))
+	{
+		throw SemanticError(node.location, "Unknown TSOP state '" + node.schemaName + "<" + node.stateName + ">'.");
+	}
 }
 
 void SemanticAnalyzer::EnterScope()
@@ -647,4 +734,16 @@ void SemanticAnalyzer::ExitScope()
 	{
 		m_symbolTable.pop_back();
 	}
+}
+
+void SemanticAnalyzer::EnterSchemaContext(const ImplNode& node)
+{
+	m_currentImplSchema = node.schemaName;
+	m_currentImplState = node.stateName;
+}
+
+void SemanticAnalyzer::DropSchemaContext()
+{
+	m_currentImplSchema = "";
+	m_currentImplState = "";
 }

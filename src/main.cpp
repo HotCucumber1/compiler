@@ -1,6 +1,6 @@
 #include "CodeGenerator/CodeGenerator.h"
+#include "Common/AstPrinter.h"
 #include "Lexer/Lexer.h"
-#include "Parser/Common/AstPrinter.h"
 #include "Parser/Grammar/GrammarReader.h"
 #include "Parser/Parser.h"
 #include "Parser/SLRTableBuilder.h"
@@ -79,7 +79,7 @@ int main(const int argc, char* argv[])
 			visualizer.Generate(astRoot);
 
 			outFile.close();
-			std::cout << "[*] Схема успешно экспортирована в файл: " << dumpFilename << std::endl;
+			std::cout << "Схема успешно экспортирована в файл: " << dumpFilename << std::endl;
 		}
 
 		if (printSchema)
@@ -94,7 +94,7 @@ int main(const int argc, char* argv[])
 
 		std::cout << "\nExecution finished successfully." << std::endl;
 	}
-	catch (const CompilerError& e)
+	catch (const CompilationError& e)
 	{
 		std::cerr << "\n[!] COMPILATION ERROR:\n"
 				  << "File: " << e.location.file << "\n"

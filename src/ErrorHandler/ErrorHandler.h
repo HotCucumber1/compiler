@@ -10,14 +10,36 @@ struct SourceLocation
 	int col = 0;
 };
 
-class CompilerError final : public std::runtime_error
+class CompilationError : public std::runtime_error
 {
 public:
 	SourceLocation location;
 
-	CompilerError(SourceLocation loc, const std::string& message)
+	CompilationError(SourceLocation loc, const std::string& message)
 		: std::runtime_error(message)
 		, location(std::move(loc))
 	{
 	}
 };
+
+class SemanticError final : public CompilationError
+{
+public:
+	SemanticError(const SourceLocation& loc, const std::string& message)
+		: CompilationError(loc, "Semantic error: " + message)
+	{
+	}
+};
+
+class SyntaxError final : public CompilationError
+{
+public:
+	SyntaxError(const SourceLocation& loc, const std::string& message)
+		: CompilationError(loc, "Syntax error: " + message)
+	{
+	}
+};
+
+// throw std::runtime_error(
+// 				"Syntax error (" + std::to_string(currentToken.line) + ':' + std::to_string(currentToken.pos)
+// 				+ "): Unexpected token '" + currentToken.value + "'");

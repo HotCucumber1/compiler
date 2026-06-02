@@ -30,9 +30,12 @@ std::shared_ptr<AstNode> Parser::Parse() const
 		auto it = m_table[currentState].find(currentSymbolId);
 		if (it == m_table[currentState].end())
 		{
-			throw std::runtime_error(
-				"Syntax error (" + std::to_string(currentToken.line) + ':' + std::to_string(currentToken.pos)
-				+ "): Unexpected token '" + currentToken.value + "'");
+			throw SyntaxError({
+								  currentToken.file,
+								  currentToken.line,
+								  currentToken.pos,
+							  },
+				"Unexpected token '" + currentToken.value + "'");
 		}
 
 		const auto action = it->second;
@@ -144,7 +147,12 @@ SymbolId Parser::GetSymbolId(const Token& token) const
 
 	if (id == -1)
 	{
-		throw std::runtime_error("Lexical error: token type '" + terminalName + "' is not defined in the Grammar!");
+		throw SemanticError({
+								token.file,
+								token.line,
+								token.pos,
+							},
+			"Lexical error: token type '" + terminalName + "' is not defined in the Grammar!");
 	}
 	return id;
 }

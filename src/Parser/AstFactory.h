@@ -1,5 +1,5 @@
 #pragma once
-#include "Common/Node.h"
+#include "../Common/Node.h"
 
 class AstFactory
 {

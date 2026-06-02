@@ -1,8 +1,8 @@
 #pragma once
-#include "../../ErrorHandler/ErrorHandler.h"
-#include "../../Common/Token.h"
+#include "../ErrorHandler/ErrorHandler.h"
 #include "AstVisitor.h"
 #include "DataType.h"
+#include "Token.h"
 
 #include <memory>
 #include <utility>
@@ -670,20 +670,29 @@ struct MethodDeclNode final : AstNode
 	}
 };
 
-struct ImplDeclNode final : AstNode
+struct ImplNode : AstNode
 {
 	std::string schemaName;
 	std::string stateName;
+
+	ImplNode(const SymbolId id, const AstNodeType type, std::string schema, std::string state)
+		: AstNode(id, type)
+		, schemaName(std::move(schema))
+		, stateName(std::move(state))
+	{
+	}
+};
+
+struct ImplDeclNode final : ImplNode
+{
 	std::vector<std::shared_ptr<MethodDeclNode>> methods;
 
 	ImplDeclNode(
 		const SymbolId id,
-		std::string sName,
-		std::string stName,
+		const std::string& sName,
+		const std::string& stName,
 		std::vector<std::shared_ptr<MethodDeclNode>> methods)
-		: AstNode(id, AstNodeType::IMPL_DECL)
-		, schemaName(std::move(sName))
-		, stateName(std::move(stName))
+		: ImplNode(id, AstNodeType::IMPL_DECL, sName, stName)
 		, methods(std::move(methods))
 	{
 	}
@@ -694,15 +703,13 @@ struct ImplDeclNode final : AstNode
 	}
 };
 
-struct ImplStateNode final : AstNode
+struct ImplStateNode final : ImplNode
 {
-	std::string schemaName;
-	std::string stateName;
-
-	ImplStateNode(const SymbolId id, std::string schema, std::string state)
-		: AstNode(id, AstNodeType::IMPL_STATE_TYPE)
-		, schemaName(std::move(schema))
-		, stateName(std::move(state))
+	ImplStateNode(
+		const SymbolId id,
+		const std::string& schema,
+		const std::string& state)
+		: ImplNode(id, AstNodeType::IMPL_STATE_TYPE, schema, state)
 	{
 	}
 
@@ -712,16 +719,16 @@ struct ImplStateNode final : AstNode
 	}
 };
 
-struct TsopInitNode final : AstNode
+struct TsopInitNode final : ImplNode
 {
-	std::string schemaName;
-	std::string stateName;
 	std::vector<std::shared_ptr<AstNode>> args;
 
-	TsopInitNode(const SymbolId id, std::string schema, std::string state, std::vector<std::shared_ptr<AstNode>> a)
-		: AstNode(id, AstNodeType::TSOP_INIT)
-		, schemaName(std::move(schema))
-		, stateName(std::move(state))
+	TsopInitNode(
+		const SymbolId id,
+		const std::string& schema,
+		const std::string& state,
+		std::vector<std::shared_ptr<AstNode>> a)
+		: ImplNode(id, AstNodeType::TSOP_INIT, schema, state)
 		, args(std::move(a))
 	{
 	}
