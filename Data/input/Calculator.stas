@@ -1,0 +1,139 @@
+schema Calculator
+{
+    // коммент
+    state Ready() {
+        func digit(int d) -> FirstNumber
+        func clear() -> Ready
+    }
+
+    state FirstNumber(int current) {
+        func digit(int d) -> FirstNumber
+        func operator(string op) -> SecondNumber
+        func clear() -> Ready
+        func equal() -> Ready
+    }
+
+    state SecondNumber(int first, string op) {
+        func digit(int d) -> SecondNumberWithValue
+        func clear() -> Ready
+    }
+
+    state SecondNumberWithValue(int first, string op, int current) {
+        func digit(int d) -> SecondNumberWithValue
+        func equal() -> Compute
+        func clear() -> Ready
+    }
+
+    state Compute(int first, string op, int second) {
+        func execute() -> Result
+    }
+
+    state Result(int value) {
+        func digit(int d) -> FirstNumber
+        func clear() -> Ready
+        func operator(string op) -> SecondNumber
+    }
+}
+
+
+
+
+impl Calculator<Ready>
+{
+    public func digit(int d) -> Calculator<FirstNumber> {
+        return new Calculator<FirstNumber>(d);
+    }
+
+    public func clear() -> Calculator<Ready> {
+        return new Calculator<Ready>();
+    }
+}
+
+impl Calculator<FirstNumber>
+{
+    public func digit(int d) -> Calculator<FirstNumber> {
+        return new Calculator<FirstNumber>(this.current * 10 + d);
+    }
+
+    public func operator(string op) -> Calculator<SecondNumber> {
+        return new Calculator<SecondNumber>(this.current, op);
+    }
+
+    public func clear() -> Calculator<Ready> {
+        return new Calculator<Ready>();
+    }
+
+    public func equal() -> Calculator<Ready> {
+        return new Calculator<Ready>();
+    }
+}
+
+impl Calculator<SecondNumber>
+{
+    public func digit(int d) -> Calculator<SecondNumberWithValue> {
+        return new Calculator<SecondNumberWithValue>(this.first, this.op, d);
+    }
+
+    public func clear() -> Calculator<Ready> {
+        return new Calculator<Ready>();
+    }
+}
+
+impl Calculator<SecondNumberWithValue>
+{
+    public func digit(int d) -> Calculator<SecondNumberWithValue> {
+        return new Calculator<SecondNumberWithValue>(this.first, this.op, this.current * 10 + d);
+    }
+
+    public func equal() -> Calculator<Compute> {
+        return new Calculator<Compute>(this.first, this.op, this.current);
+    }
+
+    public func clear() -> Calculator<Ready> {
+        return new Calculator<Ready>();
+    }
+}
+
+impl Calculator<Compute>
+{
+    public func execute() -> Calculator<Result> {
+        int result = 5;
+//        match this.op {
+//            Op.Plus     => this.first + this.second
+//            Op.Minus    => this.first - this.second
+//            Op.Multiply => this.first * this.second
+//            Op.Divide   => if (this.second == 0) { 0 } else { this.first / this.second }
+//        };
+        return new Calculator<Result>(result);
+    }
+}
+
+impl Calculator<Result>
+{
+    public func digit(int d) -> Calculator<FirstNumber> {
+        return new Calculator<FirstNumber>(d);
+    }
+
+    public func clear() -> Calculator<Ready> {
+        return new Calculator<Ready>();
+    }
+
+    public func operator(string op) -> Calculator<SecondNumber> {
+        return new Calculator<SecondNumber>(this.value, op);
+    }
+}
+
+
+
+Calculator calc = new Calculator<Ready>();
+
+calc = calc.digit(5);
+calc = calc.digit(3);
+calc = calc.operator("hello");
+calc = calc.digit(2);
+calc = calc.digit(7);
+calc = calc.equal();
+
+calc = calc.execute();
+
+print(calc.value);
