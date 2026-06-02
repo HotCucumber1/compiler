@@ -1,4 +1,4 @@
-import "/home/dmitriy.rybakov/study/compiler/bin/stl/math.stas"
+import "../../bin/stl/math.stas"
 import "./lib.stas"
 
 int[] myArr = [1, 2, 3, 4, 5];

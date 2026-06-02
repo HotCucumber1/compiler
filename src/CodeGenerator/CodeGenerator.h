@@ -1,6 +1,6 @@
 #pragma once
-#include "../Frontend/Parser/Common/DataType.h"
-#include "../Frontend/Parser/Common/Node.h"
+#include "../Parser/Common/DataType.h"
+#include "../Parser/Common/Node.h"
 #include "../VM/Type/Chunk.h"
 
 #include <map>

@@ -13,14 +13,14 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(Catch2)
 
 add_subdirectory(src/VM)
-add_subdirectory(src/Frontend/Lexer)
-add_subdirectory(src/Frontend/Parser)
+add_subdirectory(src/Lexer)
+add_subdirectory(src/Parser)
 add_subdirectory(src/CodeGenerator)
 
 add_executable(
         compiler
-        src/Frontend/Visualizer/SchemaVisualizer.cpp
-        src/Frontend/Visualizer/ConsoleSchemaVisualizer.cpp
+        src/Visualizer/SchemaVisualizer.cpp
+        src/Visualizer/ConsoleSchemaVisualizer.cpp
         src/main.cpp)
 
 target_link_libraries(

@@ -1,6 +1,6 @@
 add_library(
         CodeGen STATIC
-        ../Frontend/SematicAnalyzer/SemanticAnalyzer.cpp
+        ../SematicAnalyzer/SemanticAnalyzer.cpp
         CodeGenerator.cpp
 )
 

@@ -1,5 +1,5 @@
 file(
-        COPY ${CMAKE_CURRENT_SOURCE_DIR}/input_test/
+        COPY input_test
         DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/input_test/
 )
 

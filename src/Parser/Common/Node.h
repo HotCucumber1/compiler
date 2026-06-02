@@ -1,5 +1,5 @@
 #pragma once
-#include "../../../ErrorHandler/ErrorHandler.h"
+#include "../../ErrorHandler/ErrorHandler.h"
 #include "../../Common/Token.h"
 #include "AstVisitor.h"
 #include "DataType.h"
