@@ -438,6 +438,23 @@ std::shared_ptr<AstNode> AstFactory::CreateNode(
 		break;
 	}
 
+	case AstNodeType::METHOD_CALL: {
+		auto object = children[0];
+		std::string methodName = GetToken(children[2]).value;
+
+		std::vector<std::shared_ptr<AstNode>> args;
+		if (auto argList = std::dynamic_pointer_cast<CommonNode>(children[4]))
+		{
+			if (argList->type == AstNodeType::BLOCK)
+			{
+				args = argList->children;
+			}
+		}
+
+		result = std::make_shared<MethodCallNode>(id, object, methodName, args);
+		break;
+	}
+
 	default:
 		throw std::runtime_error("AstFactory Error: AstNodeType is not being processed " + std::to_string(static_cast<int>(type)));
 	}

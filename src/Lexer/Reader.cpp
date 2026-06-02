@@ -88,18 +88,54 @@ void Reader::ResetBuffer()
 
 void Reader::SkipSpaces()
 {
-	while (m_input.good() and std::isspace(static_cast<char>(m_input.peek())))
+	while (m_input.good())
 	{
-		const auto ch = static_cast<char>(m_input.get());
-		if (ch == '\n')
+		const int peekVal = m_input.peek();
+		if (peekVal == std::char_traits<char>::eof())
 		{
-			m_currentLine++;
-			m_currentPosition = 1;
+			break;
+		}
+
+		const char peekCh = static_cast<char>(peekVal);
+
+		if (std::isspace(peekCh))
+		{
+			const auto ch = static_cast<char>(m_input.get());
+			if (ch == '\n')
+			{
+				m_currentLine++;
+				m_currentPosition = 1;
+			}
+			else
+			{
+				m_currentPosition++;
+				m_globalPosition++;
+			}
+		}
+		else if (peekCh == '/')
+		{
+			m_input.get();
+			if (m_input.peek() == '/')
+			{
+				m_input.get();
+				m_currentPosition += 2;
+				m_globalPosition += 2;
+
+				while (m_input.good() && m_input.peek() != '\n' && m_input.peek() != std::char_traits<char>::eof())
+				{
+					m_input.get();
+					m_currentPosition++;
+					m_globalPosition++;
+				}
+			}
+			else
+			{
+				break;
+			}
 		}
 		else
 		{
-			m_currentPosition++;
-			m_globalPosition++;
+			break;
 		}
 	}
 }

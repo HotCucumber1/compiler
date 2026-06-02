@@ -1,5 +1,4 @@
 #include "CodeGenerator.h"
-
 #include <ranges>
 
 #include "OpCode.h"
@@ -59,8 +58,6 @@ void CodeGenerator::Visit(BinaryOpNode& node)
 	{
 		node.right->Accept(*this);
 	}
-	const auto leftType = node.left->type;
-	const auto rightType = node.left->type;
 
 	switch (node.op.type)
 	{
@@ -693,6 +690,27 @@ void CodeGenerator::Visit(TsopInitNode& node)
 
 		PushCode(static_cast<uint8_t>(OpCode::OP_POP));
 	}
+}
+
+void CodeGenerator::Visit(MethodCallNode& node)
+{
+	const auto nameIdx = AddConstant(MakeString(node.mangledFuncName));
+	PushCode(static_cast<uint8_t>(OpCode::OP_GET_GLOBAL));
+	PushCode(nameIdx);
+
+	if (node.object)
+	{
+		node.object->Accept(*this);
+	}
+	for (const auto& arg : node.args)
+	{
+		if (arg)
+		{
+			arg->Accept(*this);
+		}
+	}
+	PushCode(static_cast<uint8_t>(OpCode::OP_CALL));
+	PushCode(static_cast<uint8_t>(node.args.size() + 1));
 }
 
 void CodeGenerator::PushCode(const uint8_t code)

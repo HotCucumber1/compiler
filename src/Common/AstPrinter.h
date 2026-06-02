@@ -65,6 +65,8 @@ public:
 
 	void Visit(TsopInitNode& node) override;
 
+	void Visit(MethodCallNode& node) override;
+
 private:
 	int m_depth = 0;
 

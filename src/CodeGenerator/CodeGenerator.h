@@ -68,6 +68,8 @@ public:
 
 	void Visit(TsopInitNode& node) override;
 
+	void Visit(MethodCallNode& node) override;
+
 private:
 	void PushCode(uint8_t code);
 

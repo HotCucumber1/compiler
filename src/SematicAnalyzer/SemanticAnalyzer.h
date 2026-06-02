@@ -14,6 +14,7 @@ struct SymbolInfo
 struct StateSignature
 {
 	std::unordered_map<std::string, std::string> transitions;
+	size_t fieldCount = 0;
 };
 
 struct SchemaSignature
@@ -84,6 +85,8 @@ public:
 
 	void Visit(ImplStateNode& node) override;
 
+	void Visit(MethodCallNode& node) override;
+
 private:
 	void EnterScope();
 
@@ -93,7 +96,23 @@ private:
 
 	void DropSchemaContext();
 
+	void ValidateTypeExists(DataType type, const std::string& structName, const SourceLocation& loc) const;
+
 private:
+	struct TsopType
+	{
+		std::string schema;
+		std::string state;
+	};
+
+	struct StructSignature
+	{
+		std::unordered_map<std::string, SymbolInfo> fieldTypes;
+		size_t fieldCount = 0;
+	};
+
+	std::unordered_map<std::string, StructSignature> m_structSignatures;
+
 	std::unordered_map<std::string, SchemaSignature> m_schemas;
 	std::vector<std::unordered_map<std::string, SymbolInfo>> m_symbolTable;
 	std::unordered_map<std::string, SymbolInfo> m_functions;
@@ -105,4 +124,7 @@ private:
 		0, "",
 		false
 	};
+
+	std::vector<std::unordered_map<std::string, TsopType>> m_tsopVars;
+	std::unordered_map<const AstNode*, TsopType> m_nodeTypes;
 };

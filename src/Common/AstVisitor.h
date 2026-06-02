@@ -29,6 +29,7 @@ struct ImplDeclNode;
 struct MethodDeclNode;
 struct ImplStateNode;
 struct TsopInitNode;
+struct MethodCallNode;
 
 class AstVisitor
 {
@@ -92,4 +93,6 @@ public:
 	virtual void Visit(ImplStateNode& node) = 0;
 
 	virtual void Visit(TsopInitNode& node) = 0;
+
+	virtual void Visit(MethodCallNode& node) = 0;
 };

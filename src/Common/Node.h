@@ -54,6 +54,7 @@ enum class AstNodeType : int
 	METHOD_DECL,
 	TSOP_INIT,
 	IMPL_STATE_TYPE,
+	METHOD_CALL,
 };
 
 static const std::unordered_map<std::string, AstNodeType> AST_NODE_TYPES = {
@@ -100,7 +101,7 @@ static const std::unordered_map<std::string, AstNodeType> AST_NODE_TYPES = {
 	{ "METHOD_DECL", AstNodeType::METHOD_DECL },
 	{ "TSOP_INIT", AstNodeType::TSOP_INIT },
 	{ "IMPL_STATE_TYPE", AstNodeType::IMPL_STATE_TYPE },
-
+	{ "METHOD_CALL", AstNodeType::METHOD_CALL },
 };
 
 using SymbolId = int32_t;
@@ -729,6 +730,31 @@ struct TsopInitNode final : ImplNode
 		const std::string& state,
 		std::vector<std::shared_ptr<AstNode>> a)
 		: ImplNode(id, AstNodeType::TSOP_INIT, schema, state)
+		, args(std::move(a))
+	{
+	}
+
+	void Accept(AstVisitor& visitor) override
+	{
+		visitor.Visit(*this);
+	}
+};
+
+struct MethodCallNode final : AstNode
+{
+	std::shared_ptr<AstNode> object;
+	std::string methodName;
+	std::vector<std::shared_ptr<AstNode>> args;
+	std::string mangledFuncName;
+
+	MethodCallNode(
+		const SymbolId id,
+		std::shared_ptr<AstNode> obj,
+		std::string mName,
+		std::vector<std::shared_ptr<AstNode>> a)
+		: AstNode(id, AstNodeType::METHOD_CALL)
+		, object(std::move(obj))
+		, methodName(std::move(mName))
 		, args(std::move(a))
 	{
 	}

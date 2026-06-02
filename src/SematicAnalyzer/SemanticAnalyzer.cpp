@@ -89,6 +89,7 @@ void SemanticAnalyzer::Visit(UnaryOpNode& node)
 
 void SemanticAnalyzer::Visit(VarDeclNode& node)
 {
+	ValidateTypeExists(node.varType, node.structName, node.location);
 	if (m_symbolTable.back().contains(node.varName))
 	{
 		throw SemanticError(node.location, "Variable already declared: " + node.varName);
@@ -110,6 +111,10 @@ void SemanticAnalyzer::Visit(VarDeclNode& node)
 			&& node.expr->structName != node.structName)
 		{
 			throw SemanticError(node.location, "Struct type mismatch for " + node.varName);
+		}
+		if (m_nodeTypes.contains(node.expr.get()))
+		{
+			m_tsopVars.back()[node.varName] = m_nodeTypes[node.expr.get()];
 		}
 	}
 
@@ -149,14 +154,22 @@ void SemanticAnalyzer::Visit(LiteralNode& node)
 
 void SemanticAnalyzer::Visit(VarAccessNode& node)
 {
-	for (const auto& scope : std::ranges::reverse_view(m_symbolTable))
+	auto itSym = m_symbolTable.rbegin();
+	auto itTsop = m_tsopVars.rbegin();
+
+	for (; itSym != m_symbolTable.rend(); ++itSym, ++itTsop)
 	{
-		if (scope.contains(node.varName))
+		if (itSym->contains(node.varName))
 		{
-			const auto& varInfo = scope.at(node.varName);
+			const auto& varInfo = itSym->at(node.varName);
 			node.evaluatedType = varInfo.type;
 			node.arrayDepth = varInfo.arrayDepth;
 			node.structName = varInfo.structName;
+
+			if (itTsop->contains(node.varName))
+			{
+				m_nodeTypes[&node] = itTsop->at(node.varName);
+			}
 			return;
 		}
 	}
@@ -201,6 +214,20 @@ void SemanticAnalyzer::Visit(AssignmentNode& node)
 		if (node.expr->evaluatedType == DataType::INSTANCE && node.expr->structName != varInfo.structName)
 		{
 			throw SemanticError(node.location, "Struct type mismatch in assignment to '" + node.varName + "'");
+		}
+		if (m_nodeTypes.contains(node.expr.get()))
+		{
+			auto itSym = m_symbolTable.rbegin();
+			auto itTsop = m_tsopVars.rbegin();
+
+			for (; itSym != m_symbolTable.rend(); ++itSym, ++itTsop)
+			{
+				if (itSym->contains(node.varName))
+				{
+					(*itTsop)[node.varName] = m_nodeTypes[node.expr.get()];
+					break;
+				}
+			}
 		}
 	}
 }
@@ -361,17 +388,44 @@ void SemanticAnalyzer::Visit(FunctionDeclNode& node)
 
 void SemanticAnalyzer::Visit(StructDeclNode& node)
 {
+	StructSignature signature;
 	for (const auto& field : node.fields)
 	{
+		if (const auto varDecl = std::dynamic_pointer_cast<VarDeclNode>(field))
+		{
+			signature.fieldTypes[varDecl->varName] = {
+				varDecl->varType,
+				varDecl->arrayDepth,
+				varDecl->structName,
+				varDecl->isConst
+			};
+			signature.fieldCount++;
+		}
 		if (field)
 		{
 			field->Accept(*this);
 		}
 	}
+	m_structSignatures[node.name] = std::move(signature);
 }
 
 void SemanticAnalyzer::Visit(StructInitNode& node)
 {
+	if (!m_structSignatures.contains(node.structName))
+	{
+		throw SemanticError(node.location, "Unknown struct '" + node.structName + "'");
+	}
+
+	const auto& signature = m_structSignatures[node.structName];
+
+	if (node.args.size() > signature.fieldCount)
+	{
+		throw SemanticError(
+			node.location,
+			"Too many arguments for struct '" + node.structName
+				+ "'. Expected max " + std::to_string(signature.fieldCount) + ".");
+	}
+
 	for (const auto& arg : node.args)
 	{
 		if (arg)
@@ -391,9 +445,33 @@ void SemanticAnalyzer::Visit(MemberAccessNode& node)
 		node.object->Accept(*this);
 	}
 
-	node.evaluatedType = DataType::UNKNOWN;
-	node.arrayDepth = 0;
-	node.structName = "";
+	if (node.object && node.object->evaluatedType == DataType::INSTANCE)
+	{
+		std::string structName = node.object->structName;
+
+		if (m_nodeTypes.contains(node.object.get()))
+		{
+			const auto& tsopType = m_nodeTypes[node.object.get()];
+			structName = tsopType.schema + "_" + tsopType.state;
+		}
+
+		if (m_structSignatures.contains(structName))
+		{
+			const auto& sig = m_structSignatures.at(structName);
+			if (sig.fieldTypes.contains(node.fieldName))
+			{
+				const auto& fieldInfo = sig.fieldTypes.at(node.fieldName);
+
+				node.evaluatedType = fieldInfo.type;
+				node.arrayDepth = fieldInfo.arrayDepth;
+				node.structName = fieldInfo.structName;
+				return;
+			}
+			throw SemanticError(node.location, "Field '" + node.fieldName + "' does not exist in state '" + structName + "'");
+		}
+	}
+
+	throw SemanticError(node.location, "Cannot access field '" + node.fieldName + "'. Object is not a valid struct or state.");
 }
 
 void SemanticAnalyzer::Visit(MemberAssignmentNode& node)
@@ -598,6 +676,8 @@ void SemanticAnalyzer::Visit(SchemaDeclNode& node)
 		if (state)
 		{
 			StateSignature stateSig;
+			stateSig.fieldCount = state->fields.size();
+
 			for (const auto& method : state->methods)
 			{
 				if (method)
@@ -613,6 +693,25 @@ void SemanticAnalyzer::Visit(SchemaDeclNode& node)
 				}
 			}
 			schemaSig.states[state->name] = stateSig;
+
+			StructSignature structSig;
+			structSig.fieldCount = state->fields.size();
+			for (const auto& field : state->fields)
+			{
+				if (const auto varDecl = std::dynamic_pointer_cast<VarDeclNode>(field))
+				{
+					ValidateTypeExists(varDecl->varType, varDecl->structName, varDecl->location);
+
+					structSig.fieldTypes[varDecl->varName] = {
+						varDecl->varType,
+						varDecl->arrayDepth,
+						varDecl->structName,
+						varDecl->isConst
+					};
+				}
+			}
+			m_structSignatures[node.name + "_" + state->name] = std::move(structSig);
+
 			state->Accept(*this);
 		}
 	}
@@ -676,11 +775,21 @@ void SemanticAnalyzer::Visit(MethodDeclNode& node)
 	}
 
 	EnterScope();
-	// TODO: Зарегистрировать неявно переменную `this` в Scope, чтобы можно было обращаться к полям текущего стейта
+	m_symbolTable.back()["this"] = {
+		DataType::INSTANCE,
+		0,
+		m_currentImplSchema + "_" + m_currentImplState,
+		true,
+	};
+	m_tsopVars.back()["this"] = { m_currentImplSchema, m_currentImplState };
 	for (const auto& param : node.parameters)
 	{
 		if (param)
 		{
+			if (const auto varDecl = std::dynamic_pointer_cast<VarDeclNode>(param))
+			{
+				ValidateTypeExists(varDecl->varType, varDecl->structName, varDecl->location);
+			}
 			param->Accept(*this);
 		}
 	}
@@ -700,8 +809,14 @@ void SemanticAnalyzer::Visit(TsopInitNode& node)
 		throw SemanticError(node.location, "Cannot initialize unknown TSOP state '" + node.schemaName + "<" + node.stateName + ">'.");
 	}
 
-	// TODO: Достать из m_schemas количество полей для node.stateName и сверить с node.args.size()
-	// (так же, как ты делал это для StructInitNode)
+	const auto& [transitions, fieldCount] = m_schemas.at(node.schemaName).states.at(node.stateName);
+	if (node.args.size() != fieldCount)
+	{
+		throw SemanticError(node.location,
+			"Argument count mismatch. State '"
+				+ node.stateName + "' expects " + std::to_string(fieldCount) + " arguments, but got "
+				+ std::to_string(node.args.size()));
+	}
 	for (const auto& arg : node.args)
 	{
 		if (arg)
@@ -709,6 +824,7 @@ void SemanticAnalyzer::Visit(TsopInitNode& node)
 			arg->Accept(*this);
 		}
 	}
+	m_nodeTypes[&node] = { node.schemaName, node.stateName };
 }
 
 void SemanticAnalyzer::Visit(ImplStateNode& node)
@@ -723,9 +839,46 @@ void SemanticAnalyzer::Visit(ImplStateNode& node)
 	}
 }
 
+void SemanticAnalyzer::Visit(MethodCallNode& node)
+{
+	if (node.object)
+	{
+		node.object->Accept(*this);
+	}
+
+	if (!m_nodeTypes.contains(node.object.get()))
+	{
+		throw SemanticError(node.location, "Semantic error: Cannot call method '." + node.methodName + "' on a non-TSOP object or undefined variable.");
+	}
+
+	const auto objType = m_nodeTypes[node.object.get()];
+
+	const auto& [transitions, fieldCount] = m_schemas.at(objType.schema).states.at(objType.state);
+	if (!transitions.contains(node.methodName))
+	{
+		throw SemanticError(node.location, "Semantic error: Method '" + node.methodName + "' does not exist in state '" + objType.schema + "<" + objType.state + ">'.");
+	}
+
+	const auto returnState = transitions.at(node.methodName);
+	m_nodeTypes[&node] = { objType.schema, returnState };
+
+	node.mangledFuncName = objType.schema + "_" + objType.state + "_" + node.methodName;
+	for (const auto& arg : node.args)
+	{
+		if (arg)
+		{
+			arg->Accept(*this);
+		}
+	}
+	node.evaluatedType = DataType::INSTANCE;
+	node.structName = objType.schema;
+	node.arrayDepth = 0;
+}
+
 void SemanticAnalyzer::EnterScope()
 {
 	m_symbolTable.emplace_back();
+	m_tsopVars.emplace_back();
 }
 
 void SemanticAnalyzer::ExitScope()
@@ -733,6 +886,10 @@ void SemanticAnalyzer::ExitScope()
 	if (!m_symbolTable.empty())
 	{
 		m_symbolTable.pop_back();
+	}
+	if (!m_tsopVars.empty())
+	{
+		m_tsopVars.pop_back();
 	}
 }
 
@@ -746,4 +903,15 @@ void SemanticAnalyzer::DropSchemaContext()
 {
 	m_currentImplSchema = "";
 	m_currentImplState = "";
+}
+
+void SemanticAnalyzer::ValidateTypeExists(DataType type, const std::string& structName, const SourceLocation& loc) const
+{
+	if (type == DataType::INSTANCE)
+	{
+		if (!m_structSignatures.contains(structName) && !m_schemas.contains(structName))
+		{
+			throw SemanticError(loc, "Unknown type '" + structName + "'.");
+		}
+	}
 }

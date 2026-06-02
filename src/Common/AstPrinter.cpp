@@ -714,6 +714,44 @@ void AstPrinter::Visit(TsopInitNode& node)
 	m_depth--;
 }
 
+void AstPrinter::Visit(MethodCallNode& node)
+{
+	PrintIndent();
+	std::cout << "[MethodCall] ." << node.methodName << "()\n";
+
+	m_depth++;
+
+	PrintIndent();
+	std::cout << "Object:\n";
+	m_depth++;
+	if (node.object)
+	{
+		node.object->Accept(*this);
+	}
+	m_depth--;
+
+	PrintIndent();
+	std::cout << "Arguments:\n";
+	m_depth++;
+	if (node.args.empty())
+	{
+		PrintIndent();
+		std::cout << "(none)\n";
+	}
+	else
+	{
+		for (const auto& arg : node.args)
+		{
+			if (arg)
+			{
+				arg->Accept(*this);
+			}
+		}
+	}
+	m_depth--;
+	m_depth--;
+}
+
 void AstPrinter::PrintIndent() const
 {
 	std::cout << std::string(m_depth * 2, ' ');

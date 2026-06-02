@@ -25,6 +25,7 @@ Unary -> Primary : PASS_THROUGH
 Primary -> Call : PASS_THROUGH
 Primary -> StructInit : PASS_THROUGH
 Primary -> Primary . IDENTIFIER : MEMBER_ACCESS
+Primary -> Primary . IDENTIFIER ( ArgList ) : METHOD_CALL
 Primary -> not Primary : UNARY_OP
 Primary -> ( Expression ) : PASS_THROUGH
 Primary -> IDENTIFIER : VAR_ACCESS
