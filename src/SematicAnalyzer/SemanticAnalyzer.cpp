@@ -4,15 +4,14 @@
 #include <ranges>
 #include <unordered_set>
 
+void AcceptNode(AstNode& node);
+
 void SemanticAnalyzer::Analyze(const std::shared_ptr<AstNode>& root)
 {
 	m_symbolTable.clear();
 	EnterScope();
 
-	if (root)
-	{
-		root->Accept(*this);
-	}
+	AcceptNode(root);
 	ExitScope();
 }
 
@@ -24,23 +23,14 @@ void SemanticAnalyzer::Visit(CommonNode& node)
 {
 	for (const auto& child : node.children)
 	{
-		if (child)
-		{
-			child->Accept(*this);
-		}
+		AcceptNode(child);
 	}
 }
 
 void SemanticAnalyzer::Visit(BinaryOpNode& node)
 {
-	if (node.left)
-	{
-		node.left->Accept(*this);
-	}
-	if (node.right)
-	{
-		node.right->Accept(*this);
-	}
+	AcceptNode(node.left);
+	AcceptNode(node.right);
 
 	if (node.left && node.right)
 	{
@@ -178,10 +168,8 @@ void SemanticAnalyzer::Visit(VarAccessNode& node)
 
 void SemanticAnalyzer::Visit(AssignmentNode& node)
 {
-	if (node.expr)
-	{
-		node.expr->Accept(*this);
-	}
+	AcceptNode(node.expr);
+
 	bool found = false;
 	SymbolInfo varInfo{};
 	for (const auto& scope : std::ranges::reverse_view(m_symbolTable))
@@ -201,32 +189,33 @@ void SemanticAnalyzer::Visit(AssignmentNode& node)
 	{
 		throw SemanticError(node.location, "Cannot assign to constant variable '" + node.varName + "'");
 	}
-	if (node.expr)
+	if (!node.expr)
 	{
-		if (node.expr->evaluatedType != DataType::UNKNOWN && node.expr->evaluatedType != varInfo.type)
-		{
-			throw SemanticError(node.location, "Type mismatch in assignment to '" + node.varName + "'");
-		}
-		if (node.expr->arrayDepth != varInfo.arrayDepth)
-		{
-			throw SemanticError(node.location, "Array depth mismatch in assignment to '" + node.varName + "'");
-		}
-		if (node.expr->evaluatedType == DataType::INSTANCE && node.expr->structName != varInfo.structName)
-		{
-			throw SemanticError(node.location, "Struct type mismatch in assignment to '" + node.varName + "'");
-		}
-		if (m_nodeTypes.contains(node.expr.get()))
-		{
-			auto itSym = m_symbolTable.rbegin();
-			auto itTsop = m_tsopVars.rbegin();
+		return;
+	}
+	if (node.expr->evaluatedType != DataType::UNKNOWN && node.expr->evaluatedType != varInfo.type)
+	{
+		throw SemanticError(node.location, "Type mismatch in assignment to '" + node.varName + "'");
+	}
+	if (node.expr->arrayDepth != varInfo.arrayDepth)
+	{
+		throw SemanticError(node.location, "Array depth mismatch in assignment to '" + node.varName + "'");
+	}
+	if (node.expr->evaluatedType == DataType::INSTANCE && node.expr->structName != varInfo.structName)
+	{
+		throw SemanticError(node.location, "Struct type mismatch in assignment to '" + node.varName + "'");
+	}
+	if (m_nodeTypes.contains(node.expr.get()))
+	{
+		auto itSym = m_symbolTable.rbegin();
+		auto itTsop = m_tsopVars.rbegin();
 
-			for (; itSym != m_symbolTable.rend(); ++itSym, ++itTsop)
+		for (; itSym != m_symbolTable.rend(); ++itSym, ++itTsop)
+		{
+			if (itSym->contains(node.varName))
 			{
-				if (itSym->contains(node.varName))
-				{
-					(*itTsop)[node.varName] = m_nodeTypes[node.expr.get()];
-					break;
-				}
+				(*itTsop)[node.varName] = m_nodeTypes[node.expr.get()];
+				break;
 			}
 		}
 	}
@@ -234,38 +223,23 @@ void SemanticAnalyzer::Visit(AssignmentNode& node)
 
 void SemanticAnalyzer::Visit(IfNode& node)
 {
-	if (node.condition)
-	{
-		node.condition->Accept(*this);
-	}
+	AcceptNode(node.condition);
 
 	EnterScope();
-	if (node.thenBranch)
-	{
-		node.thenBranch->Accept(*this);
-	}
+	AcceptNode(node.thenBranch);
 	ExitScope();
 
-	if (node.elseBranch)
-	{
-		EnterScope();
-		node.elseBranch->Accept(*this);
-		ExitScope();
-	}
+	EnterScope();
+	AcceptNode(node.elseBranch);
+	ExitScope();
 }
 
 void SemanticAnalyzer::Visit(WhileNode& node)
 {
-	if (node.condition)
-	{
-		node.condition->Accept(*this);
-	}
+	AcceptNode(node.condition);
 
 	EnterScope();
-	if (node.body)
-	{
-		node.body->Accept(*this);
-	}
+	AcceptNode(node.body);
 	ExitScope();
 }
 
@@ -273,22 +247,10 @@ void SemanticAnalyzer::Visit(ForNode& node)
 {
 	EnterScope();
 
-	if (node.init)
-	{
-		node.init->Accept(*this);
-	}
-	if (node.condition)
-	{
-		node.condition->Accept(*this);
-	}
-	if (node.increment)
-	{
-		node.increment->Accept(*this);
-	}
-	if (node.body)
-	{
-		node.body->Accept(*this);
-	}
+	AcceptNode(node.init);
+	AcceptNode(node.condition);
+	AcceptNode(node.increment);
+	AcceptNode(node.body);
 
 	ExitScope();
 }
@@ -297,10 +259,7 @@ void SemanticAnalyzer::Visit(CallNode& node)
 {
 	for (const auto& arg : node.args)
 	{
-		if (arg)
-		{
-			arg->Accept(*this);
-		}
+		AcceptNode(arg);
 	}
 	if (m_functions.contains(node.funcName))
 	{
@@ -378,10 +337,7 @@ void SemanticAnalyzer::Visit(FunctionDeclNode& node)
 		}
 	}
 
-	if (node.body)
-	{
-		node.body->Accept(*this);
-	}
+	AcceptNode(node.body);
 	ExitScope();
 	m_currentFunctionSignature = previousSignature;
 }
@@ -401,10 +357,7 @@ void SemanticAnalyzer::Visit(StructDeclNode& node)
 			};
 			signature.fieldCount++;
 		}
-		if (field)
-		{
-			field->Accept(*this);
-		}
+		AcceptNode(field);
 	}
 	m_structSignatures[node.name] = std::move(signature);
 }
@@ -428,10 +381,7 @@ void SemanticAnalyzer::Visit(StructInitNode& node)
 
 	for (const auto& arg : node.args)
 	{
-		if (arg)
-		{
-			arg->Accept(*this);
-		}
+		AcceptNode(arg);
 	}
 
 	node.evaluatedType = DataType::INSTANCE;
@@ -440,10 +390,7 @@ void SemanticAnalyzer::Visit(StructInitNode& node)
 
 void SemanticAnalyzer::Visit(MemberAccessNode& node)
 {
-	if (node.object)
-	{
-		node.object->Accept(*this);
-	}
+	AcceptNode(node.object);
 
 	if (node.object && node.object->evaluatedType == DataType::INSTANCE)
 	{
@@ -476,14 +423,8 @@ void SemanticAnalyzer::Visit(MemberAccessNode& node)
 
 void SemanticAnalyzer::Visit(MemberAssignmentNode& node)
 {
-	if (node.object)
-	{
-		node.object->Accept(*this);
-	}
-	if (node.expression)
-	{
-		node.expression->Accept(*this);
-	}
+	AcceptNode(node.object);
+	AcceptNode(node.expression);
 }
 
 void SemanticAnalyzer::Visit(ArrayLiteralNode& node)
@@ -527,14 +468,8 @@ void SemanticAnalyzer::Visit(ArrayLiteralNode& node)
 
 void SemanticAnalyzer::Visit(IndexAccessNode& node)
 {
-	if (node.target)
-	{
-		node.target->Accept(*this);
-	}
-	if (node.index)
-	{
-		node.index->Accept(*this);
-	}
+	AcceptNode(node.target);
+	AcceptNode(node.index);
 
 	if (node.target
 		&& node.target->arrayDepth == 0
@@ -559,18 +494,9 @@ void SemanticAnalyzer::Visit(IndexAccessNode& node)
 
 void SemanticAnalyzer::Visit(IndexAssignmentNode& node)
 {
-	if (node.target)
-	{
-		node.target->Accept(*this);
-	}
-	if (node.index)
-	{
-		node.index->Accept(*this);
-	}
-	if (node.value)
-	{
-		node.value->Accept(*this);
-	}
+	AcceptNode(node.target);
+	AcceptNode(node.index);
+	AcceptNode(node.value);
 
 	if (node.target && node.target->arrayDepth == 0 && node.target->evaluatedType != DataType::UNKNOWN)
 	{
@@ -634,10 +560,7 @@ void SemanticAnalyzer::Visit(SchemaFuncNode& node)
 	EnterScope();
 	for (const auto& param : node.parameters)
 	{
-		if (param)
-		{
-			param->Accept(*this);
-		}
+		AcceptNode(param);
 	}
 	ExitScope();
 }
@@ -647,10 +570,7 @@ void SemanticAnalyzer::Visit(SchemaStateNode& node)
 	EnterScope();
 	for (const auto& field : node.fields)
 	{
-		if (field)
-		{
-			field->Accept(*this);
-		}
+		AcceptNode(field);
 	}
 	ExitScope();
 }
@@ -794,10 +714,7 @@ void SemanticAnalyzer::Visit(MethodDeclNode& node)
 		}
 	}
 
-	if (node.body)
-	{
-		node.body->Accept(*this);
-	}
+	AcceptNode(node.body);
 	ExitScope();
 }
 
@@ -819,10 +736,7 @@ void SemanticAnalyzer::Visit(TsopInitNode& node)
 	}
 	for (const auto& arg : node.args)
 	{
-		if (arg)
-		{
-			arg->Accept(*this);
-		}
+		AcceptNode(arg);
 	}
 	m_nodeTypes[&node] = { node.schemaName, node.stateName };
 }
@@ -841,10 +755,7 @@ void SemanticAnalyzer::Visit(ImplStateNode& node)
 
 void SemanticAnalyzer::Visit(MethodCallNode& node)
 {
-	if (node.object)
-	{
-		node.object->Accept(*this);
-	}
+	AcceptNode(node.object);
 
 	if (!m_nodeTypes.contains(node.object.get()))
 	{
@@ -865,10 +776,7 @@ void SemanticAnalyzer::Visit(MethodCallNode& node)
 	node.mangledFuncName = objType.schema + "_" + objType.state + "_" + node.methodName;
 	for (const auto& arg : node.args)
 	{
-		if (arg)
-		{
-			arg->Accept(*this);
-		}
+		AcceptNode(arg);
 	}
 	node.evaluatedType = DataType::INSTANCE;
 	node.structName = objType.schema;
@@ -907,11 +815,19 @@ void SemanticAnalyzer::DropSchemaContext()
 
 void SemanticAnalyzer::ValidateTypeExists(DataType type, const std::string& structName, const SourceLocation& loc) const
 {
-	if (type == DataType::INSTANCE)
+	if (type != DataType::INSTANCE)
 	{
-		if (!m_structSignatures.contains(structName) && !m_schemas.contains(structName))
-		{
-			throw SemanticError(loc, "Unknown type '" + structName + "'.");
-		}
+		return;
+	}
+	if (!m_structSignatures.contains(structName) && !m_schemas.contains(structName))
+	{
+		throw SemanticError(loc, "Unknown type '" + structName + "'.");
+	}
+}
+void SemanticAnalyzer::AcceptNode(const std::shared_ptr<AstNode>& node)
+{
+	if (node)
+	{
+		node->Accept(*this);
 	}
 }

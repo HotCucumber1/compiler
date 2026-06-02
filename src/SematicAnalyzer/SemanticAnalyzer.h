@@ -98,6 +98,8 @@ private:
 
 	void ValidateTypeExists(DataType type, const std::string& structName, const SourceLocation& loc) const;
 
+	void AcceptNode(const std::shared_ptr<AstNode>& node);
+
 private:
 	struct TsopType
 	{
