@@ -22,6 +22,7 @@ void SchemaVisualizer::Generate(const std::shared_ptr<AstNode>& root)
 void SchemaVisualizer::Visit(SchemaDeclNode& node)
 {
 	m_out << "```mermaid\n";
+	m_out << "---\ntitle: " << node.name << "\n---\n";
 	m_out << "stateDiagram-v2\n";
 	m_out << "    direction LR\n\n";
 
