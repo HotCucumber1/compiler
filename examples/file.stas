@@ -1,5 +1,8 @@
 import "../bin/stl/file.stas"
 
+
+int start = time();
+
 File file = new File<Closed>("../test.txt");
 
 file = file
@@ -7,8 +10,16 @@ file = file
     .read();
 
 print(file.content);
+print("Length: ");
+print(len(file.content));
 
 file = file
     .write("New text from my example 123!")
     .save()
     .close();
+
+int endTime = time();
+
+print("");
+print("Total time (ns): ");
+print(endTime - start);

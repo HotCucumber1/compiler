@@ -1,0 +1,18 @@
+schema String
+{
+    state Ready(string text) {
+        func append(string str) -> Ready
+        func clear() -> Ready
+    }
+}
+
+impl String<Ready>
+{
+    public func append(string str) -> StringBuilder<Ready> {
+        return new StringBuilder<Ready>(this.text + str);
+    }
+
+    public func clear() -> StringBuilder<Ready> {
+        return new StringBuilder<Ready>("");
+    }
+}
