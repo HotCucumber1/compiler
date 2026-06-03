@@ -9,13 +9,19 @@ constexpr int BYTE_SIZE = 8;
 
 VirtualMachine::VirtualMachine()
 {
+	RegisterNativeFunction("panic", 1, NativePanic);
 	RegisterNativeFunction("print", 1, NativePrint);
 	RegisterNativeFunction("read", 0, NativeRead);
 
 	RegisterNativeFunction("file_read", 1, NativeFileRead);
 	RegisterNativeFunction("file_write", 2, NativeFileWrite);
 	RegisterNativeFunction("file_exists", 1, NativeFileExists);
-	RegisterNativeFunction("panic", 1, NativePanic);
+
+	RegisterNativeFunction("time", 0, NativeTime);
+	RegisterNativeFunction("len", 1, NativeLen);
+	RegisterNativeFunction("random", 2, NativeRandomInt);
+	RegisterNativeFunction("to_str", 1, NativeToString);
+	RegisterNativeFunction("to_int", 1, NativeToInt);
 }
 
 void VirtualMachine::Interpret(const std::unique_ptr<Chunk>& chunk)
