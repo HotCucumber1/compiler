@@ -1,0 +1,53 @@
+import "repo.stas"
+
+schema CreateUser
+{
+    state RawRequest(string username, string password) {
+        func validate() -> Validated
+    }
+
+    state Validated(string username, string password) {
+        func hashPassword() -> Secure
+    }
+
+    state Secure(string username, string hashedPassword) {
+        func persist(UserRepository<Ready> repo, Database<Connected> db) -> Completed
+    }
+
+    state Completed(int userId, UserRepository<Ready> repo, Database<Connected> db) {}
+}
+
+impl CreateUser<RawRequest>
+{
+    public func validate() -> CreateUserFlow<Validated> {
+        if (len(this.username) < 3) {
+            panic("Validation Error: Username too short!");
+        }
+        if (len(this.password) < 6) {
+            panic("Validation Error: Password must be at least 6 characters!");
+        }
+        return new CreateUser<Validated>(this.username, this.password);
+    }
+}
+
+impl CreateUser<Validated>
+{
+    public func hashPassword() -> CreateUserFlow<Secure> {
+        string salt = "_my_salt_";
+        string fakeHash = this.password + salt;
+        return new CreateUser<Secure>(this.username, fakeHash);
+    }
+}
+
+impl CreateUser<Secure>
+{
+    public func persist(UserRepository<Ready> repo, Database<Connected> db) -> CreateUser<Completed> {
+        UserRepository repoRes = repo.save(db, this.username, this.hashedPassword);
+
+        int newId = repoRes.newUserId;
+        Database returnedDb = repoRes.db;
+        UserRepository readyRepo = repoRes.reset();
+
+        return new CreateUser<Completed>(newId, readyRepo, returnedDb);
+    }
+}

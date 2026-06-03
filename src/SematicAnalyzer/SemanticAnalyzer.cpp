@@ -5,12 +5,28 @@
 #include <unordered_set>
 
 void AcceptNode(AstNode& node);
+bool IsTsopMatch(const std::string& left, const std::string& right);
 
 void SemanticAnalyzer::Analyze(const std::shared_ptr<AstNode>& root)
 {
 	m_symbolTable.clear();
-	EnterScope();
 
+	m_functions["len"] = { DataType::INT, 0, "", false };
+	m_functions["to_int"] = { DataType::INT, 0, "", false };
+	m_functions["to_string"] = { DataType::STRING, 0, "", false };
+	m_functions["print"] = { DataType::VOID, 0, "", false };
+	m_functions["read"] = { DataType::STRING, 0, "", false };
+	m_functions["panic"] = { DataType::VOID, 0, "", false };
+
+	m_functions["file_exists"] = { DataType::BOOL, 0, "", false };
+	m_functions["file_read"] = { DataType::STRING, 0, "", false };
+	m_functions["file_write"] = { DataType::BOOL, 0, "", false };
+
+	m_functions["db_connect"] = { DataType::INT, 0, "", false };
+	m_functions["db_execute"] = { DataType::STRING, 2, "", false };
+	m_functions["db_disconnect"] = { DataType::VOID, 0, "", false };
+
+	EnterScope();
 	AcceptNode(root);
 	ExitScope();
 }
@@ -97,10 +113,13 @@ void SemanticAnalyzer::Visit(VarDeclNode& node)
 		{
 			throw SemanticError(node.location, "Array depth mismatch for " + node.varName);
 		}
-		if (node.expr->evaluatedType == DataType::INSTANCE
-			&& node.expr->structName != node.structName)
+		if (node.varType == DataType::INSTANCE && node.expr->evaluatedType == DataType::INSTANCE)
 		{
-			throw SemanticError(node.location, "Struct type mismatch for " + node.varName);
+			if (!IsTsopMatch(node.structName, node.expr->structName))
+			{
+				throw SemanticError(node.location, "Struct type mismatch for " + node.varName);
+			}
+			node.structName = node.expr->structName;
 		}
 		if (m_nodeTypes.contains(node.expr.get()))
 		{
@@ -177,22 +196,22 @@ void SemanticAnalyzer::Visit(AssignmentNode& node)
 {
 	AcceptNode(node.expr);
 
-	bool found = false;
-	SymbolInfo varInfo{};
-	for (const auto& scope : std::ranges::reverse_view(m_symbolTable))
+	SymbolInfo* varInfoPtr = nullptr;
+
+	for (auto& scope : std::ranges::reverse_view(m_symbolTable))
 	{
 		if (scope.contains(node.varName))
 		{
-			varInfo = scope.at(node.varName);
-			found = true;
+			varInfoPtr = &scope.at(node.varName);
 			break;
 		}
 	}
-	if (!found)
+
+	if (!varInfoPtr)
 	{
 		throw SemanticError(node.location, "Assignment to undefined variable '" + node.varName + "'");
 	}
-	if (varInfo.isConst)
+	if (varInfoPtr->isConst)
 	{
 		throw SemanticError(node.location, "Cannot assign to constant variable '" + node.varName + "'");
 	}
@@ -200,18 +219,27 @@ void SemanticAnalyzer::Visit(AssignmentNode& node)
 	{
 		return;
 	}
-	if (node.expr->evaluatedType != DataType::UNKNOWN && node.expr->evaluatedType != varInfo.type)
+	if (varInfoPtr->type == DataType::INSTANCE && node.expr->evaluatedType == DataType::INSTANCE)
+	{
+		if (!IsTsopMatch(varInfoPtr->structName, node.expr->structName))
+		{
+			throw SemanticError(node.location, "Struct type mismatch in assignment to '" + node.varName + "'");
+		}
+		varInfoPtr->structName = node.expr->structName;
+	}
+	else if (node.expr->evaluatedType != DataType::UNKNOWN && node.expr->evaluatedType != varInfoPtr->type)
 	{
 		throw SemanticError(node.location, "Type mismatch in assignment to '" + node.varName + "'");
 	}
-	if (node.expr->arrayDepth != varInfo.arrayDepth)
+
+	if (node.expr->arrayDepth != varInfoPtr->arrayDepth)
 	{
 		throw SemanticError(node.location, "Array depth mismatch in assignment to '" + node.varName + "'");
 	}
-	if (node.expr->evaluatedType == DataType::INSTANCE && node.expr->structName != varInfo.structName)
-	{
-		throw SemanticError(node.location, "Struct type mismatch in assignment to '" + node.varName + "'");
-	}
+	node.evaluatedType = varInfoPtr->type;
+	node.structName = varInfoPtr->structName;
+	node.arrayDepth = varInfoPtr->arrayDepth;
+
 	if (m_nodeTypes.contains(node.expr.get()))
 	{
 		auto itSym = m_symbolTable.rbegin();
@@ -796,6 +824,9 @@ void SemanticAnalyzer::Visit(TsopInitNode& node)
 		AcceptNode(arg);
 	}
 	m_nodeTypes[&node] = { node.schemaName, node.stateName };
+	node.evaluatedType = DataType::INSTANCE;
+	node.structName = node.schemaName + "_" + node.stateName;
+	node.arrayDepth = 0;
 }
 
 void SemanticAnalyzer::Visit(ImplStateNode& node)
@@ -813,12 +844,20 @@ void SemanticAnalyzer::Visit(ImplStateNode& node)
 void SemanticAnalyzer::Visit(MethodCallNode& node)
 {
 	AcceptNode(node.object);
-	if (!m_nodeTypes.contains(node.object.get()))
+	if (node.object->evaluatedType != DataType::INSTANCE || node.object->structName.empty())
 	{
 		throw SemanticError(node.location, "Semantic error: Cannot call method '." + node.methodName + "' on a non-TSOP object or undefined variable.");
 	}
 
-	const auto [schema, state] = m_nodeTypes[node.object.get()];
+	const auto objStructName = node.object->structName;
+	const auto delimPos = objStructName.find('_');
+	if (delimPos == std::string::npos)
+	{
+		throw SemanticError(node.location, "Semantic error: Object '" + objStructName + "' is not a valid TSOP state.");
+	}
+
+	const auto schema = objStructName.substr(0, delimPos);
+	const auto state = objStructName.substr(delimPos + 1);
 
 	const auto& [transitions, fieldCount] = m_schemas.at(schema).states.at(state);
 	if (!transitions.contains(node.methodName))
@@ -845,12 +884,12 @@ void SemanticAnalyzer::Visit(MethodCallNode& node)
 		}
 	}
 
-	m_nodeTypes[&node] = { schema, returnState };
 	node.mangledFuncName = schema + "_" + state + "_" + node.methodName;
 
 	node.evaluatedType = DataType::INSTANCE;
-	node.structName = schema;
+	node.structName = schema + "_" + returnState;
 	node.arrayDepth = 0;
+	m_nodeTypes[&node] = { schema, returnState };
 }
 
 void SemanticAnalyzer::Visit(EnumCaseNode& node)
@@ -1010,4 +1049,22 @@ void SemanticAnalyzer::AcceptNode(const std::shared_ptr<AstNode>& node)
 	{
 		node->Accept(*this);
 	}
+}
+
+bool IsTsopMatch(const std::string& left, const std::string& right)
+{
+	if (left == right)
+	{
+		return true;
+	}
+
+	auto getBaseSchema = [](const std::string& name) {
+		const auto pos = name.find('_');
+		return pos == std::string::npos ? name : name.substr(0, pos);
+	};
+
+	const auto leftBase = getBaseSchema(left);
+	const auto rightBase = getBaseSchema(right);
+
+	return leftBase == rightBase && !leftBase.empty();
 }

@@ -22,7 +22,7 @@ impl Database<Disconnected>
 impl Database<Connected>
 {
     public func execute(string query) -> Database<Connected> {
-        string rows = db_execute(this.handle, query);
+        string[][] rows = db_execute(this.handle, query);
         return new Database<Connected>(this.host, this.user, this.pass, this.dbName, this.handle, rows);
     }
 

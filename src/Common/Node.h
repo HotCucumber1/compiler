@@ -45,6 +45,7 @@ enum class AstNodeType : int
 	TYPE_VOID,
 	TYPE_CUSTOM,
 	TYPE_ARRAY,
+	TYPE_TSOP,
 	IMPORT_DECL,
 	USE_DECL,
 	SCHEMA_DECL,
@@ -110,6 +111,7 @@ static const std::unordered_map<std::string, AstNodeType> AST_NODE_TYPES = {
 	{ "ENUM_DECL", AstNodeType::ENUM_DECL },
 	{ "MATCH_CASE", AstNodeType::MATCH_CASE },
 	{ "MATCH_EXPR", AstNodeType::MATCH_EXPR },
+	{ "TYPE_TSOP", AstNodeType::TYPE_TSOP },
 };
 
 using SymbolId = int32_t;

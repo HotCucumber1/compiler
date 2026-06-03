@@ -62,8 +62,6 @@ int main(const int argc, char* argv[])
 		// AstPrinter printer;
 		// printer.PrintAst(astRoot);
 
-		// TODO регистрировать встроенные функции
-
 		SemanticAnalyzer analyser;
 		analyser.Analyze(astRoot);
 
@@ -103,7 +101,7 @@ int main(const int argc, char* argv[])
 	}
 	catch (const std::exception& e)
 	{
-		std::cerr << "\n[!] COMPILATION ERROR:\n"
+		std::cerr << "\nError:\n"
 				  << e.what() << std::endl;
 		return 1;
 	}

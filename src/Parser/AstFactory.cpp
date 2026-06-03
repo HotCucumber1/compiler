@@ -38,6 +38,7 @@ std::shared_ptr<AstNode> AstFactory::CreateNode(
 		case AstNodeType::TYPE_VOID:
 		case AstNodeType::TYPE_CUSTOM:
 		case AstNodeType::TYPE_ARRAY:
+		case AstNodeType::TYPE_TSOP:
 			result = std::make_shared<CommonNode>(id, type, children);
 			break;
 
@@ -612,6 +613,18 @@ TypeInfo ExtractTypeInfo(const std::shared_ptr<AstNode>& typeNode)
 		}
 		throw std::runtime_error("AST Factory error: Invalid TYPE_CUSTOM node");
 	}
+	case AstNodeType::TYPE_TSOP: {
+		if (const auto commonNode = std::dynamic_pointer_cast<CommonNode>(typeNode))
+		{
+			if (commonNode->children.size() >= 3)
+			{
+				const auto schemaName = GetToken(commonNode->children[0]).value;
+				const auto stateName = GetToken(commonNode->children[2]).value;
+				return { DataType::INSTANCE, 0, schemaName + "_" + stateName };
+			}
+		}
+		throw std::runtime_error("AST Factory error: Invalid TYPE_TSOP node");
+	}
 
 	case AstNodeType::TYPE_ARRAY: {
 		if (const auto commonNode = std::dynamic_pointer_cast<CommonNode>(typeNode))
@@ -624,6 +637,14 @@ TypeInfo ExtractTypeInfo(const std::shared_ptr<AstNode>& typeNode)
 			}
 		}
 		throw std::runtime_error("AST Factory error: Invalid TYPE_ARRAY node");
+	}
+
+	case AstNodeType::IMPL_STATE_TYPE: {
+		if (const auto implState = std::dynamic_pointer_cast<ImplStateNode>(typeNode))
+		{
+			return { DataType::INSTANCE, 0, implState->schemaName + "_" + implState->stateName };
+		}
+		throw std::runtime_error("AST Factory error: Invalid IMPL_STATE_TYPE node");
 	}
 
 	default:

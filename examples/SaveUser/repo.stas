@@ -1,0 +1,30 @@
+import "../../bin/stl/sql.stas"
+
+schema UserRepository
+{
+    state Ready() {
+        func save(Database<Connected> db, string username, string passwordHash) -> Saved
+    }
+
+    state Saved(Database<Connected> db, int newUserId) {
+        func reset() -> Ready
+    }
+}
+
+impl UserRepository<Ready>
+{
+    public func save(Database<Connected> db, string username, string passwordHash) -> UserRepository<Saved>
+    {
+        string query = "INSERT INTO big_user (name, password) VALUES ('" + username + "', '" + passwordHash + "');";
+        Database nextDb = db.execute(query);
+        int generatedId = 100500;
+        return new UserRepository<Saved>(nextDb, generatedId);
+    }
+}
+
+impl UserRepository<Saved>
+{
+    public func reset() -> UserRepository<Ready> {
+        return new UserRepository<Ready>();
+    }
+}

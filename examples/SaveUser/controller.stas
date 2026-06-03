@@ -1,0 +1,20 @@
+import "domain.stas"
+
+string inputUser = "Alex";
+string inputPass = "super_secret_123";
+
+Database dbInit = new Database<Disconnected>("127.0.0.1", "test_user", "12345Q", "stasis_db");
+Database db = dbInit.connect();
+
+UserRepository userRepo = new UserRepository<Ready>();
+CreateUser flow = new CreateUser<RawRequest>(inputUser, inputPass);
+
+CreateUser result = flow
+    .validate()
+    .hashPassword()
+    .persist(userRepo, db);
+
+print("Пользователь успешно создан! ID нового юзера:");
+print(result.userId);
+
+Database closedDb = result.db.disconnect();

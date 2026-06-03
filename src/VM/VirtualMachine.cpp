@@ -237,10 +237,10 @@ void VirtualMachine::OpReturn()
 
 void VirtualMachine::OpAdd()
 {
-	const auto first = Pop();
-	const auto second = Pop();
+	const auto right = Pop();
+	const auto left = Pop();
 
-	Push(first + second);
+	Push(left + right);
 }
 
 void VirtualMachine::OpSub()
