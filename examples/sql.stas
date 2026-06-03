@@ -1,0 +1,12 @@
+import "../bin/stl/sql.stas"
+
+Database db = new Database<Disconnected>("127.0.0.1", "test_user", "12345Q", "stasis_db");
+
+db = db
+    .connect()
+    .execute("CREATE TABLE IF NOT EXISTS user (id INT, name VARCHAR(50));")
+    .execute("INSERT INTO user VALUES (1, 'Alex'), (2, 'Maria');")
+    .execute("SELECT * FROM user;");
+
+print(db.lastResult);
+db.disconnect();

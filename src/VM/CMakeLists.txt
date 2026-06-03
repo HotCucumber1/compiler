@@ -1,6 +1,7 @@
 add_library(VM STATIC
         StringPool/StringPool.cpp
         Parser/BytecodeParser.cpp
+        NativeLib/sql/sql.cpp
         NativeLib/NativeLib.cpp
         VirtualMachine.cpp
 )
@@ -10,6 +11,7 @@ target_include_directories(VM PUBLIC .)
 add_executable(VM_exe
         StringPool/StringPool.cpp
         Parser/BytecodeParser.cpp
+        NativeLib/sql/sql.cpp
         NativeLib/NativeLib.cpp
         VirtualMachine.cpp
         main.cpp)
@@ -17,6 +19,7 @@ add_executable(VM_exe
 add_executable(TestVM_Unit
         StringPool/StringPool.cpp
         Parser/BytecodeParser.cpp
+        NativeLib/sql/sql.cpp
         NativeLib/NativeLib.cpp
         VirtualMachine.cpp
         tests/Unit.cpp

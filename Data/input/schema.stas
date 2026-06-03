@@ -44,6 +44,3 @@ impl Calculator<Ready>
         return new Calculator<Ready>();
     }
 }
-
-
-print("Hello");

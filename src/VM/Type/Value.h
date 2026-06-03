@@ -270,9 +270,9 @@ inline ArrayPtr AsArray(const Value& value)
 	throw std::runtime_error("Value is not an array");
 }
 
-inline int AsInt(const Value& value)
+inline int64_t AsInt(const Value& value)
 {
-	return std::visit([]<typename T0>(T0&& arg) -> int {
+	return std::visit([]<typename T0>(T0&& arg) -> int64_t {
 		using T = std::decay_t<T0>;
 		if constexpr (std::is_same_v<T, int64_t>)
 		{

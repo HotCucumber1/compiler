@@ -22,6 +22,10 @@ VirtualMachine::VirtualMachine()
 	RegisterNativeFunction("random", 2, NativeRandomInt);
 	RegisterNativeFunction("to_str", 1, NativeToString);
 	RegisterNativeFunction("to_int", 1, NativeToInt);
+
+	RegisterNativeFunction("db_connect", 4, NativeDBConnect);
+	RegisterNativeFunction("db_execute", 2, NativeDBExecute);
+	RegisterNativeFunction("db_disconnect", 1, NativeDBDisconnect);
 }
 
 void VirtualMachine::Interpret(const std::unique_ptr<Chunk>& chunk)

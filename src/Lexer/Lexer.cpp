@@ -126,7 +126,8 @@ Token Lexer::String()
 	const auto startPos = m_reader.GetCurrentPosition();
 	m_reader.ResetBuffer();
 
-	if (!StringGrammar(m_reader))
+	const auto expectedQuote = m_reader.GetNext();
+	if (!StringGrammar(m_reader, expectedQuote))
 	{
 		return {
 			startPos,

@@ -1,0 +1,33 @@
+schema Database
+{
+    state Disconnected(string host, string user, string pass, string dbName) {
+        func connect() -> Connected
+    }
+
+    state Connected(string host, string user, string pass, string dbName, int handle, string[][] lastResult) {
+        func execute(string query) -> Connected
+        func disconnect() -> Disconnected
+    }
+}
+
+impl Database<Disconnected>
+{
+    public func connect() -> Database<Connected> {
+        int handle = db_connect(this.host, this.user, this.pass, this.dbName);
+        string[][] emptyResult = [[]];
+        return new Database<Connected>(this.host, this.user, this.pass, this.dbName, handle, emptyResult);
+    }
+}
+
+impl Database<Connected>
+{
+    public func execute(string query) -> Database<Connected> {
+        string rows = db_execute(this.handle, query);
+        return new Database<Connected>(this.host, this.user, this.pass, this.dbName, this.handle, rows);
+    }
+
+    public func disconnect() -> Database<Disconnected> {
+        db_disconnect(this.handle);
+        return new Database<Disconnected>(this.host, this.user, this.pass, this.dbName);
+    }
+}

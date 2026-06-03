@@ -6,21 +6,28 @@ inline bool IsQuote(const char c)
 	return c == '\'' || c == '"';
 }
 
-inline bool StringGrammar(Reader& reader)
+inline bool StringGrammar(Reader& reader, char expectedQuote)
 {
-	if (!IsQuote(reader.GetCh()) or reader.IsEmpty())
+	if (reader.IsEmpty())
 	{
 		return false;
 	}
-
-
-	while (!IsQuote(reader.GetCh()))
+	if (reader.GetCh() != expectedQuote)
 	{
-		if (reader.IsEmpty())
+		return false;
+	}
+	while (!reader.IsEmpty())
+	{
+		const char ch = reader.GetCh();
+		if (ch == '\\' && !reader.IsEmpty())
 		{
-			return false;
+			reader.GetCh();
+			continue;
+		}
+		if (ch == expectedQuote)
+		{
+			return true;
 		}
 	}
-
-	return true;
+	return false;
 }
