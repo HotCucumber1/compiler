@@ -44,6 +44,18 @@ void CodeGenerator::Visit(CommonNode& node)
 		if (child)
 		{
 			child->Accept(*this);
+
+			if (node.type == AstNodeType::BLOCK
+				|| node.type == AstNodeType::PROGRAM)
+			{
+				if (child->type == AstNodeType::CALL
+					|| child->type == AstNodeType::METHOD_CALL
+					|| child->type == AstNodeType::MEMBER_ASSIGNMENT
+					|| child->type == AstNodeType::MATCH_EXPR)
+				{
+					PushCode(static_cast<uint8_t>(OpCode::OP_POP));
+				}
+			}
 		}
 	}
 }

@@ -1,0 +1,44 @@
+schema File
+{
+    state Closed(string path) {
+        func open() -> Opened
+    }
+
+    state Opened(string path, string content) {
+        func read() -> Opened
+        func write(string newContent) -> Opened
+        func save() -> Opened
+        func close() -> Closed
+    }
+}
+
+impl File<Closed>
+{
+    public func open() -> File<Opened> {
+        if (not file_exists(this.path)) {
+            panic("Failed to open file");
+        }
+        string text = file_read(this.path);
+        return new File<Opened>(this.path, text);
+    }
+}
+
+impl File<Opened>
+{
+    public func read() -> File<Opened> {
+       return new File<Opened>(this.path, this.content);
+    }
+
+    public func write(string newContent) -> File<Opened> {
+        return new File<Opened>(this.path, newContent);
+    }
+
+    public func save() -> File<Opened> {
+        bool success = file_write(this.path, this.content);
+        return new File<Opened>(this.path, this.content);
+    }
+
+    public func close() -> File<Closed> {
+        return new File<Closed>(this.path);
+    }
+}

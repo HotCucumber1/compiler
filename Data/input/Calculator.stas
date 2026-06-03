@@ -131,10 +131,8 @@ impl Calculator<Result>
 }
 
 
-
-Calculator calc = new Calculator<Ready>();
-
-calc = calc.digit(5)
+Calculator calc = new Calculator<Ready>()
+    .digit(5)
     .digit(3)
     .operator(MyOperator.Plus)
     .digit(2)

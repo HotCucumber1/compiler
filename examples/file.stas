@@ -1,0 +1,14 @@
+import "../bin/stl/file.stas"
+
+File file = new File<Closed>("../test.txt");
+
+file = file
+    .open()
+    .read();
+
+print(file.content);
+
+file = file
+    .write("New text from my example 123!")
+    .save()
+    .close();

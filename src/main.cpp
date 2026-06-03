@@ -59,8 +59,8 @@ int main(const int argc, char* argv[])
 		ResolveImports(astRoot, parsedFiles, slrBuilder, mainFilePath.parent_path());
 		std::cout << "[3.5/5] AST Linking (Imports) resolved." << std::endl;
 
-		AstPrinter printer;
-		printer.PrintAst(astRoot);
+		// AstPrinter printer;
+		// printer.PrintAst(astRoot);
 
 		// TODO регистрировать встроенные функции
 
@@ -89,10 +89,9 @@ int main(const int argc, char* argv[])
 		}
 
 		const auto chunk = GenerateCode(astRoot);
-
 		RunVM(chunk);
 
-		std::cout << "\nExecution finished successfully." << std::endl;
+		std::cout << "\nProgram finished." << std::endl;
 	}
 	catch (const CompilationError& e)
 	{

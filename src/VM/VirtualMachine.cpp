@@ -11,6 +11,11 @@ VirtualMachine::VirtualMachine()
 {
 	RegisterNativeFunction("print", 1, NativePrint);
 	RegisterNativeFunction("read", 0, NativeRead);
+
+	RegisterNativeFunction("file_read", 1, NativeFileRead);
+	RegisterNativeFunction("file_write", 2, NativeFileWrite);
+	RegisterNativeFunction("file_exists", 1, NativeFileExists);
+	RegisterNativeFunction("panic", 1, NativePanic);
 }
 
 void VirtualMachine::Interpret(const std::unique_ptr<Chunk>& chunk)
