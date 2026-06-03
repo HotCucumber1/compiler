@@ -74,6 +74,10 @@ public:
 
 	void Visit(EnumCaseNode& node) override;
 
+	void Visit(MatchNode& node) override;
+
+	void Visit(MatchCaseNode& node) override;
+
 private:
 	void PushCode(uint8_t code);
 

@@ -57,6 +57,8 @@ enum class AstNodeType : int
 	METHOD_CALL,
 	ENUM_CASE,
 	ENUM_DECL,
+	MATCH_CASE,
+	MATCH_EXPR,
 };
 
 static const std::unordered_map<std::string, AstNodeType> AST_NODE_TYPES = {
@@ -106,6 +108,8 @@ static const std::unordered_map<std::string, AstNodeType> AST_NODE_TYPES = {
 	{ "METHOD_CALL", AstNodeType::METHOD_CALL },
 	{ "ENUM_CASE", AstNodeType::ENUM_CASE },
 	{ "ENUM_DECL", AstNodeType::ENUM_DECL },
+	{ "MATCH_CASE", AstNodeType::MATCH_CASE },
+	{ "MATCH_EXPR", AstNodeType::MATCH_EXPR },
 };
 
 using SymbolId = int32_t;
@@ -809,6 +813,48 @@ struct EnumDeclNode final : AstNode
 		: AstNode(id, AstNodeType::ENUM_DECL)
 		, name(std::move(enumName))
 		, backingType(type)
+		, cases(std::move(c))
+	{
+	}
+
+	void Accept(AstVisitor& visitor) override
+	{
+		visitor.Visit(*this);
+	}
+};
+
+struct MatchCaseNode final : AstNode
+{
+	std::shared_ptr<AstNode> pattern;
+	std::shared_ptr<AstNode> body;
+
+	MatchCaseNode(
+		const SymbolId id,
+		std::shared_ptr<AstNode> p,
+		std::shared_ptr<AstNode> b)
+		: AstNode(id, AstNodeType::MATCH_CASE)
+		, pattern(std::move(p))
+		, body(std::move(b))
+	{
+	}
+
+	void Accept(AstVisitor& visitor) override
+	{
+		visitor.Visit(*this);
+	}
+};
+
+struct MatchNode final : AstNode
+{
+	std::shared_ptr<AstNode> expr;
+	std::vector<std::shared_ptr<MatchCaseNode>> cases;
+
+	MatchNode(
+		const SymbolId id,
+		std::shared_ptr<AstNode> e,
+		std::vector<std::shared_ptr<MatchCaseNode>> c)
+		: AstNode(id, AstNodeType::MATCH_EXPR)
+		, expr(std::move(e))
 		, cases(std::move(c))
 	{
 	}

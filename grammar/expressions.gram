@@ -31,6 +31,7 @@ Primary -> ( Expression ) : PASS_THROUGH
 Primary -> IDENTIFIER : VAR_ACCESS
 Primary -> Literal : PASS_THROUGH
 Primary -> new ImplState ( ArgList ) : TSOP_INIT
+Primary -> MatchExpr : PASS_THROUGH
 
 Call -> IDENTIFIER ( ArgList ) : CALL
 StructInit -> IDENTIFIER { ArgList } : STRUCT_INIT

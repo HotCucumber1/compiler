@@ -309,6 +309,42 @@ inline bool AsBool(const Value& value)
 		value);
 }
 
+inline bool operator==(const Value& lhs, const Value& rhs)
+{
+	if (lhs.index() != rhs.index())
+	{
+		return false;
+	}
+	return std::visit([&rhs]<typename T>(const T& l) -> bool {
+		using Type = std::decay_t<T>;
+
+		if constexpr (std::is_same_v<Type, HeapObjectPtr>)
+		{
+			auto r = std::get<HeapObjectPtr>(rhs);
+			if (l->type == ObjectType::STRING && r->type == ObjectType::STRING)
+			{
+				return static_cast<String*>(l.get())->str == dynamic_cast<String*>(r.get())->str;
+			}
+			return l == r;
+		}
+		else if constexpr (std::is_same_v<Type, std::monostate>)
+		{
+			return true;
+		}
+		else
+		{
+			return l == std::get<Type>(rhs);
+		}
+	},
+		lhs);
+}
+
+// OP_NOT_EQUAL
+inline bool operator!=(const Value& lhs, const Value& rhs)
+{
+	return !(lhs == rhs);
+}
+
 // OP_ADD
 inline Value operator+(const Value& lhs, const Value& rhs) // TODO добавить поддержку сложения char и str
 {

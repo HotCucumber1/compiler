@@ -71,6 +71,10 @@ public:
 
 	void Visit(EnumCaseNode& node) override;
 
+	void Visit(MatchCaseNode& node) override;
+
+	void Visit(MatchNode& node) override;
+
 private:
 	int m_depth = 0;
 

@@ -39,4 +39,6 @@ public:
 	void Visit(SchemaDeclNode& node) override {}
 	void Visit(EnumCaseNode& node) override {}
 	void Visit(EnumDeclNode& node) override {}
+	void Visit(MatchNode& node) override {}
+	void Visit(MatchCaseNode& node) override {}
 };

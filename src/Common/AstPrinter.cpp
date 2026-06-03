@@ -781,6 +781,43 @@ void AstPrinter::Visit(EnumCaseNode& node)
 	m_depth--;
 }
 
+void AstPrinter::Visit(MatchCaseNode& node)
+{
+	PrintIndent();
+	std::cout << "├── [MatchCase] =>\n";
+
+	m_depth++;
+	if (node.pattern)
+	{
+		node.pattern->Accept(*this);
+	}
+	if (node.body)
+	{
+		node.body->Accept(*this);
+	}
+	m_depth--;
+}
+
+void AstPrinter::Visit(MatchNode& node)
+{
+	PrintIndent();
+	std::cout << "[MatchExpr]\n";
+
+	m_depth++;
+	if (node.expr)
+	{
+		node.expr->Accept(*this);
+	}
+	for (const auto& matchCase : node.cases)
+	{
+		if (matchCase)
+		{
+			matchCase->Accept(*this);
+		}
+	}
+	m_depth--;
+}
+
 void AstPrinter::PrintIndent() const
 {
 	std::cout << std::string(m_depth * 2, ' ');

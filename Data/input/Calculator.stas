@@ -105,12 +105,11 @@ impl Calculator<SecondNumberWithValue>
 impl Calculator<Compute>
 {
     public func execute() -> Calculator<Result> {
-        int result = 5;
         int result = match this.op {
-            Op.Plus     => this.first + this.second
-            Op.Minus    => this.first - this.second
-            Op.Multiply => this.first * this.second
-            Op.Divide   => if (this.second == 0) { 0 } else { this.first / this.second }
+            MyOperator.Plus => this.first + this.second,
+            MyOperator.Minus => this.first - this.second,
+            MyOperator.Multiply => this.first * this.second,
+            MyOperator.Divide => 5,
         };
         return new Calculator<Result>(result);
     }
@@ -135,13 +134,12 @@ impl Calculator<Result>
 
 Calculator calc = new Calculator<Ready>();
 
-calc = calc.digit(5);
-calc = calc.digit(3);
-calc = calc.operator(MyOperator.Plus);
-calc = calc.digit(2);
-calc = calc.digit(7);
-calc = calc.equal();
-
-calc = calc.execute();
+calc = calc.digit(5)
+    .digit(3)
+    .operator(MyOperator.Plus)
+    .digit(2)
+    .digit(7)
+    .equal()
+    .execute();
 
 print(calc.value);

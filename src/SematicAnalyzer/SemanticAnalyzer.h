@@ -98,6 +98,10 @@ public:
 
 	void Visit(EnumDeclNode& node) override;
 
+	void Visit(MatchNode& node) override;
+
+	void Visit(MatchCaseNode& node) override;
+
 private:
 	void EnterScope();
 

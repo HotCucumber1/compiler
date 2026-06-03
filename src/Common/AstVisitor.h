@@ -32,6 +32,8 @@ struct TsopInitNode;
 struct MethodCallNode;
 struct EnumCaseNode;
 struct EnumDeclNode;
+struct MatchCaseNode;
+struct MatchNode;
 
 class AstVisitor
 {
@@ -101,4 +103,8 @@ public:
 	virtual void Visit(EnumCaseNode& node) = 0;
 
 	virtual void Visit(EnumDeclNode& node) = 0;
+
+	virtual void Visit(MatchCaseNode& node) = 0;
+
+	virtual void Visit(MatchNode& node) = 0;
 };

@@ -4,3 +4,11 @@ EnumCases -> EnumCase EnumCases : LIST_APPEND
 EnumCases -> EnumCase : LIST_SINGLE
 
 EnumCase -> case IDENTIFIER = Expression : ENUM_CASE
+
+
+MatchExpr -> match Expression { MatchCases } : MATCH_EXPR
+
+MatchCases -> MatchCase MatchCases : LIST_APPEND
+MatchCases -> MatchCase : LIST_SINGLE
+
+MatchCase -> Expression => Expression , : MATCH_CASE

@@ -746,6 +746,58 @@ void CodeGenerator::Visit(EnumCaseNode& node)
 {
 }
 
+void CodeGenerator::Visit(MatchNode& node)
+{
+	if (node.expr)
+	{
+		node.expr->Accept(*this);
+	}
+
+	const auto endLabel = GenerateLabel("match_end");
+	std::vector<size_t> jumpsToEnd;
+
+	for (const auto& matchCase : node.cases)
+	{
+		const auto nextCaseLabel = GenerateLabel("match_next_case");
+
+		PushCode(static_cast<uint8_t>(OpCode::OP_DUP));
+		if (matchCase->pattern)
+		{
+			matchCase->pattern->Accept(*this);
+		}
+
+		PushCode(static_cast<uint8_t>(OpCode::OP_EQUAL));
+		PushCode(static_cast<uint8_t>(OpCode::OP_JMP_IF_FALSE));
+		const auto jumpToNextIdx = m_chunk.code.size();
+		PushTempAddr();
+		PushCode(static_cast<uint8_t>(OpCode::OP_POP));
+
+		if (matchCase->body)
+		{
+			matchCase->body->Accept(*this);
+		}
+		PushCode(static_cast<uint8_t>(OpCode::OP_JMP));
+		jumpsToEnd.push_back(m_chunk.code.size());
+		PushTempAddr();
+
+		m_chunk.labels[nextCaseLabel] = m_chunk.code.size();
+		m_chunk.pendingJumps.emplace_back(jumpToNextIdx, nextCaseLabel);
+	}
+
+	PushCode(static_cast<uint8_t>(OpCode::OP_POP));
+	PushConst(Value{});
+
+	m_chunk.labels[endLabel] = m_chunk.code.size();
+	for (const auto jumpIdx : jumpsToEnd)
+	{
+		m_chunk.pendingJumps.emplace_back(jumpIdx, endLabel);
+	}
+}
+
+void CodeGenerator::Visit(MatchCaseNode& node)
+{
+}
+
 void CodeGenerator::PushCode(const uint8_t code)
 {
 	m_chunk.code.push_back(code);

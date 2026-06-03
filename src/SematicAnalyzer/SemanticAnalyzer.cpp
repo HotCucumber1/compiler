@@ -899,6 +899,68 @@ void SemanticAnalyzer::Visit(EnumDeclNode& node)
 	m_enums[node.name] = std::move(sig);
 }
 
+void SemanticAnalyzer::Visit(MatchNode& node)
+{
+	if (node.expr)
+	{
+		node.expr->Accept(*this);
+	}
+
+	const auto targetType = node.expr ? node.expr->evaluatedType : DataType::UNKNOWN;
+	const auto targetStruct = node.expr
+		? node.expr->structName
+		: "";
+
+	auto returnType = DataType::UNKNOWN;
+	std::string returnStruct;
+	int returnDepth = 0;
+	bool isFirstCase = true;
+
+	// 2. Проверяем каждую ветку
+	for (const auto& matchCase : node.cases)
+	{
+		if (matchCase)
+		{
+			if (matchCase->pattern)
+			{
+				matchCase->pattern->Accept(*this);
+
+				if (matchCase->pattern->evaluatedType != targetType || matchCase->pattern->structName != targetStruct)
+				{
+					throw SemanticError(matchCase->pattern->location, "Pattern type does not match the target expression type.");
+				}
+			}
+			if (matchCase->body)
+			{
+				matchCase->body->Accept(*this);
+
+				if (isFirstCase)
+				{
+					returnType = matchCase->body->evaluatedType;
+					returnStruct = matchCase->body->structName;
+					returnDepth = matchCase->body->arrayDepth;
+					isFirstCase = false;
+				}
+				else
+				{
+					if (matchCase->body->evaluatedType != returnType || matchCase->body->structName != returnStruct || matchCase->body->arrayDepth != returnDepth)
+					{
+						throw SemanticError(matchCase->body->location, "All match cases must return the same exact type.");
+					}
+				}
+			}
+		}
+	}
+
+	node.evaluatedType = returnType;
+	node.structName = returnStruct;
+	node.arrayDepth = returnDepth;
+}
+
+void SemanticAnalyzer::Visit(MatchCaseNode& node)
+{
+}
+
 void SemanticAnalyzer::EnterScope()
 {
 	m_symbolTable.emplace_back();

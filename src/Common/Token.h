@@ -54,7 +54,6 @@ enum class TokenType
 	RETURN,
 	PUBLIC,
 	PRIVATE,
-	CLASS,
 	IMPLEMENTS,
 	EXTENDS,
 	THROW,
@@ -70,6 +69,7 @@ enum class TokenType
 	IMPL,
 	ENUM,
 	CASE,
+	MATCH,
 
 	// Math
 	OP_PLUS,
@@ -97,6 +97,7 @@ enum class TokenType
 	OP_DOT,
 
 	NEXT_STATE_ARROW,
+	FAT_ARROW,
 
 	ERROR,
 
@@ -152,7 +153,6 @@ static const std::unordered_map<std::string, TokenType> KEYWORDS = {
 	{ "return", TokenType::RETURN },
 	{ "public", TokenType::PUBLIC },
 	{ "private", TokenType::PRIVATE },
-	{ "class", TokenType::CLASS },
 	{ "implements", TokenType::IMPLEMENTS },
 	{ "extends", TokenType::EXTENDS },
 	{ "throw", TokenType::THROW },
@@ -167,6 +167,7 @@ static const std::unordered_map<std::string, TokenType> KEYWORDS = {
 	{ "impl", TokenType::IMPL },
 	{ "enum", TokenType::ENUM },
 	{ "case", TokenType::CASE },
+	{ "match", TokenType::MATCH },
 
 	{ "int", TokenType::TYPE_INT },
 	{ "float", TokenType::TYPE_FLOAT },
@@ -223,13 +224,19 @@ static const std::unordered_map<TokenType, std::string> REVERSE_SPECIAL_CHARS = 
 }();
 
 const std::unordered_map<char, std::unordered_map<char, TokenType>> SPECIAL_CHARS_DOUBLE = {
-	{ '=', { { '=', TokenType::OP_EQUAL } } },
 	{ '!', { { '=', TokenType::OP_NOT_EQUAL } } },
 	{ '<', { { '=', TokenType::OP_LESS_OR_EQUAL } } },
 	{ '>', { { '=', TokenType::OP_MORE_OR_EQUAL } } },
 	{ '+', { { '+', TokenType::OP_INCREMENT } } },
 
-	{ '-', { { '-', TokenType::OP_DECREMENT }, { '>', TokenType::NEXT_STATE_ARROW } } },
+	{ '-', {
+			   { '-', TokenType::OP_DECREMENT },
+			   { '>', TokenType::NEXT_STATE_ARROW },
+		   } },
+	{ '=', {
+			   { '=', TokenType::OP_EQUAL },
+			   { '>', TokenType::FAT_ARROW },
+		   } },
 };
 
 const std::unordered_map<TokenType, std::string> REVERSE_SPECIAL_CHARS_DOUBLE = {
@@ -240,6 +247,7 @@ const std::unordered_map<TokenType, std::string> REVERSE_SPECIAL_CHARS_DOUBLE = 
 	{ TokenType::OP_INCREMENT, "++" },
 	{ TokenType::OP_DECREMENT, "--" },
 	{ TokenType::NEXT_STATE_ARROW, "->" },
+	{ TokenType::FAT_ARROW, "=>" },
 };
 
 const std::unordered_map<TokenType, std::string> TOKEN_NAMES = {
@@ -285,7 +293,6 @@ const std::unordered_map<TokenType, std::string> TOKEN_NAMES = {
 	{ TokenType::RETURN, "RETURN" },
 	{ TokenType::PUBLIC, "PUBLIC" },
 	{ TokenType::PRIVATE, "PRIVATE" },
-	{ TokenType::CLASS, "CLASS" },
 	{ TokenType::IMPLEMENTS, "IMPLEMENTS" },
 	{ TokenType::EXTENDS, "EXTENDS" },
 	{ TokenType::THROW, "THROW" },
