@@ -752,6 +752,35 @@ void AstPrinter::Visit(MethodCallNode& node)
 	m_depth--;
 }
 
+void AstPrinter::Visit(EnumDeclNode& node)
+{
+	PrintIndent();
+	std::cout << "[EnumDecl] " << node.name << " : (backing type)\n";
+
+	m_depth++;
+	for (const auto& c : node.cases)
+	{
+		if (c)
+		{
+			c->Accept(*this);
+		}
+	}
+	m_depth--;
+}
+
+void AstPrinter::Visit(EnumCaseNode& node)
+{
+	PrintIndent();
+	std::cout << "├── case " << node.name << " = \n";
+
+	m_depth++;
+	if (node.value)
+	{
+		node.value->Accept(*this);
+	}
+	m_depth--;
+}
+
 void AstPrinter::PrintIndent() const
 {
 	std::cout << std::string(m_depth * 2, ' ');

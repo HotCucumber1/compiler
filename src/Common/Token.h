@@ -68,6 +68,8 @@ enum class TokenType
 	SCHEMA,
 	STATE,
 	IMPL,
+	ENUM,
+	CASE,
 
 	// Math
 	OP_PLUS,
@@ -163,6 +165,8 @@ static const std::unordered_map<std::string, TokenType> KEYWORDS = {
 	{ "schema", TokenType::SCHEMA },
 	{ "state", TokenType::STATE },
 	{ "impl", TokenType::IMPL },
+	{ "enum", TokenType::ENUM },
+	{ "case", TokenType::CASE },
 
 	{ "int", TokenType::TYPE_INT },
 	{ "float", TokenType::TYPE_FLOAT },
@@ -292,6 +296,8 @@ const std::unordered_map<TokenType, std::string> TOKEN_NAMES = {
 	{ TokenType::STRUCT, "STRUCT" },
 	{ TokenType::IMPORT, "IMPORT" },
 	{ TokenType::IMPL, "IMPL" },
+	{ TokenType::ENUM, "ENUM" },
+	{ TokenType::CASE, "CASE" },
 
 	// Math
 	{ TokenType::OP_PLUS, "OP_PLUS" },

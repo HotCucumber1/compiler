@@ -228,11 +228,9 @@ std::shared_ptr<AstNode> AstFactory::CreateNode(
 		{
 			if (auto common = std::dynamic_pointer_cast<CommonNode>(argNode))
 			{
-				if (common->type == AstNodeType::BLOCK)
-				{
-					elements = common->children;
-				}
-				else if (common->type == AstNodeType::LIST_SINGLE || common->type == AstNodeType::LIST_APPEND)
+				if (common->type == AstNodeType::BLOCK
+					|| common->type == AstNodeType::LIST_SINGLE
+					|| common->type == AstNodeType::LIST_APPEND)
 				{
 					elements = common->children;
 				}
@@ -452,6 +450,33 @@ std::shared_ptr<AstNode> AstFactory::CreateNode(
 		}
 
 		result = std::make_shared<MethodCallNode>(id, object, methodName, args);
+		break;
+	}
+
+	case AstNodeType::ENUM_CASE: {
+		const auto caseName = GetToken(children[1]).value;
+		auto valueNode = children[3];
+
+		result = std::make_shared<EnumCaseNode>(id, caseName, valueNode);
+		break;
+	}
+
+	case AstNodeType::ENUM_DECL: {
+		const auto enumName = GetToken(children[1]).value;
+		const auto backingType = ExtractTypeInfo(children[3]).type;
+
+		std::vector<std::shared_ptr<EnumCaseNode>> enumCases;
+
+		auto casesList = UnwrapList(children[5]);
+		for (auto& child : casesList)
+		{
+			if (auto caseNode = std::dynamic_pointer_cast<EnumCaseNode>(child))
+			{
+				enumCases.push_back(caseNode);
+			}
+		}
+
+		result = std::make_shared<EnumDeclNode>(id, enumName, backingType, enumCases);
 		break;
 	}
 

@@ -55,6 +55,8 @@ enum class AstNodeType : int
 	TSOP_INIT,
 	IMPL_STATE_TYPE,
 	METHOD_CALL,
+	ENUM_CASE,
+	ENUM_DECL,
 };
 
 static const std::unordered_map<std::string, AstNodeType> AST_NODE_TYPES = {
@@ -102,6 +104,8 @@ static const std::unordered_map<std::string, AstNodeType> AST_NODE_TYPES = {
 	{ "TSOP_INIT", AstNodeType::TSOP_INIT },
 	{ "IMPL_STATE_TYPE", AstNodeType::IMPL_STATE_TYPE },
 	{ "METHOD_CALL", AstNodeType::METHOD_CALL },
+	{ "ENUM_CASE", AstNodeType::ENUM_CASE },
+	{ "ENUM_DECL", AstNodeType::ENUM_DECL },
 };
 
 using SymbolId = int32_t;
@@ -255,6 +259,7 @@ struct LiteralNode final : AstNode
 struct VarAccessNode final : AstNode
 {
 	std::string varName;
+	bool isEnumName = false;
 	VarAccessNode(const SymbolId id, std::string name)
 		: AstNode(id, AstNodeType::VAR_ACCESS)
 		, varName(std::move(name))
@@ -455,6 +460,10 @@ struct MemberAccessNode final : AstNode
 {
 	std::shared_ptr<AstNode> object;
 	std::string fieldName;
+
+	bool isEnumCase = false;
+	std::string enumLiteralValue;
+	DataType enumBackingType = DataType::UNKNOWN;
 
 	MemberAccessNode(const SymbolId id, std::shared_ptr<AstNode> obj, std::string field)
 		: AstNode(id, AstNodeType::MEMBER_ACCESS)
@@ -756,6 +765,51 @@ struct MethodCallNode final : AstNode
 		, object(std::move(obj))
 		, methodName(std::move(mName))
 		, args(std::move(a))
+	{
+	}
+
+	void Accept(AstVisitor& visitor) override
+	{
+		visitor.Visit(*this);
+	}
+};
+
+struct EnumCaseNode final : AstNode
+{
+	std::string name;
+	std::shared_ptr<AstNode> value;
+
+	EnumCaseNode(
+		const SymbolId id,
+		std::string caseName,
+		std::shared_ptr<AstNode> val)
+		: AstNode(id, AstNodeType::ENUM_CASE)
+		, name(std::move(caseName))
+		, value(std::move(val))
+	{
+	}
+
+	void Accept(AstVisitor& visitor) override
+	{
+		visitor.Visit(*this);
+	}
+};
+
+struct EnumDeclNode final : AstNode
+{
+	std::string name;
+	DataType backingType;
+	std::vector<std::shared_ptr<EnumCaseNode>> cases;
+
+	EnumDeclNode(
+		const SymbolId id,
+		std::string enumName,
+		const DataType type,
+		std::vector<std::shared_ptr<EnumCaseNode>> c)
+		: AstNode(id, AstNodeType::ENUM_DECL)
+		, name(std::move(enumName))
+		, backingType(type)
+		, cases(std::move(c))
 	{
 	}
 

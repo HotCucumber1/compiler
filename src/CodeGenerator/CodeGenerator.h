@@ -70,6 +70,10 @@ public:
 
 	void Visit(MethodCallNode& node) override;
 
+	void Visit(EnumDeclNode& node) override;
+
+	void Visit(EnumCaseNode& node) override;
+
 private:
 	void PushCode(uint8_t code);
 

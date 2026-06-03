@@ -67,6 +67,10 @@ public:
 
 	void Visit(MethodCallNode& node) override;
 
+	void Visit(EnumDeclNode& node) override;
+
+	void Visit(EnumCaseNode& node) override;
+
 private:
 	int m_depth = 0;
 

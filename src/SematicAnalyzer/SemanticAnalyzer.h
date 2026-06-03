@@ -11,9 +11,16 @@ struct SymbolInfo
 	bool isConst;
 };
 
+struct MethodSignature
+{
+	std::string returnState;
+	std::vector<DataType> paramTypes;
+	std::vector<std::string> paramStructNames;
+};
+
 struct StateSignature
 {
-	std::unordered_map<std::string, std::string> transitions;
+	std::unordered_map<std::string, MethodSignature> transitions;
 	size_t fieldCount = 0;
 };
 
@@ -87,6 +94,10 @@ public:
 
 	void Visit(MethodCallNode& node) override;
 
+	void Visit(EnumCaseNode& node) override;
+
+	void Visit(EnumDeclNode& node) override;
+
 private:
 	void EnterScope();
 
@@ -113,7 +124,14 @@ private:
 		size_t fieldCount = 0;
 	};
 
+	struct EnumSignature
+	{
+		DataType backingType;
+		std::unordered_map<std::string, std::string> cases;
+	};
+
 	std::unordered_map<std::string, StructSignature> m_structSignatures;
+	std::unordered_map<std::string, EnumSignature> m_enums;
 
 	std::unordered_map<std::string, SchemaSignature> m_schemas;
 	std::vector<std::unordered_map<std::string, SymbolInfo>> m_symbolTable;

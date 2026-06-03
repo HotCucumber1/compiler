@@ -8,6 +8,7 @@ GlobalElement -> StructDecl : PASS_THROUGH
 GlobalElement -> SchemaDecl : PASS_THROUGH
 GlobalElement -> ImplDecl : PASS_THROUGH
 GlobalElement -> Statement : PASS_THROUGH
+GlobalElement -> EnumDecl : PASS_THROUGH
 GlobalElement -> import STRING : IMPORT_DECL
 
 StatementList -> Statement StatementList : LIST_APPEND

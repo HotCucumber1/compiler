@@ -37,4 +37,6 @@ public:
 	void Visit(TsopInitNode& node) override {}
 	void Visit(MethodCallNode& node) override {}
 	void Visit(SchemaDeclNode& node) override {}
+	void Visit(EnumCaseNode& node) override {}
+	void Visit(EnumDeclNode& node) override {}
 };

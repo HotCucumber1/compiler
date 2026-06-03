@@ -144,6 +144,13 @@ void SemanticAnalyzer::Visit(LiteralNode& node)
 
 void SemanticAnalyzer::Visit(VarAccessNode& node)
 {
+	if (m_enums.contains(node.varName))
+	{
+		node.isEnumName = true;
+		node.evaluatedType = DataType::UNKNOWN;
+		return;
+	}
+
 	auto itSym = m_symbolTable.rbegin();
 	auto itTsop = m_tsopVars.rbegin();
 
@@ -390,7 +397,52 @@ void SemanticAnalyzer::Visit(StructInitNode& node)
 
 void SemanticAnalyzer::Visit(MemberAccessNode& node)
 {
-	AcceptNode(node.object);
+	if (const auto varAccess = std::dynamic_pointer_cast<VarAccessNode>(node.object))
+	{
+		if (m_enums.contains(varAccess->varName))
+		{
+			varAccess->Accept(*this);
+			const auto& enumName = varAccess->varName;
+			const auto& [backingType, cases] = m_enums.at(enumName);
+
+			if (!cases.contains(node.fieldName))
+			{
+				throw SemanticError(node.location, "Enum '" + enumName + "' does not have a case '" + node.fieldName + "'");
+			}
+
+			node.isEnumCase = true;
+			node.enumLiteralValue = cases.at(node.fieldName);
+			node.enumBackingType = backingType;
+
+			node.evaluatedType = DataType::INSTANCE;
+			node.structName = enumName;
+			node.arrayDepth = 0;
+			return;
+		}
+	}
+
+	if (node.object)
+	{
+		node.object->Accept(*this);
+		if (node.object->evaluatedType == DataType::INSTANCE && m_enums.contains(node.object->structName))
+		{
+			if (node.fieldName == "value")
+			{
+				const auto& [backingType, cases] = m_enums.at(node.object->structName);
+				node.evaluatedType = backingType;
+				node.arrayDepth = 0;
+
+				if (const auto inner = std::dynamic_pointer_cast<MemberAccessNode>(node.object))
+				{
+					node.isEnumCase = true;
+					node.enumLiteralValue = inner->enumLiteralValue;
+					node.enumBackingType = inner->enumBackingType;
+				}
+				return;
+			}
+			throw SemanticError(node.location, "Enums only support the '.value' property.");
+		}
+	}
 
 	if (node.object && node.object->evaluatedType == DataType::INSTANCE)
 	{
@@ -414,7 +466,7 @@ void SemanticAnalyzer::Visit(MemberAccessNode& node)
 				node.structName = fieldInfo.structName;
 				return;
 			}
-			throw SemanticError(node.location, "Field '" + node.fieldName + "' does not exist in state '" + structName + "'");
+			throw SemanticError(node.location, "Field '" + node.fieldName + "' does not exist in state/struct '" + structName + "'");
 		}
 	}
 
@@ -609,7 +661,15 @@ void SemanticAnalyzer::Visit(SchemaDeclNode& node)
 								+ method->returnState + "' in schema '"
 								+ node.name + '\'');
 					}
-					stateSig.transitions[method->name] = method->returnState;
+
+					MethodSignature methSig;
+					methSig.returnState = method->returnState;
+					for (const auto& param : method->parameters)
+					{
+						methSig.paramTypes.push_back(param->varType);
+						methSig.paramStructNames.push_back(param->structName);
+					}
+					stateSig.transitions[method->name] = methSig;
 				}
 			}
 			schemaSig.states[state->name] = stateSig;
@@ -689,9 +749,9 @@ void SemanticAnalyzer::Visit(MethodDeclNode& node)
 	{
 		throw SemanticError(node.location, "Method '" + node.name + "' is not declared in schema state '" + m_currentImplState + "'.");
 	}
-	if (transitions.at(node.name) != node.targetState->stateName)
+	if (transitions.at(node.name).returnState != node.targetState->stateName)
 	{
-		throw SemanticError(node.location, "Semantic error: Method '" + node.name + "' must return state '" + transitions.at(node.name) + "', but returns '" + node.targetState->stateName + "'.");
+		throw SemanticError(node.location, "Semantic error: Method '" + node.name + "' must return state '" + transitions.at(node.name).returnState + "', but returns '" + node.targetState->stateName + "'.");
 	}
 
 	EnterScope();
@@ -699,17 +759,14 @@ void SemanticAnalyzer::Visit(MethodDeclNode& node)
 		DataType::INSTANCE,
 		0,
 		m_currentImplSchema + "_" + m_currentImplState,
-		true,
+		true
 	};
 	m_tsopVars.back()["this"] = { m_currentImplSchema, m_currentImplState };
 	for (const auto& param : node.parameters)
 	{
 		if (param)
 		{
-			if (const auto varDecl = std::dynamic_pointer_cast<VarDeclNode>(param))
-			{
-				ValidateTypeExists(varDecl->varType, varDecl->structName, varDecl->location);
-			}
+			ValidateTypeExists(param->varType, param->structName, param->location);
 			param->Accept(*this);
 		}
 	}
@@ -756,31 +813,90 @@ void SemanticAnalyzer::Visit(ImplStateNode& node)
 void SemanticAnalyzer::Visit(MethodCallNode& node)
 {
 	AcceptNode(node.object);
-
 	if (!m_nodeTypes.contains(node.object.get()))
 	{
 		throw SemanticError(node.location, "Semantic error: Cannot call method '." + node.methodName + "' on a non-TSOP object or undefined variable.");
 	}
 
-	const auto objType = m_nodeTypes[node.object.get()];
+	const auto [schema, state] = m_nodeTypes[node.object.get()];
 
-	const auto& [transitions, fieldCount] = m_schemas.at(objType.schema).states.at(objType.state);
+	const auto& [transitions, fieldCount] = m_schemas.at(schema).states.at(state);
 	if (!transitions.contains(node.methodName))
 	{
-		throw SemanticError(node.location, "Semantic error: Method '" + node.methodName + "' does not exist in state '" + objType.schema + "<" + objType.state + ">'.");
+		throw SemanticError(node.location, "Semantic error: Method '" + node.methodName + "' does not exist in state '" + schema + "<" + state + ">'.");
 	}
 
-	const auto returnState = transitions.at(node.methodName);
-	m_nodeTypes[&node] = { objType.schema, returnState };
-
-	node.mangledFuncName = objType.schema + "_" + objType.state + "_" + node.methodName;
-	for (const auto& arg : node.args)
+	const auto& [returnState, paramTypes, paramStructNames] = transitions.at(node.methodName);
+	if (node.args.size() != paramTypes.size())
 	{
-		AcceptNode(arg);
+		throw SemanticError(node.location, "Argument count mismatch in method '" + node.methodName + "'. Expected " + std::to_string(paramTypes.size()));
 	}
+
+	for (size_t i = 0; i < node.args.size(); ++i)
+	{
+		if (node.args[i])
+		{
+			node.args[i]->Accept(*this);
+
+			if (node.args[i]->evaluatedType != paramTypes[i] || (node.args[i]->evaluatedType == DataType::INSTANCE && node.args[i]->structName != paramStructNames[i]))
+			{
+				throw SemanticError(node.args[i]->location, "Type mismatch for argument " + std::to_string(i + 1) + " in method '" + node.methodName + "'");
+			}
+		}
+	}
+
+	m_nodeTypes[&node] = { schema, returnState };
+	node.mangledFuncName = schema + "_" + state + "_" + node.methodName;
+
 	node.evaluatedType = DataType::INSTANCE;
-	node.structName = objType.schema;
+	node.structName = schema;
 	node.arrayDepth = 0;
+}
+
+void SemanticAnalyzer::Visit(EnumCaseNode& node)
+{
+	AcceptNode(node.value);
+}
+
+void SemanticAnalyzer::Visit(EnumDeclNode& node)
+{
+	if (m_enums.contains(node.name)
+		|| m_structSignatures.contains(node.name)
+		|| m_schemas.contains(node.name))
+	{
+		throw SemanticError(node.location, "Type '" + node.name + "' is already defined.");
+	}
+
+	EnumSignature sig;
+	sig.backingType = node.backingType;
+
+	for (const auto& caseNode : node.cases)
+	{
+		if (caseNode)
+		{
+			caseNode->Accept(*this);
+
+			if (const auto literal = std::dynamic_pointer_cast<LiteralNode>(caseNode->value))
+			{
+				if (literal->evaluatedType != sig.backingType)
+				{
+					throw SemanticError(caseNode->location, "Type mismatch in enum case '" + caseNode->name + "'. Expected " + DATA_TYPE_NAMES.at(sig.backingType));
+				}
+
+				auto valStr = literal->token.value;
+				if (sig.backingType == DataType::STRING)
+				{
+					valStr = valStr.substr(1, valStr.size() - 2);
+				}
+				sig.cases[caseNode->name] = valStr;
+			}
+			else
+			{
+				throw SemanticError(caseNode->location, "Enum case value must be a constant literal.");
+			}
+		}
+	}
+	m_enums[node.name] = std::move(sig);
 }
 
 void SemanticAnalyzer::EnterScope()
@@ -819,7 +935,9 @@ void SemanticAnalyzer::ValidateTypeExists(DataType type, const std::string& stru
 	{
 		return;
 	}
-	if (!m_structSignatures.contains(structName) && !m_schemas.contains(structName))
+	if (!m_structSignatures.contains(structName)
+		&& !m_schemas.contains(structName)
+		&& !m_enums.contains(structName))
 	{
 		throw SemanticError(loc, "Unknown type '" + structName + "'.");
 	}

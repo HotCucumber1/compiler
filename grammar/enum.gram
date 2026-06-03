@@ -1,0 +1,6 @@
+EnumDecl -> enum IDENTIFIER : Type { EnumCases } : ENUM_DECL
+
+EnumCases -> EnumCase EnumCases : LIST_APPEND
+EnumCases -> EnumCase : LIST_SINGLE
+
+EnumCase -> case IDENTIFIER = Expression : ENUM_CASE

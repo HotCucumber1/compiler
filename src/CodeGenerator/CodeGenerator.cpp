@@ -461,7 +461,32 @@ void CodeGenerator::Visit(StructInitNode& node)
 
 void CodeGenerator::Visit(MemberAccessNode& node)
 {
-	node.object->Accept(*this);
+	if (node.isEnumCase)
+	{
+		Value val;
+		if (node.enumBackingType == DataType::INT)
+		{
+			val = Value(std::stoi(node.enumLiteralValue));
+		}
+		else if (node.enumBackingType == DataType::FLOAT)
+		{
+			val = Value(std::stof(node.enumLiteralValue));
+		}
+		else if (node.enumBackingType == DataType::STRING)
+		{
+			val = MakeString(node.enumLiteralValue);
+		}
+		else if (node.enumBackingType == DataType::BOOL)
+		{
+			val = Value(node.enumLiteralValue == "true");
+		}
+		PushConst(val);
+		return;
+	}
+	if (node.object)
+	{
+		node.object->Accept(*this);
+	}
 
 	const auto nameIdx = AddConstant(MakeString(node.fieldName));
 	PushCode(static_cast<uint8_t>(OpCode::OP_GET_FIELD));
@@ -711,6 +736,14 @@ void CodeGenerator::Visit(MethodCallNode& node)
 	}
 	PushCode(static_cast<uint8_t>(OpCode::OP_CALL));
 	PushCode(static_cast<uint8_t>(node.args.size() + 1));
+}
+
+void CodeGenerator::Visit(EnumDeclNode& node)
+{
+}
+
+void CodeGenerator::Visit(EnumCaseNode& node)
+{
 }
 
 void CodeGenerator::PushCode(const uint8_t code)
