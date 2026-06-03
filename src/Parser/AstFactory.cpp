@@ -82,9 +82,24 @@ std::shared_ptr<AstNode> AstFactory::CreateNode(
 			}
 			throw std::runtime_error("AST Factory error: Invalid CONST_DECL");
 
-		case AstNodeType::ASSIGNMENT:
-			result = std::make_shared<AssignmentNode>(id, GetToken(children[0]).value, children[2]);
+		case AstNodeType::ASSIGNMENT: {
+			auto leftNode = children[0];
+			auto rightNode = children[2];
+
+			if (auto indexAccess = std::dynamic_pointer_cast<IndexAccessNode>(leftNode))
+			{
+				result = std::make_shared<IndexAssignmentNode>(id, indexAccess->target, indexAccess->index, rightNode);
+			}
+			else if (auto memberAccess = std::dynamic_pointer_cast<MemberAccessNode>(leftNode))
+			{
+				result = std::make_shared<MemberAssignmentNode>(id, memberAccess->object, memberAccess->fieldName, rightNode);
+			}
+			else if (auto varAccess = std::dynamic_pointer_cast<VarAccessNode>(leftNode))
+			{
+				result = std::make_shared<AssignmentNode>(id, varAccess->varName, rightNode);
+			}
 			break;
+		}
 
 		case AstNodeType::BINARY_OP:
 			result = std::make_shared<BinaryOpNode>(id, children[0], GetToken(children[1]), children[2]);

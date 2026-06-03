@@ -21,7 +21,7 @@ SimpleStatement -> DeclStatement : PASS_THROUGH
 SimpleStatement -> ConstDeclStatement : PASS_THROUGH
 SimpleStatement -> Expression : PASS_THROUGH
 SimpleStatement -> MemberAssignment : PASS_THROUGH
-SimpleStatement -> IDENTIFIER = Expression : ASSIGNMENT
+SimpleStatement -> Primary = Expression : ASSIGNMENT
 SimpleStatement -> return Expression : RETURN_STATEMENT
 SimpleStatement -> return : RETURN_STATEMENT
 

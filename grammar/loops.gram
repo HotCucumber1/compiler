@@ -5,4 +5,4 @@ ForStatement -> for ( DeclStatement_For ; Expression ; ForAssignment ) { Stateme
 DeclStatement_For -> Type IDENTIFIER = Expression : VAR_DECL
 
 ForAssignment -> Expression : PASS_THROUGH
-ForAssignment -> IDENTIFIER = Expression : ASSIGNMENT
+ForAssignment -> Primary = Expression : ASSIGNMENT

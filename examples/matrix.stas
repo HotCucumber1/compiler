@@ -1,0 +1,61 @@
+schema Matrix
+{
+    state Size2x3(int[][] data) {
+        func multiply(Matrix<Size3x2> other) -> Size2x2
+    }
+
+    state Size3x2(int[][] data) {
+    }
+
+    state Size2x2(int[][] data) {
+       func printMatrix() -> Size2x2
+    }
+}
+
+impl Matrix<Size2x3>
+{
+    public func multiply(Matrix<Size3x2> other) -> Matrix<Size2x2>
+    {
+        int[][] result = [
+            [0, 0],
+            [0, 0]
+        ];
+        for (int i = 0; i < 2; i = i + 1) {
+            for (int j = 0; j < 2; j = j + 1) {
+                int sum = 0;
+                for (int k = 0; k < 3; k = k + 1) {
+                    sum = sum + (this.data[i][k] * other.data[k][j]);
+                }
+                result[i][j] = sum;
+            }
+        }
+        return new Matrix<Size2x2>(result);
+    }
+}
+
+impl Matrix<Size2x2>
+{
+    public func printMatrix() -> Matrix<Size2x2> {
+        print("--- Результат матрицы 2x2 ---");
+        print(this.data[0]);
+        print(this.data[1]);
+        print("-----------------------------");
+        return new Matrix<Size2x2>(this.data);
+    }
+}
+
+
+
+Matrix matA = new Matrix<Size2x3>([
+                                      [1, 2, 3],
+                                      [4, 5, 6]
+                                  ]);
+
+Matrix matB = new Matrix<Size3x2>([
+                                      [7, 8],
+                                      [9, 1],
+                                      [2, 3]
+                                  ]);
+
+Matrix matRes = matA.multiply(matB);
+matRes.printMatrix();
