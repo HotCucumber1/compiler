@@ -1,9 +1,3 @@
-file(
-        COPY ${CMAKE_CURRENT_SOURCE_DIR}/input_test/
-        DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/input_test/
-)
-
-
 add_library(
         Lexer STATIC
         Reader.cpp
