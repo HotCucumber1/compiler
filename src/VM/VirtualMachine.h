@@ -103,6 +103,8 @@ private:
 
 	void OpSetGlobal();
 
+	void RegisterNativeLib();
+
 private:
 	friend struct VMAccessor;
 

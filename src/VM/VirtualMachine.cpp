@@ -9,33 +9,7 @@ constexpr int BYTE_SIZE = 8;
 
 VirtualMachine::VirtualMachine()
 {
-	// base
-	RegisterNativeFunction("panic", 1, NativePanic);
-	RegisterNativeFunction("print", 1, NativePrint);
-	RegisterNativeFunction("read", 0, NativeRead);
-	RegisterNativeFunction("time", 0, NativeTime);
-	RegisterNativeFunction("len", 1, NativeLen);
-	RegisterNativeFunction("random", 2, NativeRandomInt);
-	RegisterNativeFunction("to_str", 1, NativeToString);
-	RegisterNativeFunction("to_int", 1, NativeToInt);
-
-	// file
-	RegisterNativeFunction("file_read", 1, NativeFileRead);
-	RegisterNativeFunction("file_write", 2, NativeFileWrite);
-	RegisterNativeFunction("file_exists", 1, NativeFileExists);
-
-	// sql
-	RegisterNativeFunction("db_connect", 4, NativeDBConnect);
-	RegisterNativeFunction("db_execute", 2, NativeDBExecute);
-	RegisterNativeFunction("db_disconnect", 1, NativeDBDisconnect);
-
-	// http
-	RegisterNativeFunction("http_init", 0, NativeHttpInit);
-	RegisterNativeFunction("http_setopt", 3, NativeHttpSetOpt);
-	RegisterNativeFunction("http_send", 1, NativeHttpSend);
-	RegisterNativeFunction("http_status", 1, NativeHttpGetStatus);
-	RegisterNativeFunction("http_response", 1, NativeHttpGetResponse);
-	RegisterNativeFunction("http_cleanup", 1, NativeHttpCleanup);
+	RegisterNativeLib();
 }
 
 void VirtualMachine::Interpret(const std::unique_ptr<Chunk>& chunk)
@@ -734,4 +708,39 @@ Value VirtualMachine::Pop()
 uint8_t VirtualMachine::ReadByte()
 {
 	return m_currentChunk->code[m_instructionPointer++];
+}
+
+void VirtualMachine::RegisterNativeLib()
+{
+	// base
+	RegisterNativeFunction("panic", 1, NativePanic);
+	RegisterNativeFunction("print", 1, NativePrint);
+	RegisterNativeFunction("read", 0, NativeRead);
+	RegisterNativeFunction("time", 0, NativeTime);
+	RegisterNativeFunction("len", 1, NativeLen);
+	RegisterNativeFunction("random", 2, NativeRandomInt);
+	RegisterNativeFunction("to_str", 1, NativeToString);
+	RegisterNativeFunction("to_int", 1, NativeToInt);
+
+	// file
+	RegisterNativeFunction("file_read", 1, NativeFileRead);
+	RegisterNativeFunction("file_write", 2, NativeFileWrite);
+	RegisterNativeFunction("file_exists", 1, NativeFileExists);
+
+	// sql
+	RegisterNativeFunction("db_connect", 4, NativeDBConnect);
+	RegisterNativeFunction("db_execute", 2, NativeDBExecute);
+	RegisterNativeFunction("db_disconnect", 1, NativeDBDisconnect);
+
+	// http
+	RegisterNativeFunction("http_init", 0, NativeHttpInit);
+	RegisterNativeFunction("http_setopt", 3, NativeHttpSetOpt);
+	RegisterNativeFunction("http_send", 1, NativeHttpSend);
+	RegisterNativeFunction("http_status", 1, NativeHttpGetStatus);
+	RegisterNativeFunction("http_response", 1, NativeHttpGetResponse);
+	RegisterNativeFunction("http_cleanup", 1, NativeHttpCleanup);
+
+	RegisterNativeFunction("http_send_async", 1, NativeHttpSendAsync);
+	RegisterNativeFunction("http_is_ready", 1, NativeHttpIsReady);
+	RegisterNativeFunction("http_await", 1, NativeHttpAwait);
 }

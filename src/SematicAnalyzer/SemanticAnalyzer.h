@@ -115,6 +115,8 @@ private:
 
 	void AcceptNode(const std::shared_ptr<AstNode>& node);
 
+	void RegisterNativeLib();
+
 private:
 	struct TsopType
 	{

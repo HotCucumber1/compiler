@@ -11,31 +11,7 @@ void SemanticAnalyzer::Analyze(const std::shared_ptr<AstNode>& root)
 {
 	m_symbolTable.clear();
 
-	// base
-	m_functions["len"] = { DataType::INT, 0, "", false };
-	m_functions["to_int"] = { DataType::INT, 0, "", false };
-	m_functions["to_string"] = { DataType::STRING, 0, "", false };
-	m_functions["print"] = { DataType::VOID, 0, "", false };
-	m_functions["read"] = { DataType::STRING, 0, "", false };
-	m_functions["panic"] = { DataType::VOID, 0, "", false };
-
-	// file
-	m_functions["file_exists"] = { DataType::BOOL, 0, "", false };
-	m_functions["file_read"] = { DataType::STRING, 0, "", false };
-	m_functions["file_write"] = { DataType::BOOL, 0, "", false };
-
-	// sql
-	m_functions["db_connect"] = { DataType::INT, 0, "", false };
-	m_functions["db_execute"] = { DataType::STRING, 2, "", false };
-	m_functions["db_disconnect"] = { DataType::VOID, 0, "", false };
-
-	// http
-	m_functions["http_init"] = { DataType::INT, 0, "", false };
-	m_functions["http_setopt"] = { DataType::VOID, 0, "", false };
-	m_functions["http_send"] = { DataType::VOID, 0, "", false };
-	m_functions["http_status"] = { DataType::INT, 0, "", false };
-	m_functions["http_response"] = { DataType::STRING, 0, "", false };
-	m_functions["http_cleanup"] = { DataType::VOID, 0, "", false };
+	RegisterNativeLib();
 
 	EnterScope();
 	AcceptNode(root);
@@ -1060,6 +1036,39 @@ void SemanticAnalyzer::AcceptNode(const std::shared_ptr<AstNode>& node)
 	{
 		node->Accept(*this);
 	}
+}
+
+void SemanticAnalyzer::RegisterNativeLib()
+{
+	// base
+	m_functions["len"] = { DataType::INT, 0, "", false };
+	m_functions["to_int"] = { DataType::INT, 0, "", false };
+	m_functions["to_string"] = { DataType::STRING, 0, "", false };
+	m_functions["print"] = { DataType::VOID, 0, "", false };
+	m_functions["read"] = { DataType::STRING, 0, "", false };
+	m_functions["panic"] = { DataType::VOID, 0, "", false };
+
+	// file
+	m_functions["file_exists"] = { DataType::BOOL, 0, "", false };
+	m_functions["file_read"] = { DataType::STRING, 0, "", false };
+	m_functions["file_write"] = { DataType::BOOL, 0, "", false };
+
+	// sql
+	m_functions["db_connect"] = { DataType::INT, 0, "", false };
+	m_functions["db_execute"] = { DataType::STRING, 2, "", false };
+	m_functions["db_disconnect"] = { DataType::VOID, 0, "", false };
+
+	// http
+	m_functions["http_init"] = { DataType::INT, 0, "", false };
+	m_functions["http_setopt"] = { DataType::VOID, 0, "", false };
+	m_functions["http_send"] = { DataType::VOID, 0, "", false };
+	m_functions["http_status"] = { DataType::INT, 0, "", false };
+	m_functions["http_response"] = { DataType::STRING, 0, "", false };
+	m_functions["http_cleanup"] = { DataType::VOID, 0, "", false };
+
+	m_functions["http_send_async"] = { DataType::VOID, 0, "", false };
+	m_functions["http_is_ready"] = { DataType::BOOL, 0, "", false };
+	m_functions["http_await"] = { DataType::VOID, 0, "", false };
 }
 
 bool IsTsopMatch(const std::string& left, const std::string& right)

@@ -10,12 +10,14 @@ schema HttpRequest
         func header(string header) -> Build
         func body(string body) -> Build
         func timeout(int ms) -> Build
-        func send() -> Response
+        func sendAsync() -> Pending
     }
 
     state Response(int status, string response) {}
 
-    state Closed() {}
+    state Pending(int handle) {
+        func await() -> Response
+    }
 }
 
 impl HttpRequest<Idle>
@@ -53,13 +55,21 @@ impl HttpRequest<Build>
         return new HttpRequest<Build>(this.handle);
     }
 
-    public func send() -> HttpRequest<Response> {
-        http_send(this.handle);
+    public func sendAsync() -> HttpRequest<Pending> {
+        http_send_async(this.handle);
+        return new HttpRequest<Pending>(this.handle);
+    }
+}
+
+impl HttpRequest<Pending>
+{
+    public func await() -> HttpRequest<Response> {
+        http_await(this.handle);
 
         int status = http_status(this.handle);
         string resp = http_response(this.handle);
-        http_cleanup(this.handle);
 
+        http_cleanup(this.handle);
         return new HttpRequest<Response>(status, resp);
     }
 }

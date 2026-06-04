@@ -12,3 +12,9 @@ Value NativeHttpGetStatus(const std::vector<Value>& args);
 Value NativeHttpGetResponse(const std::vector<Value>& args);
 
 Value NativeHttpCleanup(const std::vector<Value>& args);
+
+Value NativeHttpSendAsync(const std::vector<Value>& args);
+
+Value NativeHttpIsReady(const std::vector<Value>& args);
+
+Value NativeHttpAwait(const std::vector<Value>& args);

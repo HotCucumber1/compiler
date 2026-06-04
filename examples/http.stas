@@ -1,24 +1,30 @@
 import "../bin/stl/http.stas"
 
-HttpRequest req = new HttpRequest<Idle>();
 
-req = req.init()
+HttpRequest req1 = new HttpRequest<Idle>()
+    .init()
     .url("http://httpbin.org/post")
-    .method("POST")
-    .timeout(10000)
     .header("Content-Type: application/json")
     .body("{ \"title\": \"TSOP is awesome\" }")
-    .send();
+    .method("POST");
 
-if (req.status == 0) {
-    print("Network error:");
-    print(req.response);
-}
+HttpRequest req2 = new HttpRequest<Idle>()
+    .init()
+    .url("http://httpbin.org/post")
+    .header("Content-Type: application/json")
+    .body("{ \"title\": \"TSOP is awesome\" }")
+    .method("POST");
 
-if (req.status != 0) {
-    print("Success (Code):");
-    print(req.status);
-    print("");
-    print("Response body:");
-    print(req.response);
-}
+req1 = req1.sendAsync();
+req2 = req2.sendAsync();
+
+print("Запросы выполняются в фоне...");
+
+req1 = req1.await();
+req2 = req2.await();
+
+print("Request 1. Status:");
+print(req1.status);
+
+print("Request 2. Status:");
+print(req2.status);

@@ -1,6 +1,9 @@
 #include "http.h"
+
+#include <atomic>
 #include <curl/curl.h>
 #include <string>
+#include <thread>
 
 struct HttpContext
 {
@@ -8,6 +11,8 @@ struct HttpContext
 	curl_slist* headers;
 	std::string responseBody;
 	long statusCode;
+	std::atomic<bool> isDone = false;
+	std::thread worker;
 
 	HttpContext()
 	{
@@ -18,6 +23,10 @@ struct HttpContext
 
 	~HttpContext()
 	{
+		if (worker.joinable())
+		{
+			worker.join();
+		}
 		if (headers)
 		{
 			curl_slist_free_all(headers);
@@ -90,7 +99,7 @@ Value NativeHttpSetOpt(const std::vector<Value>& args)
 		const long timeoutMs = std::stol(val);
 		curl_easy_setopt(ctx->curl, CURLOPT_TIMEOUT_MS, timeoutMs);
 	}
-	return Value{};
+	return {};
 }
 
 Value NativeHttpSend(const std::vector<Value>& args)
@@ -112,7 +121,7 @@ Value NativeHttpSend(const std::vector<Value>& args)
 	{
 		curl_easy_getinfo(ctx->curl, CURLINFO_RESPONSE_CODE, &ctx->statusCode);
 	}
-	return Value{};
+	return {};
 }
 
 Value NativeHttpGetStatus(const std::vector<Value>& args)
@@ -129,5 +138,46 @@ Value NativeHttpCleanup(const std::vector<Value>& args)
 {
 	const auto handle = AsInt(args[0]);
 	g_httpContexts.erase(handle);
+	return {};
+}
+
+Value NativeHttpSendAsync(const std::vector<Value>& args)
+{
+	const auto ctx = GetContextOrThrow(AsInt(args[0]));
+	if (ctx->headers)
+	{
+		curl_easy_setopt(ctx->curl, CURLOPT_HTTPHEADER, ctx->headers);
+	}
+
+	ctx->worker = std::thread([ctx]() {
+		const auto res = curl_easy_perform(ctx->curl);
+
+		if (res != CURLE_OK)
+		{
+			ctx->statusCode = 0;
+			ctx->responseBody = std::string(curl_easy_strerror(res));
+		}
+		else
+		{
+			curl_easy_getinfo(ctx->curl, CURLINFO_RESPONSE_CODE, &ctx->statusCode);
+		}
+		ctx->isDone = true;
+	});
+	return {};
+}
+
+Value NativeHttpIsReady(const std::vector<Value>& args)
+{
+	const auto ctx = GetContextOrThrow(AsInt(args[0]));
+	return ctx->isDone.load() ? 1 : 0;
+}
+
+Value NativeHttpAwait(const std::vector<Value>& args)
+{
+	const auto ctx = GetContextOrThrow(AsInt(args[0]));
+	if (ctx->worker.joinable())
+	{
+		ctx->worker.join();
+	}
 	return Value{};
 }
