@@ -1,0 +1,24 @@
+import "../bin/stl/http.stas"
+
+HttpRequest req = new HttpRequest<Idle>();
+
+req = req.init()
+    .url("http://httpbin.org/post")
+    .method("POST")
+    .timeout(10000)
+    .header("Content-Type: application/json")
+    .body("{ \"title\": \"TSOP is awesome\" }")
+    .send();
+
+if (req.status == 0) {
+    print("Network error:");
+    print(req.response);
+}
+
+if (req.status != 0) {
+    print("Success (Code):");
+    print(req.status);
+    print("");
+    print("Response body:");
+    print(req.response);
+}

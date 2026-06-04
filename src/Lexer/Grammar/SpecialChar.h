@@ -33,5 +33,5 @@ inline TokenType SpecialCharGrammar(Reader& reader)
 
 inline bool IsSpecialChar(const char c)
 {
-	return SPECIAL_CHARS.contains(c);
+	return SPECIAL_CHARS.contains(c) || SPECIAL_CHARS_DOUBLE.contains(c);
 }

@@ -19,8 +19,6 @@ Lexer::Lexer(const std::istream& input, std::string filePath)
 {
 }
 
-// TODO проверять, что закрывающая кавычка равна открывающей
-
 Token Lexer::GetToken()
 {
 	if (IsEmpty())

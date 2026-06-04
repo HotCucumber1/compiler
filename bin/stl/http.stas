@@ -1,0 +1,65 @@
+schema HttpRequest
+{
+    state Idle() {
+        func init() -> Build
+    }
+
+    state Build(int handle) {
+        func url(string url) -> Build
+        func method(string method) -> Build
+        func header(string header) -> Build
+        func body(string body) -> Build
+        func timeout(int ms) -> Build
+        func send() -> Response
+    }
+
+    state Response(int status, string response) {}
+
+    state Closed() {}
+}
+
+impl HttpRequest<Idle>
+{
+    public func init() -> HttpRequest<Build> {
+        int handle = http_init();
+        return new HttpRequest<Build>(handle);
+    }
+}
+
+impl HttpRequest<Build>
+{
+    public func url(string url) -> HttpRequest<Build> {
+        http_setopt(this.handle, "URL", url);
+        return new HttpRequest<Build>(this.handle);
+    }
+
+    public func method(string m) -> HttpRequest<Build> {
+        http_setopt(this.handle, "METHOD", m);
+        return new HttpRequest<Build>(this.handle);
+    }
+
+    public func header(string h) -> HttpRequest<Build> {
+        http_setopt(this.handle, "HEADER", h);
+        return new HttpRequest<Build>(this.handle);
+    }
+
+    public func body(string b) -> HttpRequest<Build> {
+        http_setopt(this.handle, "BODY", b);
+        return new HttpRequest<Build>(this.handle);
+    }
+
+    public func timeout(int ms) -> HttpRequest<Build> {
+        http_setopt(this.handle, "TIMEOUT", to_str(ms));
+        return new HttpRequest<Build>(this.handle);
+    }
+
+    public func send() -> HttpRequest<Response> {
+        http_send(this.handle);
+
+        int status = http_status(this.handle);
+        string resp = http_response(this.handle);
+        http_cleanup(this.handle);
+
+        return new HttpRequest<Response>(status, resp);
+    }
+}

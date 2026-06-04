@@ -4,6 +4,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
 set(CMAKE_CXX_STANDARD 23)
 
 find_package(PkgConfig REQUIRED)
+find_package(CURL REQUIRED)
 pkg_check_modules(MYSQL REQUIRED mysqlclient)
 
 include(FetchContent)
@@ -31,6 +32,7 @@ target_link_libraries(
         VM
         Lexer
         CodeGen
+        CURL::libcurl
         ${MYSQL_LIBRARIES}
 )
 target_compile_options(compiler PRIVATE ${MYSQL_CFLAGS_OTHER})
