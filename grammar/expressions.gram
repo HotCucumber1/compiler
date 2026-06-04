@@ -20,6 +20,7 @@ Multiplication -> Multiplication / Primary : BINARY_OP
 Multiplication -> Unary : PASS_THROUGH
 Unary -> - Primary : UNARY_OP
 Unary -> not Primary : UNARY_OP
+Unary -> move Primary : UNARY_OP
 Unary -> Primary : PASS_THROUGH
 
 Primary -> Call : PASS_THROUGH

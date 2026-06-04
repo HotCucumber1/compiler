@@ -74,6 +74,37 @@ void SemanticAnalyzer::Visit(UnaryOpNode& node)
 			throw SemanticError(node.location, "Unary operations on arrays are not allowed.");
 		}
 
+		if (node.op.type == TokenType::MOVE)
+		{
+			node.evaluatedType = node.operand->evaluatedType;
+			node.structName = node.operand->structName;
+			node.arrayDepth = node.operand->arrayDepth;
+
+			if (const auto varAccess = std::dynamic_pointer_cast<VarAccessNode>(node.operand))
+			{
+				bool found = false;
+				for (auto& scope : std::ranges::reverse_view(m_symbolTable))
+				{
+					if (scope.contains(varAccess->varName))
+					{
+						auto& varInfo = scope.at(varAccess->varName);
+						if (varInfo.isMoved)
+						{
+							throw SemanticError(node.location, "Variable '" + varAccess->varName + "' was already moved!");
+						}
+						varInfo.isMoved = true;
+						found = true;
+						break;
+					}
+				}
+				if (!found)
+				{
+					throw SemanticError(node.location, "Cannot move undefined variable '" + varAccess->varName + "'");
+				}
+				return;
+			}
+			throw SemanticError(node.location, "The 'move' operator can only be applied to variables.");
+		}
 		node.evaluatedType = node.operand->evaluatedType;
 		node.arrayDepth = 0;
 		node.structName = "";
@@ -165,6 +196,11 @@ void SemanticAnalyzer::Visit(VarAccessNode& node)
 		if (itSym->contains(node.varName))
 		{
 			const auto& varInfo = itSym->at(node.varName);
+			if (varInfo.isMoved)
+			{
+				throw SemanticError(node.location, "Semantic error: Use of moved variable '" + node.varName + "'. Ownership was transferred.");
+			}
+
 			node.evaluatedType = varInfo.type;
 			node.arrayDepth = varInfo.arrayDepth;
 			node.structName = varInfo.structName;
@@ -201,6 +237,10 @@ void SemanticAnalyzer::Visit(AssignmentNode& node)
 	if (varInfoPtr->isConst)
 	{
 		throw SemanticError(node.location, "Cannot assign to constant variable '" + node.varName + "'");
+	}
+	if (varInfoPtr->isMoved)
+	{
+		throw SemanticError(node.location, " Cannot reassign to moved variable '" + node.varName + "'. Ownership was permanently transferred.");
 	}
 	if (!node.expr)
 	{

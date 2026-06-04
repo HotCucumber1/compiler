@@ -1,0 +1,10 @@
+schema Thread
+{
+    state Running(string function, int hy) {}
+}
+
+int db = 6;
+
+Thread t = new Thread<Running>("func", move db);
+
+db = 5;

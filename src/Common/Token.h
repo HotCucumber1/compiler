@@ -70,6 +70,7 @@ enum class TokenType
 	ENUM,
 	CASE,
 	MATCH,
+	MOVE,
 
 	// Math
 	OP_PLUS,
@@ -168,6 +169,7 @@ static const std::unordered_map<std::string, TokenType> KEYWORDS = {
 	{ "enum", TokenType::ENUM },
 	{ "case", TokenType::CASE },
 	{ "match", TokenType::MATCH },
+	{ "move", TokenType::MOVE },
 
 	{ "int", TokenType::TYPE_INT },
 	{ "float", TokenType::TYPE_FLOAT },
@@ -305,6 +307,7 @@ const std::unordered_map<TokenType, std::string> TOKEN_NAMES = {
 	{ TokenType::IMPL, "IMPL" },
 	{ TokenType::ENUM, "ENUM" },
 	{ TokenType::CASE, "CASE" },
+	{ TokenType::MOVE, "MOVE" },
 
 	// Math
 	{ TokenType::OP_PLUS, "OP_PLUS" },

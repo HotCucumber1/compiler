@@ -9,6 +9,7 @@ struct SymbolInfo
 	int arrayDepth;
 	std::string structName;
 	bool isConst;
+	bool isMoved;
 };
 
 struct MethodSignature
