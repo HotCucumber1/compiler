@@ -1,6 +1,6 @@
 #pragma once
-#include <unordered_map>
 #include <string>
+#include <unordered_map>
 
 enum class DataType
 {
@@ -10,6 +10,7 @@ enum class DataType
 	STRING,
 	INSTANCE,
 	VOID,
+	FUNC,
 	UNKNOWN
 };
 
@@ -20,5 +21,6 @@ const std::unordered_map<DataType, std::string> DATA_TYPE_NAMES = {
 	{ DataType::STRING, "string" },
 	{ DataType::INSTANCE, "struct instance" },
 	{ DataType::VOID, "void" },
+	{ DataType::FUNC, "func" },
 	{ DataType::UNKNOWN, "unknown" },
 };

@@ -9,7 +9,7 @@ func someMath(int base, int multiplier): int {
 }
 
 int baseData = 42;
-Thread j1 = new Thread<Idle>();
+Thread t1 = new Thread<Idle>();
 Thread t2 = new Thread<Idle>();
 
 t1 = t1.spawn(someMath, [move baseData, 10]);

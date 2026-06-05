@@ -39,6 +39,7 @@ std::shared_ptr<AstNode> AstFactory::CreateNode(
 		case AstNodeType::TYPE_CUSTOM:
 		case AstNodeType::TYPE_ARRAY:
 		case AstNodeType::TYPE_TSOP:
+		case AstNodeType::TYPE_FUNC:
 			result = std::make_shared<CommonNode>(id, type, children);
 			break;
 
@@ -83,8 +84,8 @@ std::shared_ptr<AstNode> AstFactory::CreateNode(
 			throw std::runtime_error("AST Factory error: Invalid CONST_DECL");
 
 		case AstNodeType::ASSIGNMENT: {
-			auto leftNode = children[0];
-			auto rightNode = children[2];
+			const auto& leftNode = children[0];
+			const auto& rightNode = children[2];
 
 			if (auto indexAccess = std::dynamic_pointer_cast<IndexAccessNode>(leftNode))
 			{
@@ -616,6 +617,8 @@ TypeInfo ExtractTypeInfo(const std::shared_ptr<AstNode>& typeNode)
 		return { DataType::STRING, 0, "" };
 	case AstNodeType::TYPE_VOID:
 		return { DataType::VOID, 0, "" };
+	case AstNodeType::TYPE_FUNC:
+		return { DataType::FUNC, 0, "" };
 
 	case AstNodeType::TYPE_CUSTOM: {
 		if (const auto commonNode = std::dynamic_pointer_cast<CommonNode>(typeNode))

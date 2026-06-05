@@ -11,6 +11,7 @@ std::unique_ptr<Chunk> CodeGenerator::Generate(const std::shared_ptr<AstNode>& r
 	m_chunk = Chunk();
 	m_nextLocalIdx = 0;
 	m_scopes.clear();
+	m_userFunctions.clear();
 
 	EnterScope();
 	if (root)
@@ -180,6 +181,14 @@ void CodeGenerator::Visit(LiteralNode& node)
 
 void CodeGenerator::Visit(VarAccessNode& node)
 {
+	if (node.isGlobalFunc || m_userFunctions.contains(node.varName))
+	{
+		const auto nameIdx = AddConstant(MakeString(node.varName));
+		PushCode(static_cast<uint8_t>(OpCode::OP_GET_GLOBAL));
+		PushCode(nameIdx);
+		return;
+	}
+
 	for (auto& m_scope : std::ranges::reverse_view(m_scopes))
 	{
 		if (!m_scope.contains(node.varName))
@@ -424,6 +433,7 @@ void CodeGenerator::Visit(FunctionDeclNode& node)
 
 	PushCode(static_cast<uint8_t>(OpCode::OP_SET_GLOBAL));
 	PushCode(nameIdx);
+	m_userFunctions.insert(node.name);
 }
 
 void CodeGenerator::Visit(StructDeclNode& node)

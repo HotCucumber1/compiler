@@ -211,6 +211,10 @@ void VirtualMachine::OpReturn(ExecutionContext& ctx)
 
 	if (ctx.callFrames.empty())
 	{
+		if (!std::holds_alternative<std::monostate>(returnValue))
+		{
+			Push(ctx, returnValue);
+		}
 		return;
 	}
 

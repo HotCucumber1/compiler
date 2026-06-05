@@ -212,6 +212,13 @@ void SemanticAnalyzer::Visit(VarAccessNode& node)
 			return;
 		}
 	}
+	if (m_functions.contains(node.varName))
+	{
+		node.evaluatedType = DataType::FUNC;
+		node.arrayDepth = 0;
+		node.structName = "";
+		return;
+	}
 	throw SemanticError(node.location, "Undefined variable '" + node.varName + "'");
 }
 
@@ -1111,8 +1118,8 @@ void SemanticAnalyzer::RegisterNativeLib()
 	m_functions["http_await"] = { DataType::VOID, 0, "", false };
 
 	// threads
-	m_functions["thread_spawn"] = { DataType::VOID, 0, "", false };
-	m_functions["thread_join"] = { DataType::VOID, 0, "", false };
+	m_functions["thread_spawn"] = { DataType::INT, 0, "", false };
+	m_functions["thread_join"] = { DataType::UNKNOWN, 0, "", false };
 }
 
 bool IsTsopMatch(const std::string& left, const std::string& right)

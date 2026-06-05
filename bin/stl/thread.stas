@@ -1,7 +1,7 @@
 schema Thread
 {
     state Idle() {
-        func spawn(func target, int[] args) -> Running
+        func spawn(closure target, int[] args) -> Running
     }
 
     state Running(int handle) {
@@ -13,7 +13,7 @@ schema Thread
 
 impl Thread<Idle>
 {
-    public func spawn(func target, int[] args) -> Thread<Running> {
+    public func spawn(closure target, int[] args) -> Thread<Running> {
         int handle = thread_spawn(target, args);
         return new Thread<Running>(handle);
     }

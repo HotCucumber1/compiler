@@ -26,6 +26,7 @@ enum class TokenType
 	TYPE_FLOAT,
 	TYPE_STRING,
 	TYPE_BOOL,
+	TYPE_CLOSURE,
 
 	// Delimiters
 	SEMICOLON,
@@ -179,6 +180,7 @@ static const std::unordered_map<std::string, TokenType> KEYWORDS = {
 	{ "const", TokenType::CONST },
 	{ "bool", TokenType::TYPE_BOOL },
 	{ "void", TokenType::VOID },
+	{ "closure", TokenType::TYPE_CLOSURE },
 
 	{ "var", TokenType::VAR },
 	{ "main", TokenType::MAIN },

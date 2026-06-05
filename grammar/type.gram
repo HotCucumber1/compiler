@@ -3,6 +3,7 @@ BaseType -> float : TYPE_FLOAT
 BaseType -> bool : TYPE_BOOL
 BaseType -> string : TYPE_STRING
 BaseType -> void : TYPE_VOID
+BaseType -> closure : TYPE_FUNC
 BaseType -> IDENTIFIER : TYPE_CUSTOM
 
 Type -> BaseType : PASS_THROUGH

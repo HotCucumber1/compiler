@@ -4,6 +4,7 @@
 #include "../VM/Type/Chunk.h"
 
 #include <map>
+#include <unordered_set>
 
 class CodeGenerator final : public AstVisitor
 {
@@ -105,6 +106,7 @@ private:
 	Chunk m_chunk{};
 	std::unordered_map<std::string, size_t> m_locals;
 	std::vector<std::map<std::string, LocalVarInfo>> m_scopes;
+	std::unordered_set<std::string> m_userFunctions;
 	std::unordered_map<std::string, std::vector<std::string>> m_structs;
 	size_t m_nextLocalIdx = 0;
 
