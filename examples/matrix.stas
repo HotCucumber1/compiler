@@ -1,61 +1,64 @@
-schema Matrix
-{
-    state Size2x3(int[][] data) {
-        func multiply(Matrix<Size3x2> other) -> Size2x2
-    }
+import "../bin/stl/thread.stas"
 
-    state Size3x2(int[][] data) {
-    }
+int[] matrixA = [
+    1,  2,  3,  4,
+    5,  6,  7,  8,
+    9,  10, 11, 12,
+    13, 14, 15, 16
+];
 
-    state Size2x2(int[][] data) {
-       func printMatrix() -> Size2x2
-    }
-}
+int[] matrixB = [
+    1, 0, 0, 0,
+    0, 1, 0, 0,
+    0, 0, 1, 0,
+    0, 0, 0, 1,
+];
 
-impl Matrix<Size2x3>
-{
-    public func multiply(Matrix<Size3x2> other) -> Matrix<Size2x2>
-    {
-        int[][] result = [
-            [0, 0],
-            [0, 0]
-        ];
-        for (int i = 0; i < 2; i = i + 1) {
-            for (int j = 0; j < 2; j = j + 1) {
-                int sum = 0;
-                for (int k = 0; k < 3; k = k + 1) {
-                    sum = sum + (this.data[i][k] * other.data[k][j]);
-                }
-                result[i][j] = sum;
-            }
+
+func calcRow(int rowIndex) use (int[] matrixA, int[] matrixB) : int[] {
+    int[] rowResult = [0, 0, 0, 0];
+    int N = 4;
+
+    for (int col = 0; col < N; col = col + 1) {
+        int sum = 0;
+        
+        for (int k = 0; k < N; k = k + 1) {
+            int a_val = matrixA[rowIndex * N + k];
+            int b_val = matrixB[k * N + col];
+            
+            sum = sum + (a_val * b_val);
         }
-        return new Matrix<Size2x2>(result);
+        
+        rowResult[col] = sum;
     }
-}
 
-impl Matrix<Size2x2>
-{
-    public func printMatrix() -> Matrix<Size2x2> {
-        print("--- Результат матрицы 2x2 ---");
-        print(this.data[0]);
-        print(this.data[1]);
-        print("-----------------------------");
-        return new Matrix<Size2x2>(this.data);
-    }
+    return rowResult;
 }
 
 
+print("--- Matrix Multiplication Started ---");
 
-Matrix matA = new Matrix<Size2x3>([
-                                      [1, 2, 3],
-                                      [4, 5, 6]
-                                  ]);
+Thread t0 = new Thread<Idle>();
+Thread t1 = new Thread<Idle>();
+Thread t2 = new Thread<Idle>();
+Thread t3 = new Thread<Idle>();
 
-Matrix matB = new Matrix<Size3x2>([
-                                      [7, 8],
-                                      [9, 1],
-                                      [2, 3]
-                                  ]);
+print("Spawning 4 workers...");
 
-Matrix matRes = matA.multiply(matB);
-matRes.printMatrix();
+t0 = t0.spawn(calcRow, [0]);
+t1 = t1.spawn(calcRow, [1]);
+t2 = t2.spawn(calcRow, [2]);
+t3 = t3.spawn(calcRow, [3]);
+
+print("Calculating in parallel...");
+
+t0 = t0.join();
+t1 = t1.join();
+t2 = t2.join();
+t3 = t3.join();
+
+print("--- Result Matrix C ---");
+print(t0.result);
+print(t1.result);
+print(t2.result);
+print(t3.result);
