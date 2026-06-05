@@ -139,7 +139,7 @@ std::unique_ptr<Chunk> GenerateCode(const std::shared_ptr<AstNode>& astRoot)
 {
 	CodeGenerator generator;
 	auto chunk = generator.Generate(astRoot);
-	std::cout << "[4/5] Bytecode generated. Constants: " << chunk->constants.size() << std::endl;
+	std::cout << "[4/5] Bytecode generated." << std::endl;
 
 	return chunk;
 }

@@ -130,6 +130,7 @@ void Reader::SkipSpaces()
 			}
 			else
 			{
+				m_input.unget();
 				break;
 			}
 		}
