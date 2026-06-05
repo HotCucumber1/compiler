@@ -37,7 +37,13 @@ void SemanticAnalyzer::Visit(BinaryOpNode& node)
 
 	if (node.left && node.right)
 	{
-		if (node.left->evaluatedType != node.right->evaluatedType)
+		const auto leftType = node.left->evaluatedType;
+		const auto rightType = node.right->evaluatedType;
+
+		const bool isNumericMix = (leftType == DataType::INT && rightType == DataType::FLOAT)
+			|| (leftType == DataType::FLOAT && rightType == DataType::INT);
+
+		if (leftType != rightType && !isNumericMix)
 		{
 			throw SemanticError(node.location, "Cannot operate on different types!");
 		}
@@ -53,9 +59,13 @@ void SemanticAnalyzer::Visit(BinaryOpNode& node)
 		{
 			node.evaluatedType = DataType::BOOL;
 		}
+		else if (isNumericMix)
+		{
+			node.evaluatedType = DataType::FLOAT;
+		}
 		else
 		{
-			node.evaluatedType = node.left->evaluatedType;
+			node.evaluatedType = leftType;
 		}
 
 		node.arrayDepth = 0;
@@ -414,6 +424,7 @@ void SemanticAnalyzer::Visit(FunctionDeclNode& node)
 void SemanticAnalyzer::Visit(StructDeclNode& node)
 {
 	StructSignature signature;
+	EnterScope();
 	for (const auto& field : node.fields)
 	{
 		if (const auto varDecl = std::dynamic_pointer_cast<VarDeclNode>(field))
@@ -428,6 +439,7 @@ void SemanticAnalyzer::Visit(StructDeclNode& node)
 		}
 		AcceptNode(field);
 	}
+	ExitScope();
 	m_structSignatures[node.name] = std::move(signature);
 }
 

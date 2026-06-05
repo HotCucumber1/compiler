@@ -28,7 +28,7 @@ while ((myStruct.b < 12))
 }
 
 
-int qw = "qw";
-int he = "he";
+string qw = "qw";
+string he = "he";
 
 print(qw + he);

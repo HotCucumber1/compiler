@@ -513,10 +513,10 @@ std::shared_ptr<AstNode> AstFactory::CreateNode(
 		}
 
 		case AstNodeType::MATCH_EXPR: {
-			auto targetExpr = children[1];
+			auto targetExpr = children[2];
 			std::vector<std::shared_ptr<MatchCaseNode>> matchCases;
 
-			auto casesList = UnwrapList(children[3]);
+			auto casesList = UnwrapList(children[5]);
 			for (auto& child : casesList)
 			{
 				if (auto caseNode = std::dynamic_pointer_cast<MatchCaseNode>(child))

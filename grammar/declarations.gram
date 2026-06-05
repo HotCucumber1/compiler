@@ -1,4 +1,3 @@
 DeclStatement -> Type IDENTIFIER = Expression : VAR_DECL
-DeclStatement -> IDENTIFIER IDENTIFIER = StructInit : VAR_DECL
 
 ConstDeclStatement -> const DeclStatement : CONST_DECL

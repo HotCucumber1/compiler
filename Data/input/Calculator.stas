@@ -105,7 +105,7 @@ impl Calculator<SecondNumberWithValue>
 impl Calculator<Compute>
 {
     public func execute() -> Calculator<Result> {
-        int result = match this.op {
+        int result = match (this.op) {
             MyOperator.Plus => this.first + this.second,
             MyOperator.Minus => this.first - this.second,
             MyOperator.Multiply => this.first * this.second,
