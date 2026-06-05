@@ -1109,6 +1109,10 @@ void SemanticAnalyzer::RegisterNativeLib()
 	m_functions["http_send_async"] = { DataType::VOID, 0, "", false };
 	m_functions["http_is_ready"] = { DataType::BOOL, 0, "", false };
 	m_functions["http_await"] = { DataType::VOID, 0, "", false };
+
+	// threads
+	m_functions["thread_spawn"] = { DataType::VOID, 0, "", false };
+	m_functions["thread_join"] = { DataType::VOID, 0, "", false };
 }
 
 bool IsTsopMatch(const std::string& left, const std::string& right)

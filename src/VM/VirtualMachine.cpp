@@ -1,9 +1,11 @@
 #include "VirtualMachine.h"
 #include "NativeLib/NativeLib.h"
+#include "NativeLib/threads/thread.h"
 #include "OpCode.h"
 
 #include <algorithm>
 #include <iostream>
+#include <mutex>
 
 constexpr int BYTE_SIZE = 8;
 
@@ -14,38 +16,41 @@ VirtualMachine::VirtualMachine()
 
 void VirtualMachine::Interpret(const std::unique_ptr<Chunk>& chunk)
 {
+	ExecutionContext mainCtx;
+
 	const auto mainFunc = std::make_shared<Function>(nullptr, 0);
 	mainFunc->chunk = std::move(*chunk);
 
 	const CallFrame mainFrame(mainFunc);
-	m_callFrames.push_back(mainFrame);
+	mainCtx.callFrames.push_back(mainFrame);
+	mainCtx.currentChunk = &mainCtx.callFrames.back().function->chunk;
 
-	m_valueStack.clear();
-	Run();
+	Run(mainCtx);
 }
 
 void VirtualMachine::RegisterNativeFunction(const std::string& name, int arity, const NativeFunction::NativeFunc& func)
 {
+	std::unique_lock lock(m_globalsMutex);
 	auto native = std::make_shared<NativeFunction>(name, arity, func);
 	m_globals[name] = native;
 }
 
-Value VirtualMachine::GetStackTop() const
+Value VirtualMachine::GetStackTop(ExecutionContext& ctx)
 {
-	if (m_valueStack.empty())
+	if (ctx.valueStack.empty())
 	{
 		throw std::runtime_error("Stack is empty");
 	}
-	return m_valueStack.back();
+	return ctx.valueStack.back();
 }
 
-Value VirtualMachine::GetLocal(const size_t index) const
+Value VirtualMachine::GetLocal(const ExecutionContext& ctx, const size_t index)
 {
-	if (m_callFrames.empty())
+	if (ctx.callFrames.empty())
 	{
 		throw std::runtime_error("No call frame");
 	}
-	const auto& locals = m_callFrames.back().locals;
+	const auto& locals = ctx.callFrames.back().locals;
 	if (index >= locals.size())
 	{
 		throw std::runtime_error("Local variable index out of range");
@@ -53,276 +58,276 @@ Value VirtualMachine::GetLocal(const size_t index) const
 	return locals[index];
 }
 
-void VirtualMachine::Run()
+void VirtualMachine::Run(ExecutionContext& ctx)
 {
-	while (true)
+	while (ctx.isRunning)
 	{
-		if (m_callFrames.empty())
+		if (ctx.callFrames.empty())
 		{
 			return;
 		}
-		CallFrame& currentFrame = m_callFrames.back();
-		m_currentChunk = &currentFrame.function->chunk;
-		m_instructionPointer = currentFrame.instructionPointer;
+		CallFrame& currentFrame = ctx.callFrames.back();
+		ctx.currentChunk = &currentFrame.function->chunk;
+		ctx.instructionPointer = currentFrame.instructionPointer;
 
-		if (m_instructionPointer >= m_currentChunk->code.size())
+		if (ctx.instructionPointer >= ctx.currentChunk->code.size())
 		{
-			OpReturn();
+			OpReturn(ctx);
 			continue;
 		}
-		const auto opCode = static_cast<OpCode>(ReadByte());
+		const auto opCode = static_cast<OpCode>(ReadByte(ctx));
 		switch (opCode)
 		{
 		case OpCode::OP_CONSTANT:
-			OpConstant();
+			OpConstant(ctx);
 			break;
 		case OpCode::OP_RETURN:
-			OpReturn();
-			if (m_callFrames.empty())
+			OpReturn(ctx);
+			if (ctx.callFrames.empty())
 			{
 				return;
 			}
 			continue;
 		case OpCode::OP_ADD:
-			OpAdd();
+			OpAdd(ctx);
 			break;
 		case OpCode::OP_SUB:
-			OpSub();
+			OpSub(ctx);
 			break;
 		case OpCode::OP_MULTI:
-			OpMulti();
+			OpMulti(ctx);
 			break;
 		case OpCode::OP_DIV:
-			OpDiv();
+			OpDiv(ctx);
 			break;
 		case OpCode::OP_MOD:
-			OpMod();
+			OpMod(ctx);
 			break;
 		case OpCode::OP_NEG:
-			OpNeg();
+			OpNeg(ctx);
 			break;
 		case OpCode::OP_AND:
-			OpAnd();
+			OpAnd(ctx);
 			break;
 		case OpCode::OP_OR:
-			OpOr();
+			OpOr(ctx);
 			break;
 		case OpCode::OP_NOT:
-			OpNot();
+			OpNot(ctx);
 			break;
 		case OpCode::OP_EQUAL:
-			OpEqual();
+			OpEqual(ctx);
 			break;
 		case OpCode::OP_NOT_EQUAL:
-			OpNotEqual();
+			OpNotEqual(ctx);
 			break;
 		case OpCode::OP_GREATER:
-			OpGrater();
+			OpGrater(ctx);
 			break;
 		case OpCode::OP_LESS:
-			OpLess();
+			OpLess(ctx);
 			break;
 		case OpCode::OP_SET_LOCAL_VAR:
-			OpSetLocal();
+			OpSetLocal(ctx);
 			break;
 		case OpCode::OP_GET_LOCAL_VAR:
-			OpGetLocal();
+			OpGetLocal(ctx);
 			break;
 		case OpCode::OP_JMP:
-			OpJmp();
+			OpJmp(ctx);
 			break;
 		case OpCode::OP_JMP_IF_FALSE:
-			OpJmpIfFalse();
+			OpJmpIfFalse(ctx);
 			break;
 		case OpCode::OP_JMP_IF_LESS:
-			OpJmpIfLess();
+			OpJmpIfLess(ctx);
 			break;
 		case OpCode::OP_JMP_IF_GREATER:
-			OpJmpIfGreater();
+			OpJmpIfGreater(ctx);
 			break;
 		case OpCode::OP_CALL:
-			OpCall();
+			OpCall(ctx);
 			continue;
 		case OpCode::OP_FUNC:
-			OpFunc();
+			OpFunc(ctx);
 			break;
 		case OpCode::OP_CREATE_ARRAY:
-			OpCreateArr();
+			OpCreateArr(ctx);
 			break;
 		case OpCode::OP_GET_ELEMENT:
-			OpGetEl();
+			OpGetEl(ctx);
 			break;
 		case OpCode::OP_SET_ELEMENT:
-			OpSetEl();
+			OpSetEl(ctx);
 			break;
 		case OpCode::OP_GET_GLOBAL:
-			OpGetGlobal();
+			OpGetGlobal(ctx);
 			break;
 		case OpCode::OP_SET_GLOBAL:
-			OpSetGlobal();
+			OpSetGlobal(ctx);
 			break;
 		case OpCode::OP_POP:
-			OpPop();
+			OpPop(ctx);
 			break;
 		case OpCode::OP_DUP:
-			OpDup();
+			OpDup(ctx);
 			break;
 		case OpCode::OP_STRUCT_INIT:
-			OpStructInit();
+			OpStructInit(ctx);
 			break;
 		case OpCode::OP_GET_FIELD:
-			OpGetField();
+			OpGetField(ctx);
 			break;
 		case OpCode::OP_SET_FIELD:
-			OpSetField();
+			OpSetField(ctx);
 			break;
 		case OpCode::OP_MAKE_CLOSURE:
-			OpMakeClosure();
+			OpMakeClosure(ctx);
 			break;
 		default:
 			std::cerr << "Unknown operation: " << static_cast<int>(opCode) << std::endl;
 			return;
 		}
-		currentFrame.instructionPointer = m_instructionPointer;
+		currentFrame.instructionPointer = ctx.instructionPointer;
 	}
 }
 
-void VirtualMachine::OpConstant()
+void VirtualMachine::OpConstant(ExecutionContext& ctx)
 {
-	const auto index = ReadByte();
-	const auto constant = m_currentChunk->constants[index];
-	Push(constant);
+	const auto index = ReadByte(ctx);
+	const auto constant = ctx.currentChunk->constants[index];
+	Push(ctx, constant);
 }
 
-void VirtualMachine::OpReturn()
+void VirtualMachine::OpReturn(ExecutionContext& ctx)
 {
 	Value returnValue;
-	if (!m_valueStack.empty())
+	if (!ctx.valueStack.empty())
 	{
-		returnValue = Pop();
+		returnValue = Pop(ctx);
 	}
 
-	m_callFrames.pop_back();
+	ctx.callFrames.pop_back();
 
-	if (m_callFrames.empty())
+	if (ctx.callFrames.empty())
 	{
 		return;
 	}
 
-	auto& callerFrame = m_callFrames.back();
-	m_currentChunk = &callerFrame.function->chunk;
-	m_instructionPointer = callerFrame.instructionPointer;
+	auto& callerFrame = ctx.callFrames.back();
+	ctx.currentChunk = &callerFrame.function->chunk;
+	ctx.instructionPointer = callerFrame.instructionPointer;
 
 	if (!std::holds_alternative<std::monostate>(returnValue))
 	{
-		Push(returnValue);
+		Push(ctx, returnValue);
 	}
 }
 
-void VirtualMachine::OpAdd()
+void VirtualMachine::OpAdd(ExecutionContext& ctx)
 {
-	const auto right = Pop();
-	const auto left = Pop();
+	const auto right = Pop(ctx);
+	const auto left = Pop(ctx);
 
-	Push(left + right);
+	Push(ctx, left + right);
 }
 
-void VirtualMachine::OpSub()
+void VirtualMachine::OpSub(ExecutionContext& ctx)
 {
-	const auto first = Pop();
-	const auto second = Pop();
+	const auto first = Pop(ctx);
+	const auto second = Pop(ctx);
 
-	Push(second - first);
+	Push(ctx, second - first);
 }
 
-void VirtualMachine::OpMulti()
+void VirtualMachine::OpMulti(ExecutionContext& ctx)
 {
-	const auto first = Pop();
-	const auto second = Pop();
+	const auto first = Pop(ctx);
+	const auto second = Pop(ctx);
 
-	Push(first * second);
+	Push(ctx, first * second);
 }
 
-void VirtualMachine::OpDiv()
+void VirtualMachine::OpDiv(ExecutionContext& ctx)
 {
-	const auto first = Pop();
-	const auto second = Pop();
+	const auto first = Pop(ctx);
+	const auto second = Pop(ctx);
 
-	Push(second / first);
+	Push(ctx, second / first);
 }
 
-void VirtualMachine::OpMod()
+void VirtualMachine::OpMod(ExecutionContext& ctx)
 {
-	const auto first = Pop();
-	const auto second = Pop();
+	const auto first = Pop(ctx);
+	const auto second = Pop(ctx);
 
-	Push(second % first);
+	Push(ctx, second % first);
 }
 
-void VirtualMachine::OpNeg()
+void VirtualMachine::OpNeg(ExecutionContext& ctx)
 {
-	Push(-Pop());
+	Push(ctx, -Pop(ctx));
 }
 
-void VirtualMachine::OpEqual()
+void VirtualMachine::OpEqual(ExecutionContext& ctx)
 {
-	const auto rhs = Pop();
-	const auto lhs = Pop();
-	Push(lhs == rhs);
+	const auto rhs = Pop(ctx);
+	const auto lhs = Pop(ctx);
+	Push(ctx, lhs == rhs);
 }
 
-void VirtualMachine::OpNotEqual()
+void VirtualMachine::OpNotEqual(ExecutionContext& ctx)
 {
-	const auto rhs = Pop();
-	const auto lhs = Pop();
-	Push(lhs != rhs);
+	const auto rhs = Pop(ctx);
+	const auto lhs = Pop(ctx);
+	Push(ctx, lhs != rhs);
 }
 
-void VirtualMachine::OpGrater()
+void VirtualMachine::OpGrater(ExecutionContext& ctx)
 {
-	const auto rhs = Pop();
-	const auto lhs = Pop();
-	Push(lhs > rhs);
+	const auto rhs = Pop(ctx);
+	const auto lhs = Pop(ctx);
+	Push(ctx, lhs > rhs);
 }
 
-void VirtualMachine::OpLess()
+void VirtualMachine::OpLess(ExecutionContext& ctx)
 {
-	const auto rhs = Pop();
-	const auto lhs = Pop();
-	Push(lhs < rhs);
+	const auto rhs = Pop(ctx);
+	const auto lhs = Pop(ctx);
+	Push(ctx, lhs < rhs);
 }
 
-void VirtualMachine::OpAnd()
+void VirtualMachine::OpAnd(ExecutionContext& ctx)
 {
-	const auto rhs = Pop();
-	const auto lhs = Pop();
-	Push(lhs && rhs);
+	const auto rhs = Pop(ctx);
+	const auto lhs = Pop(ctx);
+	Push(ctx, lhs && rhs);
 }
 
-void VirtualMachine::OpOr()
+void VirtualMachine::OpOr(ExecutionContext& ctx)
 {
-	const auto rhs = Pop();
-	const auto lhs = Pop();
-	Push(lhs || rhs);
+	const auto rhs = Pop(ctx);
+	const auto lhs = Pop(ctx);
+	Push(ctx, lhs || rhs);
 }
 
-void VirtualMachine::OpNot()
+void VirtualMachine::OpNot(ExecutionContext& ctx)
 {
-	const auto val = Pop();
-	Push(!val);
+	const auto val = Pop(ctx);
+	Push(ctx, !val);
 }
 
-void VirtualMachine::OpSetLocal()
+void VirtualMachine::OpSetLocal(ExecutionContext& ctx)
 {
-	const auto index = ReadByte();
-	const auto value = Pop();
+	const auto index = ReadByte(ctx);
+	const auto value = Pop(ctx);
 
-	if (m_callFrames.empty())
+	if (ctx.callFrames.empty())
 	{
 		throw std::runtime_error("No call frame");
 	}
 
-	auto& locals = m_callFrames.back().locals;
+	auto& locals = ctx.callFrames.back().locals;
 	if (index >= locals.size())
 	{
 		throw std::runtime_error("Local variable index out of range");
@@ -330,43 +335,43 @@ void VirtualMachine::OpSetLocal()
 	locals[index] = value;
 }
 
-void VirtualMachine::OpGetLocal()
+void VirtualMachine::OpGetLocal(ExecutionContext& ctx)
 {
-	const auto index = ReadByte();
-	if (m_callFrames.empty())
+	const auto index = ReadByte(ctx);
+	if (ctx.callFrames.empty())
 	{
 		throw std::runtime_error("No call frame");
 	}
 
-	const auto& locals = m_callFrames.back().locals;
+	const auto& locals = ctx.callFrames.back().locals;
 	if (index >= locals.size())
 	{
 		throw std::runtime_error("Local variable index out of range");
 	}
-	Push(locals[index]);
+	Push(ctx, locals[index]);
 }
 
-void VirtualMachine::OpJmp()
+void VirtualMachine::OpJmp(ExecutionContext& ctx)
 {
-	const auto address = static_cast<uint16_t>(ReadByte()) << BYTE_SIZE | ReadByte();
-	m_instructionPointer = address;
+	const auto address = static_cast<uint16_t>(ReadByte(ctx)) << BYTE_SIZE | ReadByte(ctx);
+	ctx.instructionPointer = address;
 }
 
-void VirtualMachine::OpJmpIfFalse()
+void VirtualMachine::OpJmpIfFalse(ExecutionContext& ctx)
 {
-	const auto address = static_cast<uint16_t>(ReadByte()) << BYTE_SIZE | ReadByte();
-	const auto condition = Pop();
+	const auto address = static_cast<uint16_t>(ReadByte(ctx)) << BYTE_SIZE | ReadByte(ctx);
+	const auto condition = Pop(ctx);
 
 	if (!condition)
 	{
-		m_instructionPointer = address;
+		ctx.instructionPointer = address;
 	}
 }
 
-void VirtualMachine::OpJmpIfLess()
+void VirtualMachine::OpJmpIfLess(ExecutionContext& ctx)
 {
-	const auto address = static_cast<uint16_t>(ReadByte()) << BYTE_SIZE | ReadByte();
-	const auto value = Pop();
+	const auto address = static_cast<uint16_t>(ReadByte(ctx)) << BYTE_SIZE | ReadByte(ctx);
+	const auto value = Pop(ctx);
 
 	if (!std::holds_alternative<int64_t>(value) && !std::holds_alternative<double>(value))
 	{
@@ -376,13 +381,13 @@ void VirtualMachine::OpJmpIfLess()
 	if (std::holds_alternative<int64_t>(value) && std::get<int64_t>(value) < 0
 		|| std::holds_alternative<double>(value) && std::get<double>(value) < 0)
 	{
-		m_instructionPointer = address;
+		ctx.instructionPointer = address;
 	}
 }
-void VirtualMachine::OpJmpIfGreater()
+void VirtualMachine::OpJmpIfGreater(ExecutionContext& ctx)
 {
-	const auto address = static_cast<uint16_t>(ReadByte()) << BYTE_SIZE | ReadByte();
-	const auto value = Pop();
+	const auto address = static_cast<uint16_t>(ReadByte(ctx)) << BYTE_SIZE | ReadByte(ctx);
+	const auto value = Pop(ctx);
 
 	if (!std::holds_alternative<int64_t>(value) && !std::holds_alternative<double>(value))
 	{
@@ -392,14 +397,14 @@ void VirtualMachine::OpJmpIfGreater()
 	if (std::holds_alternative<int64_t>(value) && std::get<int64_t>(value) > 0
 		|| std::holds_alternative<double>(value) && std::get<double>(value) > 0)
 	{
-		m_instructionPointer = address;
+		ctx.instructionPointer = address;
 	}
 }
 
-void VirtualMachine::OpCall()
+void VirtualMachine::OpCall(ExecutionContext& ctx)
 {
-	const auto argCount = ReadByte();
-	const auto callee = Peek(argCount);
+	const auto argCount = ReadByte(ctx);
+	const auto callee = Peek(ctx, argCount);
 	if (IsNativeFunction(callee))
 	{
 		auto native = AsNativeFunction(callee);
@@ -411,18 +416,18 @@ void VirtualMachine::OpCall()
 		std::vector<Value> args;
 		for (int i = 0; i < argCount; ++i)
 		{
-			args.push_back(m_valueStack[m_valueStack.size() - argCount + i]);
+			args.push_back(ctx.valueStack[ctx.valueStack.size() - argCount + i]);
 		}
 
 		for (int i = 0; i <= argCount; ++i)
 		{
-			m_valueStack.pop_back();
+			ctx.valueStack.pop_back();
 		}
 		const auto result = native->func(args);
-		Push(result);
+		Push(ctx, result);
 
-		CallFrame& currentFrame = m_callFrames.back();
-		currentFrame.instructionPointer = m_instructionPointer;
+		CallFrame& currentFrame = ctx.callFrames.back();
+		currentFrame.instructionPointer = ctx.instructionPointer;
 		return;
 	}
 	std::shared_ptr<Function> function = nullptr;
@@ -457,55 +462,55 @@ void VirtualMachine::OpCall()
 
 	for (int i = 0; i < argCount; i++)
 	{
-		const auto arg = m_valueStack[m_valueStack.size() - argCount + i];
+		const auto arg = ctx.valueStack[ctx.valueStack.size() - argCount + i];
 		frame.locals[localIdx++] = arg;
 	}
 	for (int i = 0; i <= argCount; i++)
 	{
-		m_valueStack.pop_back();
+		ctx.valueStack.pop_back();
 	}
 
-	CallFrame& currentFrame = m_callFrames.back();
-	currentFrame.instructionPointer = m_instructionPointer;
+	CallFrame& currentFrame = ctx.callFrames.back();
+	currentFrame.instructionPointer = ctx.instructionPointer;
 
-	m_callFrames.push_back(frame);
-	m_instructionPointer = 0;
+	ctx.callFrames.push_back(frame);
+	ctx.instructionPointer = 0;
 }
 
-void VirtualMachine::OpFunc()
+void VirtualMachine::OpFunc(ExecutionContext& ctx)
 {
-	const auto funcIndex = ReadByte();
-	if (funcIndex >= m_currentChunk->constants.size())
+	const auto funcIndex = ReadByte(ctx);
+	if (funcIndex >= ctx.currentChunk->constants.size())
 	{
 		throw std::runtime_error("Function index out of range");
 	}
 
-	const auto funcValue = m_currentChunk->constants[funcIndex];
+	const auto funcValue = ctx.currentChunk->constants[funcIndex];
 
 	if (!IsFunction(funcValue))
 	{
 		throw std::runtime_error("Expected function constant");
 	}
 
-	Push(funcValue);
+	Push(ctx, funcValue);
 }
 
-void VirtualMachine::OpCreateArr()
+void VirtualMachine::OpCreateArr(ExecutionContext& ctx)
 {
-	const auto count = ReadByte();
+	const auto count = ReadByte(ctx);
 	auto array = std::make_shared<Array>(count);
 
 	for (int i = count - 1; i >= 0; --i)
 	{
-		array->elements[i] = Pop();
+		array->elements[i] = Pop(ctx);
 	}
-	Push(array);
+	Push(ctx, array);
 }
 
-void VirtualMachine::OpGetEl()
+void VirtualMachine::OpGetEl(ExecutionContext& ctx)
 {
-	const auto indexVal = Pop();
-	const auto arrayVal = Pop();
+	const auto indexVal = Pop(ctx);
+	const auto arrayVal = Pop(ctx);
 
 	if (!IsArray(arrayVal))
 	{
@@ -523,14 +528,14 @@ void VirtualMachine::OpGetEl()
 	{
 		throw std::runtime_error("Array index out of range");
 	}
-	Push(arr->elements[idx]);
+	Push(ctx, arr->elements[idx]);
 }
 
-void VirtualMachine::OpSetEl()
+void VirtualMachine::OpSetEl(ExecutionContext& ctx)
 {
-	Value indexVal = Pop();
-	Value arrayVal = Pop();
-	Value value = Pop();
+	const auto indexVal = Pop(ctx);
+	const auto arrayVal = Pop(ctx);
+	const auto value = Pop(ctx);
 
 	if (!IsArray(arrayVal))
 	{
@@ -551,96 +556,89 @@ void VirtualMachine::OpSetEl()
 	arr->elements[idx] = value;
 }
 
-void PrintGlobals(const std::unordered_map<std::string, Value>& m_globals)
+void VirtualMachine::OpGetGlobal(ExecutionContext& ctx)
 {
-	for (const auto& [key, value] : m_globals)
-	{
-		std::cout << key << ' ';
-		PrintValue(value);
-	}
-}
-
-void VirtualMachine::OpGetGlobal()
-{
-	const uint8_t nameIndex = ReadByte();
-	const auto& name = m_currentChunk->constants[nameIndex];
+	const uint8_t nameIndex = ReadByte(ctx);
+	const auto& name = ctx.currentChunk->constants[nameIndex];
 	if (!IsString(name))
 	{
 		throw std::runtime_error("Expected string constant for global name");
 	}
 	const auto nameStr = AsString(name);
 
+	std::shared_lock lock(m_globalsMutex);
 	const auto it = m_globals.find(nameStr);
 	if (it == m_globals.end())
 	{
 		throw std::runtime_error("Undefined global variable: " + nameStr);
 	}
-	Push(it->second);
+	Push(ctx, it->second);
 }
 
-void VirtualMachine::OpSetGlobal()
+void VirtualMachine::OpSetGlobal(ExecutionContext& ctx)
 {
-	const auto nameIndex = ReadByte();
-	const auto& name = m_currentChunk->constants[nameIndex];
+	const auto nameIndex = ReadByte(ctx);
+	const auto& name = ctx.currentChunk->constants[nameIndex];
 	if (!IsString(name))
 	{
 		throw std::runtime_error("Expected string constant for global name");
 	}
 	const auto nameStr = AsString(name);
+	const auto value = Pop(ctx);
 
-	const auto value = Pop();
+	std::unique_lock lock(m_globalsMutex);
 	m_globals[nameStr] = value;
 }
 
-Value VirtualMachine::Peek(const int distance) const
+Value VirtualMachine::Peek(ExecutionContext& ctx, const int distance)
 {
-	if (distance >= static_cast<int>(m_valueStack.size()))
+	if (distance >= static_cast<int>(ctx.valueStack.size()))
 	{
 		throw std::runtime_error("Stack index out of range");
 	}
-	return m_valueStack[m_valueStack.size() - 1 - distance];
+	return ctx.valueStack[ctx.valueStack.size() - 1 - distance];
 }
 
-uint16_t VirtualMachine::ReadShort()
+uint16_t VirtualMachine::ReadShort(ExecutionContext& ctx)
 {
-	return static_cast<uint16_t>(ReadByte()) << BYTE_SIZE | ReadByte();
+	return static_cast<uint16_t>(ReadByte(ctx)) << BYTE_SIZE | ReadByte(ctx);
 }
 
-void VirtualMachine::Push(const Value& value)
+void VirtualMachine::Push(ExecutionContext& ctx, const Value& value)
 {
-	m_valueStack.push_back(value);
+	ctx.valueStack.push_back(value);
 }
 
-void VirtualMachine::OpPop()
+void VirtualMachine::OpPop(ExecutionContext& ctx)
 {
-	Pop();
+	Pop(ctx);
 }
 
-void VirtualMachine::OpDup()
+void VirtualMachine::OpDup(ExecutionContext& ctx)
 {
-	if (m_valueStack.empty())
+	if (ctx.valueStack.empty())
 	{
 		throw std::runtime_error("Const stack is empty");
 	}
-	const auto top = m_valueStack.back();
-	Push(top);
+	const auto top = ctx.valueStack.back();
+	Push(ctx, top);
 }
 
-void VirtualMachine::OpStructInit()
+void VirtualMachine::OpStructInit(ExecutionContext& ctx)
 {
-	const auto nameIdx = ReadByte();
-	const auto structName = AsString(m_currentChunk->constants[nameIdx]);
+	const auto nameIdx = ReadByte(ctx);
+	const auto structName = AsString(ctx.currentChunk->constants[nameIdx]);
 
 	auto inst = std::make_shared<Instance>(structName);
-	Push(inst);
+	Push(ctx, inst);
 }
 
-void VirtualMachine::OpGetField()
+void VirtualMachine::OpGetField(ExecutionContext& ctx)
 {
-	const auto nameIdx = ReadByte();
-	const auto fieldName = AsString(m_currentChunk->constants[nameIdx]);
+	const auto nameIdx = ReadByte(ctx);
+	const auto fieldName = AsString(ctx.currentChunk->constants[nameIdx]);
 
-	const auto strct = Pop();
+	const auto strct = Pop(ctx);
 	if (!IsInstance(strct))
 	{
 		throw std::runtime_error("Cannot get field from non-instance object");
@@ -650,21 +648,21 @@ void VirtualMachine::OpGetField()
 	auto it = instance->fields.find(fieldName);
 	if (it == instance->fields.end())
 	{
-		Push({});
+		Push(ctx, {});
 	}
 	else
 	{
-		Push(it->second);
+		Push(ctx, it->second);
 	}
 }
 
-void VirtualMachine::OpSetField()
+void VirtualMachine::OpSetField(ExecutionContext& ctx)
 {
-	const auto nameIdx = ReadByte();
-	const auto fieldName = AsString(m_currentChunk->constants[nameIdx]);
+	const auto nameIdx = ReadByte(ctx);
+	const auto fieldName = AsString(ctx.currentChunk->constants[nameIdx]);
 
-	const auto val = Pop();
-	const auto strct = Pop();
+	const auto val = Pop(ctx);
+	const auto strct = Pop(ctx);
 
 	if (!IsInstance(strct))
 	{
@@ -672,42 +670,42 @@ void VirtualMachine::OpSetField()
 	}
 	auto instance = AsInstance(strct);
 	instance->fields[fieldName] = val;
-	Push(val);
+	Push(ctx, val);
 }
 
-void VirtualMachine::OpMakeClosure()
+void VirtualMachine::OpMakeClosure(ExecutionContext& ctx)
 {
-	const auto captureCount = ReadByte();
+	const auto captureCount = ReadByte(ctx);
 	std::vector<Value> captures(captureCount);
 
 	for (int i = captureCount - 1; i >= 0; i--)
 	{
-		captures[i] = Pop();
+		captures[i] = Pop(ctx);
 	}
 
-	const auto funcValue = Pop();
+	const auto funcValue = Pop(ctx);
 	if (!IsFunction(funcValue))
 	{
 		throw std::runtime_error("VM Error: Expected function for OP_MAKE_CLOSURE");
 	}
 	auto closure = std::make_shared<Closure>(AsFunc(funcValue), std::move(captures));
-	Push(closure);
+	Push(ctx, closure);
 }
 
-Value VirtualMachine::Pop()
+Value VirtualMachine::Pop(ExecutionContext& ctx)
 {
-	if (m_valueStack.empty())
+	if (ctx.valueStack.empty())
 	{
 		throw std::runtime_error("Const stack is empty");
 	}
-	const auto top = m_valueStack.back();
-	m_valueStack.pop_back();
+	const auto top = ctx.valueStack.back();
+	ctx.valueStack.pop_back();
 	return top;
 }
 
-uint8_t VirtualMachine::ReadByte()
+uint8_t VirtualMachine::ReadByte(ExecutionContext& ctx)
 {
-	return m_currentChunk->code[m_instructionPointer++];
+	return ctx.currentChunk->code[ctx.instructionPointer++];
 }
 
 void VirtualMachine::RegisterNativeLib()
@@ -743,4 +741,109 @@ void VirtualMachine::RegisterNativeLib()
 	RegisterNativeFunction("http_send_async", 1, NativeHttpSendAsync);
 	RegisterNativeFunction("http_is_ready", 1, NativeHttpIsReady);
 	RegisterNativeFunction("http_await", 1, NativeHttpAwait);
+
+	// threads
+	RegisterNativeFunction("thread_spawn", 2, [this](const std::vector<Value>& args) -> Value {
+		const auto& funcValue = args[0];
+		const auto& argsArr = args[1];
+
+		if (!IsArray(argsArr))
+		{
+			throw std::runtime_error("thread_spawn: args must be an array");
+		}
+		const auto arr = AsArray(argsArr);
+		std::shared_ptr<Function> function;
+		std::vector<Value> captures;
+
+		if (IsClosure(funcValue))
+		{
+			const auto closure = AsClosure(funcValue);
+			function = closure->function;
+			captures = closure->captures;
+		}
+		else if (IsFunction(funcValue))
+		{
+			function = AsFunc(funcValue);
+		}
+		else
+		{
+			throw std::runtime_error("thread_spawn: first argument must be a function");
+		}
+		if (function->arity != arr->elements.size())
+		{
+			throw std::runtime_error("thread_spawn: incorrect number of arguments");
+		}
+
+		ExecutionContext newCtx;
+		CallFrame frame(function);
+
+		int localIdx = 0;
+		for (const auto& capt : captures)
+		{
+			frame.locals[localIdx++] = capt;
+		}
+		for (const auto& arg : arr->elements)
+		{
+			frame.locals[localIdx++] = arg;
+		}
+		newCtx.callFrames.push_back(frame);
+		newCtx.currentChunk = &function->chunk;
+		newCtx.instructionPointer = 0;
+
+		int64_t handle;
+		{
+			auto tState = std::make_unique<ThreadState>();
+
+			std::lock_guard lock(g_threadsMutex);
+			handle = g_nextThreadId++;
+			g_threads[handle] = std::move(tState);
+		}
+		g_threads[handle]->worker = std::thread([this, newCtx, handle]() mutable {
+			try
+			{
+				this->Run(newCtx);
+
+				std::lock_guard lock(g_threadsMutex);
+				if (!newCtx.valueStack.empty())
+				{
+					g_threads[handle]->result = newCtx.valueStack.back();
+				}
+			}
+			catch (const std::exception& e)
+			{
+				std::lock_guard lock(g_threadsMutex);
+				g_threads[handle]->errorMsg = e.what();
+			}
+			g_threads[handle]->isDone = true;
+		});
+		return handle;
+	});
+
+	RegisterNativeFunction("thread_join", 1, [](const std::vector<Value>& args) -> Value {
+		const auto handle = AsInt(args[0]);
+
+		ThreadState* tState = nullptr;
+		{
+			std::lock_guard lock(g_threadsMutex);
+			if (!g_threads.contains(handle))
+			{
+				throw std::runtime_error("Invalid thread handle");
+			}
+			tState = g_threads[handle].get();
+		}
+		if (tState->worker.joinable())
+		{
+			tState->worker.join();
+		}
+		if (!tState->errorMsg.empty())
+		{
+			throw std::runtime_error("Thread panicked: " + tState->errorMsg);
+		}
+		auto res = tState->result;
+		{
+			std::lock_guard lock(g_threadsMutex);
+			g_threads.erase(handle);
+		}
+		return res;
+	});
 }

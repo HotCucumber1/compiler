@@ -1,0 +1,28 @@
+schema Thread
+{
+    state Idle() {
+        func spawn(func target, int[] args) -> Running
+    }
+
+    state Running(int handle) {
+        func join() -> Completed
+    }
+
+    state Completed(int result) {}
+}
+
+impl Thread<Idle>
+{
+    public func spawn(func target, int[] args) -> Thread<Running> {
+        int handle = thread_spawn(target, args);
+        return new Thread<Running>(handle);
+    }
+}
+
+impl Thread<Running>
+{
+    public func join() -> Thread<Completed> {
+        int res = thread_join(this.handle);
+        return new Thread<Completed>(res);
+    }
+}

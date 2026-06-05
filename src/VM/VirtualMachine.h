@@ -3,9 +3,10 @@
 #include "StringPool/StringPool.h"
 #include "Type/Chunk.h"
 #include "Type/NativeFunction.h"
+#include "ExecutionContext.h"
 
 #include <memory>
-#include <vector>
+#include <shared_mutex>
 
 class VirtualMachine
 {
@@ -16,104 +17,105 @@ public:
 
 	void Interpret(const std::unique_ptr<Chunk>& chunk);
 
+	void Run(ExecutionContext& ctx);
+
 private:
 	void RegisterNativeFunction(const std::string& name, int arity, const NativeFunction::NativeFunc& func);
 
-	void Run();
+	static void OpConstant(ExecutionContext& ctx);
 
-	void OpConstant();
+	static void OpReturn(ExecutionContext& ctx);
 
-	void OpReturn();
+	static void OpAdd(ExecutionContext& ctx);
 
-	void OpAdd();
+	static void OpSub(ExecutionContext& ctx);
 
-	void OpSub();
+	static void OpMulti(ExecutionContext& ctx);
 
-	void OpMulti();
+	static void OpDiv(ExecutionContext& ctx);
 
-	void OpDiv();
+	static void OpMod(ExecutionContext& ctx);
 
-	void OpMod();
+	static void OpNeg(ExecutionContext& ctx);
 
-	void OpNeg();
+	static void OpEqual(ExecutionContext& ctx);
 
-	void OpEqual();
+	static void OpNotEqual(ExecutionContext& ctx);
 
-	void OpNotEqual();
+	static void OpGrater(ExecutionContext& ctx);
 
-	void OpGrater();
+	static void OpLess(ExecutionContext& ctx);
 
-	void OpLess();
+	static void OpAnd(ExecutionContext& ctx);
 
-	void OpAnd();
+	static void OpOr(ExecutionContext& ctx);
 
-	void OpOr();
+	static void OpNot(ExecutionContext& ctx);
 
-	void OpNot();
+	static void OpSetLocal(ExecutionContext& ctx);
 
-	void OpSetLocal();
+	static void OpGetLocal(ExecutionContext& ctx);
 
-	void OpGetLocal();
+	static void OpJmp(ExecutionContext& ctx);
 
-	void OpJmp();
+	static void OpJmpIfFalse(ExecutionContext& ctx);
 
-	void OpJmpIfFalse();
+	static void OpJmpIfLess(ExecutionContext& ctx);
 
-	void OpJmpIfLess();
+	static void OpJmpIfGreater(ExecutionContext& ctx);
 
-	void OpJmpIfGreater();
+	static void OpCall(ExecutionContext& ctx);
 
-	void OpCall();
+	static void OpFunc(ExecutionContext& ctx);
 
-	void OpFunc();
+	static void OpCreateArr(ExecutionContext& ctx);
 
-	void OpCreateArr();
+	static void OpGetEl(ExecutionContext& ctx);
 
-	void OpGetEl();
+	static void OpSetEl(ExecutionContext& ctx);
 
-	void OpSetEl();
+	static void Push(ExecutionContext& ctx, const Value& value);
 
-	void Push(const Value& value);
+	static void OpPop(ExecutionContext& ctx);
 
-	void OpPop();
+	static void OpDup(ExecutionContext& ctx);
 
-	void OpDup();
+	static void OpStructInit(ExecutionContext& ctx);
 
-	void OpStructInit();
+	static void OpGetField(ExecutionContext& ctx);
 
-	void OpGetField();
+	static void OpSetField(ExecutionContext& ctx);
 
-	void OpSetField();
+	static void OpMakeClosure(ExecutionContext& ctx);
 
-	void OpMakeClosure();
+	static Value Pop(ExecutionContext& ctx);
 
-	Value Pop();
+	static Value Peek(ExecutionContext& ctx, int distance) ;
 
-	Value Peek(int distance) const;
+	static uint8_t ReadByte(ExecutionContext& ctx);
 
-	uint8_t ReadByte();
+	static uint16_t ReadShort(ExecutionContext& ctx);
 
-	uint16_t ReadShort();
+	static Value GetStackTop(ExecutionContext& ctx) ;
 
-	Value GetStackTop() const;
+	static Value GetLocal(const ExecutionContext& ctx, size_t index) ;
 
-	Value GetLocal(size_t index) const;
+	void OpGetGlobal(ExecutionContext& ctx);
 
-	void OpGetGlobal();
-
-	void OpSetGlobal();
+	void OpSetGlobal(ExecutionContext& ctx);
 
 	void RegisterNativeLib();
 
 private:
 	friend struct VMAccessor;
 
-	size_t m_instructionPointer = 0;
-	StringPool m_stringPool; // TODO применить стринг пул
-	Chunk* m_currentChunk{};
+	// size_t m_instructionPointer = 0;
+	// StringPool m_stringPool; // TODO применить стринг пул
+	// Chunk* m_currentChunk{};
 
-	std::vector<CallFrame> m_callFrames;
-	std::vector<Value> m_valueStack;
+	// std::vector<CallFrame> m_callFrames;
+	// std::vector<Value> m_valueStack;
 
 	std::unordered_map<std::string, Value> m_globals;
+	mutable std::shared_mutex m_globalsMutex;
 };
