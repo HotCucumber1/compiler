@@ -53,7 +53,7 @@ std::shared_ptr<AstNode> BuildPassThrough(const std::vector<std::shared_ptr<AstN
 
 std::shared_ptr<AstNode> AstFactory::CreateNode(
 	AstNodeType type,
-	SymbolId id,
+	const SymbolId id,
 	const std::vector<std::shared_ptr<AstNode>>& children)
 {
 	if (type == AstNodeType::UNDEFINED)
