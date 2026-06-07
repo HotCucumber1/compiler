@@ -1,0 +1,13 @@
+// EXPECT: true
+// EXPECT: false
+// EXPECT: true
+// EXPECT: true
+// EXPECT: false
+
+print(10 > 5);
+
+print(10.0 < 5);
+print(5 == 5.0);
+
+print((5 + 5 == 10) and true);
+print(not (10 != 5) or false);

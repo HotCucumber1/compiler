@@ -1,0 +1,25 @@
+// EXPECT: 10.5
+// EXPECT: 3.5
+// EXPECT: 24.5
+// EXPECT: 2.5
+// EXPECT: 20
+
+int a = 7;
+float b = 3.5;
+
+// int + float
+print(a + b);
+
+// int - float
+print(a - b);
+
+// float * int
+print(b * a);
+
+// float / int
+float c = 6.0;
+int d = 2;
+print(c / d);
+
+print(10 + 5.0 * 2);
+

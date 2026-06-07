@@ -3,6 +3,8 @@ project(compiler)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
 set(CMAKE_CXX_STANDARD 23)
 
+set(GRAMMAR_PATH "${CMAKE_SOURCE_DIR}/grammar")
+
 find_package(PkgConfig REQUIRED)
 find_package(CURL REQUIRED)
 pkg_check_modules(MYSQL REQUIRED mysqlclient)
@@ -19,11 +21,13 @@ add_subdirectory(src/VM)
 add_subdirectory(src/Lexer)
 add_subdirectory(src/Parser)
 add_subdirectory(src/CodeGenerator)
+add_subdirectory(tests/end2end)
 
 add_executable(
         compiler
         src/Visualizer/SchemaVisualizer.cpp
         src/Visualizer/ConsoleSchemaVisualizer.cpp
+        src/Engine.cpp
         src/main.cpp)
 
 target_include_directories(compiler PRIVATE ${MYSQL_INCLUDE_DIRS})
@@ -36,3 +40,4 @@ target_link_libraries(
         ${MYSQL_LIBRARIES}
 )
 target_compile_options(compiler PRIVATE ${MYSQL_CFLAGS_OTHER})
+target_compile_definitions(compiler PRIVATE GRAMMAR_PATH="${GRAMMAR_PATH}")

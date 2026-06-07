@@ -1,0 +1,12 @@
+// EXPECT: 5.5
+// EXPECT: 1.5
+// EXPECT: 7
+// EXPECT: 1.75
+
+float x = 3.5;
+float y = 2.0;
+
+print(x + y);
+print(x - y);
+print(x * y);
+print(x / y);

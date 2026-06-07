@@ -1,0 +1,18 @@
+// EXPECT: 15
+// EXPECT: 5
+// EXPECT: 50
+// EXPECT: 2
+// EXPECT: 14
+// EXPECT: -5
+
+int a = 10;
+int b = 5;
+
+print(a + b);
+print(a - b);
+print(a * b);
+print(a / b);
+
+print(a + b * 2 - 6 / 1);
+
+print(-b);

@@ -1,0 +1,6 @@
+// ERROR: Cannot operate on different types!
+
+int a = 5;
+string b = "hello";
+
+print(a + b);

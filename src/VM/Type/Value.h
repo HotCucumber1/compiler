@@ -311,32 +311,45 @@ inline bool AsBool(const Value& value)
 
 inline bool operator==(const Value& lhs, const Value& rhs)
 {
-	if (lhs.index() != rhs.index())
-	{
-		return false;
-	}
-	return std::visit([&rhs]<typename T>(const T& l) -> bool {
-		using Type = std::decay_t<T>;
+	return std::visit([]<typename T0, typename T1>(const T0& l, const T1& r) -> bool {
+		using LType = std::decay_t<T0>;
+		using RType = std::decay_t<T1>;
 
-		if constexpr (std::is_same_v<Type, HeapObjectPtr>)
+		if constexpr (std::is_integral_v<LType> && std::is_floating_point_v<RType>)
 		{
-			auto r = std::get<HeapObjectPtr>(rhs);
-			if (l->type == ObjectType::STRING && r->type == ObjectType::STRING)
+			return static_cast<double>(l) == static_cast<double>(r);
+		}
+		else if constexpr (std::is_floating_point_v<LType> && std::is_integral_v<RType>)
+		{
+			return static_cast<double>(l) == static_cast<double>(r);
+		}
+
+		else if constexpr (std::is_same_v<LType, RType>)
+		{
+			if constexpr (std::is_same_v<LType, HeapObjectPtr>)
 			{
-				return static_cast<String*>(l.get())->str == dynamic_cast<String*>(r.get())->str;
+				if (l->type == ObjectType::STRING && r->type == ObjectType::STRING)
+				{
+					return static_cast<String*>(l.get())->str == static_cast<String*>(r.get())->str;
+				}
+				return l == r;
 			}
-			return l == r;
+			else if constexpr (std::is_same_v<LType, std::monostate>)
+			{
+				return true;
+			}
+			else
+			{
+				return l == r;
+			}
 		}
-		else if constexpr (std::is_same_v<Type, std::monostate>)
-		{
-			return true;
-		}
+
 		else
 		{
-			return l == std::get<Type>(rhs);
+			return false;
 		}
 	},
-		lhs);
+		lhs, rhs);
 }
 
 // OP_NOT_EQUAL

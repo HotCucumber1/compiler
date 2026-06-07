@@ -84,6 +84,7 @@ void CodeGenerator::Visit(BinaryOpNode& node)
 		PushCode(static_cast<uint8_t>(OpCode::OP_MULTI));
 		break;
 	case TokenType::OP_DIV:
+	case TokenType::OP_DIVISION:
 		PushCode(static_cast<uint8_t>(OpCode::OP_DIV));
 		break;
 	case TokenType::OP_MOD:
