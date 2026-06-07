@@ -1,0 +1,4 @@
+// ERROR: Invalid thread handle
+
+int bad_handle = 9999;
+int res = thread_join(bad_handle);

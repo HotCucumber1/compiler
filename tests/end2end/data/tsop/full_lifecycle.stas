@@ -1,0 +1,30 @@
+// EXPECT: 111
+// EXPECT: 222
+
+schema Door
+{
+    state Closed() {
+        func open() -> Open
+    }
+    state Open() {
+        func close() -> Closed
+    }
+}
+
+impl Door<Closed> {
+    public func open() -> Door<Open> {
+        print(111);
+        return new Door<Open>();
+    }
+}
+
+impl Door<Open> {
+    public func close() -> Door<Closed> {
+        print(222);
+        return new Door<Closed>();
+    }
+}
+
+Door d = new Door<Closed>();
+d = d.open();
+d = d.close();

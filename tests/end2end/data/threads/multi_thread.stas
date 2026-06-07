@@ -1,0 +1,15 @@
+// EXPECT: 10
+// EXPECT: 20
+// EXPECT: 30
+
+func calc(int id): int {
+    return id * 10;
+}
+
+int t1 = thread_spawn(calc, [1]);
+int t2 = thread_spawn(calc, [2]);
+int t3 = thread_spawn(calc, [3]);
+
+print(thread_join(t1));
+print(thread_join(t2));
+print(thread_join(t3));

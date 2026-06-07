@@ -1,0 +1,11 @@
+// ERROR: move
+
+struct SecureData
+{
+    int secret;
+}
+
+SecureData data1 = SecureData { 999 };
+SecureData data2 = move data1;
+
+print(data1.secret);

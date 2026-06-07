@@ -1,0 +1,15 @@
+// ERROR: move
+
+struct HeavyPayload
+{
+    int data;
+}
+
+func processor(HeavyPayload payload): int {
+    return payload.data;
+}
+
+HeavyPayload myData = HeavyPayload { 512 };
+
+int handle = thread_spawn(processor, [move myData]);
+print(myData.data);

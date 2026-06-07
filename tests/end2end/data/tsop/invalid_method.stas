@@ -1,0 +1,13 @@
+// ERROR: Method
+
+schema Door {
+    state Closed() {
+        func open() -> Open
+    }
+    state Open() {
+        func close() -> Closed
+    }
+}
+
+Door d = new Door<Closed>();
+d = d.close();

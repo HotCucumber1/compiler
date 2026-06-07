@@ -1,0 +1,12 @@
+// EXPECT: 777
+
+int GLOBAL_CONFIG = 777;
+
+func reader() use (int GLOBAL_CONFIG): int {
+    return GLOBAL_CONFIG;
+}
+
+int handle = thread_spawn(reader, []);
+int res = thread_join(handle);
+
+print(res);
