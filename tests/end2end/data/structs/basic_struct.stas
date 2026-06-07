@@ -1,0 +1,13 @@
+// EXPECT: 10
+// EXPECT: 50
+
+struct Point {
+    int x;
+    int y;
+}
+
+Point p = Point { 10, 20 };
+print(p.x);
+
+p.y = 50;
+print(p.y);

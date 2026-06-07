@@ -297,6 +297,7 @@ void CodeGenerator::Visit(WhileNode& node)
 
 void CodeGenerator::Visit(ForNode& node)
 {
+	EnterScope();
 	if (node.init)
 	{
 		node.init->Accept(*this);
@@ -336,6 +337,7 @@ void CodeGenerator::Visit(ForNode& node)
 	m_chunk.pendingJumps.emplace_back(jumpToStartIdx, startLabel);
 
 	m_chunk.labels[endLabel] = m_chunk.code.size();
+	ExitScope();
 }
 
 void CodeGenerator::Visit(CallNode& node)

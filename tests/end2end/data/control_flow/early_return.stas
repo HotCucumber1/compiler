@@ -1,0 +1,17 @@
+// EXPECT: 42
+// EXPECT: 42
+
+func findMagicNumber() : int {
+    for (int i = 0; i < 100; i = i + 1) {
+        if (i == 42) {
+            return i; // Ранний выход
+        }
+    }
+    return 0;
+}
+
+print(findMagicNumber());
+
+// Убеждаемся, что стек не "поехал" после раннего выхода, вызвав функцию еще раз
+int x = findMagicNumber();
+print(x);

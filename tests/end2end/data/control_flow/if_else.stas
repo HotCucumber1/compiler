@@ -1,0 +1,22 @@
+// EXPECT: 100
+// EXPECT: 300
+// EXPECT: 500
+
+int a = 10;
+
+if (a > 5) {
+    print(100);
+} else {
+    print(200);
+}
+
+if (a == 5) {
+    print(200);
+}
+else if (a == 10) {
+    print(300);
+}
+
+if (a != 0) {
+    print(500);
+}

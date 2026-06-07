@@ -1,0 +1,11 @@
+// EXPECT: 50
+// EXPECT: 100
+
+int multiplier = 10;
+
+func applyMultiplier(int x) use (int multiplier) : int {
+    return x * multiplier;
+}
+
+print(applyMultiplier(5));
+print(applyMultiplier(10));

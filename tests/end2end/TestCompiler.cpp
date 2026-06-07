@@ -37,6 +37,10 @@ TEST_CASE("End-to-End Compiler Tests", "[e2e]")
 		if (hasError)
 		{
 			REQUIRE(executionFailed == true);
+
+			INFO("Expected to find: '" << expectedError << "'");
+			INFO("But actual error was: '" << actualErrorMsg << "'");
+
 			REQUIRE(actualErrorMsg.find(expectedError) != std::string::npos);
 		}
 		else

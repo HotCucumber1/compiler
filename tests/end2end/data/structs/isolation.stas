@@ -1,0 +1,12 @@
+// EXPECT: 111
+// EXPECT: 999
+
+struct Test {
+    int a;
+}
+
+int a = 999;
+Test t = Test { 111 };
+
+print(t.a);
+print(a);

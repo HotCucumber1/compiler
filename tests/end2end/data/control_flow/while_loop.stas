@@ -1,0 +1,12 @@
+// EXPECT: 3
+// EXPECT: 2
+// EXPECT: 1
+// EXPECT: 0
+
+int x = 3;
+while (x > 0) {
+    print(x);
+    x = x - 1;
+}
+
+print(x);

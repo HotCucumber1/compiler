@@ -1,0 +1,16 @@
+// EXPECT: 100
+// EXPECT: 200
+
+struct Inner {
+    int val;
+}
+
+struct Outer {
+    Inner in;
+}
+
+Outer o = Outer { Inner { 100 } };
+print(o.in.val);
+
+o.in.val = 200;
+print(o.in.val);

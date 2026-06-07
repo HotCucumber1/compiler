@@ -17,7 +17,7 @@ print(a - b);
 print(b * a);
 
 // float / int
-float c = 6.0;
+float c = 5.0;
 int d = 2;
 print(c / d);
 
