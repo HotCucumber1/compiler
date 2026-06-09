@@ -8,6 +8,8 @@ LogicalAnd -> Comparison : PASS_THROUGH
 
 Comparison -> Addition == Addition : BINARY_OP
 Comparison -> Addition != Addition : BINARY_OP
+Comparison -> Addition >= Addition : BINARY_OP
+Comparison -> Addition <= Addition : BINARY_OP
 Comparison -> Addition < Addition : BINARY_OP
 Comparison -> Addition > Addition : BINARY_OP
 Comparison -> Addition : PASS_THROUGH

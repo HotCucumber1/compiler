@@ -102,6 +102,12 @@ void CodeGenerator::Visit(BinaryOpNode& node)
 	case TokenType::OP_MORE:
 		PushCode(static_cast<uint8_t>(OpCode::OP_GREATER));
 		break;
+	case TokenType::OP_LESS_OR_EQUAL:
+		PushCode(static_cast<uint8_t>(OpCode::OP_LESS_OR_EQUAL));
+		break;
+	case TokenType::OP_MORE_OR_EQUAL:
+		PushCode(static_cast<uint8_t>(OpCode::OP_MORE_OR_EQUAL));
+		break;
 	case TokenType::AND:
 		PushCode(static_cast<uint8_t>(OpCode::OP_AND));
 		break;

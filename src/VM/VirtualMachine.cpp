@@ -127,6 +127,12 @@ void VirtualMachine::Run(ExecutionContext& ctx)
 		case OpCode::OP_LESS:
 			OpLess(ctx);
 			break;
+		case OpCode::OP_LESS_OR_EQUAL:
+			OpLessOrEqual(ctx);
+			break;
+		case OpCode::OP_MORE_OR_EQUAL:
+			OpMoreOrEqual(ctx);
+			break;
 		case OpCode::OP_SET_LOCAL_VAR:
 			OpSetLocal(ctx);
 			break;
@@ -299,6 +305,20 @@ void VirtualMachine::OpLess(ExecutionContext& ctx)
 	const auto rhs = Pop(ctx);
 	const auto lhs = Pop(ctx);
 	Push(ctx, lhs < rhs);
+}
+
+void VirtualMachine::OpLessOrEqual(ExecutionContext& ctx)
+{
+	const auto rhs = Pop(ctx);
+	const auto lhs = Pop(ctx);
+	Push(ctx, lhs <= rhs);
+}
+
+void VirtualMachine::OpMoreOrEqual(ExecutionContext& ctx)
+{
+	const auto rhs = Pop(ctx);
+	const auto lhs = Pop(ctx);
+	Push(ctx, lhs >= rhs);
 }
 
 void VirtualMachine::OpAnd(ExecutionContext& ctx)

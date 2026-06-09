@@ -18,6 +18,8 @@ enum class OpCode : uint8_t
 	OP_NOT_EQUAL,
 	OP_LESS,
 	OP_GREATER,
+	OP_LESS_OR_EQUAL,
+	OP_MORE_OR_EQUAL,
 	OP_AND,
 	OP_OR,
 	OP_NOT,

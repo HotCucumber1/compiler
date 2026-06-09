@@ -46,6 +46,10 @@ private:
 
 	static void OpLess(ExecutionContext& ctx);
 
+	static void OpLessOrEqual(ExecutionContext& ctx);
+
+	static void OpMoreOrEqual(ExecutionContext& ctx);
+
 	static void OpAnd(ExecutionContext& ctx);
 
 	static void OpOr(ExecutionContext& ctx);
