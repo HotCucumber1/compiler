@@ -30,7 +30,7 @@ Engine::Engine(
 
 void Engine::Compile()
 {
-	const auto mainFilePath = std::filesystem::absolute(m_exePath);
+	const auto mainFilePath = std::filesystem::weakly_canonical(m_exePath);
 	const auto sourceCode = GetSourceCode(m_exePath);
 
 	const auto slrBuilder = SetupSLRTableBuilder(m_exePath);
@@ -39,7 +39,9 @@ void Engine::Compile()
 	std::unordered_set<std::string> parsedFiles;
 	parsedFiles.insert(m_exePath);
 
-	ResolveImports(astRoot, parsedFiles, slrBuilder, mainFilePath.parent_path());
+	std::vector<std::string> importStack;
+	importStack.push_back(mainFilePath);
+	ResolveImports(parsedFiles, importStack, astRoot, slrBuilder, mainFilePath.parent_path());
 
 	if (m_printLogs)
 	{
@@ -112,7 +114,12 @@ std::shared_ptr<AstNode> Engine::BuildAST(const std::string& sourceCode, const s
 	return astRoot;
 }
 
-void Engine::ResolveImports(const std::shared_ptr<AstNode>& astRoot, std::unordered_set<std::string>& parsedFiles, const SLRTableBuilder& slrBuilder, const std::filesystem::__cxx11::path& currentDirPath)
+void Engine::ResolveImports(
+	std::unordered_set<std::string>& parsedFiles,
+	std::vector<std::string>& importStack,
+	const std::shared_ptr<AstNode>& astRoot,
+	const SLRTableBuilder& slrBuilder,
+	const std::filesystem::path& currentDirPath)
 {
 	if (!astRoot)
 	{
@@ -134,32 +141,44 @@ void Engine::ResolveImports(const std::shared_ptr<AstNode>& astRoot, std::unorde
 		if (!importNode)
 		{
 			resolvedChildren.push_back(child);
+			continue;
 		}
-		else
+		const auto importPath = currentDirPath / importNode->filePath;
+		const auto importPathStr = std::filesystem::weakly_canonical(importPath).string();
+
+		if (std::ranges::find(importStack, importPathStr) != importStack.end())
 		{
-			const auto importPath = currentDirPath / importNode->filePath;
-			const auto importPathStr = std::filesystem::absolute(importPath).string();
-
-			if (!parsedFiles.contains(importPathStr))
+			std::string cycleTrace;
+			for (const auto& path : importStack)
 			{
-				parsedFiles.insert(importPathStr);
+				cycleTrace += path + "\n -> ";
+			}
+			cycleTrace += importPathStr;
 
-				if (m_printLogs)
-				{
-					std::cout << "      -> Resolving import: " << importNode->filePath << std::endl;
-				}
+			throw std::runtime_error("Compile error: Circular import detected!\n" + cycleTrace);
+		}
 
-				std::string importedSource = ReadFile(importPathStr);
-				auto importedAst = BuildAST(importedSource, importPathStr, slrBuilder);
-				ResolveImports(importedAst, parsedFiles, slrBuilder, importPath.parent_path());
+		if (!parsedFiles.contains(importPathStr))
+		{
+			parsedFiles.insert(importPathStr);
+			importStack.push_back(importPathStr);
 
-				if (const auto importedProgram = std::dynamic_pointer_cast<CommonNode>(importedAst))
-				{
-					resolvedChildren.insert(
-						resolvedChildren.end(),
-						importedProgram->children.begin(),
-						importedProgram->children.end());
-				}
+			if (m_printLogs)
+			{
+				std::cout << "      -> Resolving import: " << importNode->filePath << std::endl;
+			}
+
+			std::string importedSource = ReadFile(importPathStr);
+			auto importedAst = BuildAST(importedSource, importPathStr, slrBuilder);
+			ResolveImports(parsedFiles, importStack, importedAst, slrBuilder, importPath.parent_path());
+
+			importStack.pop_back();
+			if (const auto importedProgram = std::dynamic_pointer_cast<CommonNode>(importedAst))
+			{
+				resolvedChildren.insert(
+					resolvedChildren.end(),
+					importedProgram->children.begin(),
+					importedProgram->children.end());
 			}
 		}
 	}

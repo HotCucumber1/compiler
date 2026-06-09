@@ -1,0 +1,7 @@
+import "./circle_import_2.stas"
+
+func Add1(int a): int {
+    return Add2(a);
+}
+
+Add1();

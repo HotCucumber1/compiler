@@ -35,10 +35,11 @@ private:
 		const SLRTableBuilder& slrBuilder) const;
 
 	void ResolveImports(
-		const std::shared_ptr<AstNode>& astRoot,
 		std::unordered_set<std::string>& parsedFiles,
+		std::vector<std::string>& importStack,
+		const std::shared_ptr<AstNode>& astRoot,
 		const SLRTableBuilder& slrBuilder,
-		const std::filesystem::__cxx11::path& currentDirPath);
+		const std::filesystem::path& currentDirPath);
 
 	std::unique_ptr<Chunk> GenerateCode(const std::shared_ptr<AstNode>& astRoot) const;
 
