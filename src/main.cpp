@@ -1,4 +1,4 @@
-#include "Engine.h"
+#include "Engine/Engine.h"
 
 struct Params
 {
@@ -27,7 +27,7 @@ int main(const int argc, char* argv[])
 				dumpSchema,
 				dumpFilename,
 			},
-			true,
+			false,
 			true);
 		engine.Compile();
 

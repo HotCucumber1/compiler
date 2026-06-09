@@ -27,7 +27,7 @@ add_executable(
         compiler
         src/Visualizer/SchemaVisualizer.cpp
         src/Visualizer/ConsoleSchemaVisualizer.cpp
-        src/Engine.cpp
+        src/Engine/Engine.cpp
         src/main.cpp)
 
 target_include_directories(compiler PRIVATE ${MYSQL_INCLUDE_DIRS})

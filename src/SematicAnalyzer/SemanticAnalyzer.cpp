@@ -344,6 +344,52 @@ void SemanticAnalyzer::Visit(CallNode& node)
 	{
 		AcceptNode(arg);
 	}
+	if (node.funcName == "append" || node.funcName == "concat")
+	{
+		if (node.args.size() != 2)
+		{
+			throw SemanticError(node.location, "Semantic error: '" + node.funcName + "' expects exactly 2 arguments.");
+		}
+
+		const auto& baseArg = node.args[0];
+		const auto& extArg = node.args[1];
+
+		if (baseArg->arrayDepth == 0)
+		{
+			throw SemanticError(node.location, "Semantic error: First argument to '" + node.funcName + "' must be an array.");
+		}
+
+		if (node.funcName == "append")
+		{
+			if (extArg->evaluatedType != DataType::UNKNOWN)
+			{
+				if (baseArg->evaluatedType != extArg->evaluatedType
+					|| baseArg->arrayDepth - 1 != extArg->arrayDepth
+					|| baseArg->structName != extArg->structName)
+				{
+					throw SemanticError(node.location, "Semantic error: Type mismatch in 'append'. Second argument must be a single element of the array's type.");
+				}
+			}
+		}
+		else if (node.funcName == "concat")
+		{
+			if (extArg->evaluatedType != DataType::UNKNOWN)
+			{
+				if (baseArg->evaluatedType != extArg->evaluatedType
+					|| baseArg->arrayDepth != extArg->arrayDepth
+					|| baseArg->structName != extArg->structName)
+				{
+					throw SemanticError(node.location, "Semantic error: Type mismatch in 'concat'. Both arguments must be arrays of the exact same type and depth.");
+				}
+			}
+		}
+
+		node.evaluatedType = baseArg->evaluatedType;
+		node.arrayDepth = baseArg->arrayDepth;
+		node.structName = baseArg->structName;
+
+		return;
+	}
 	if (m_functions.contains(node.funcName))
 	{
 		const auto& funcInfo = m_functions.at(node.funcName);
@@ -1096,7 +1142,7 @@ void SemanticAnalyzer::DropSchemaContext()
 	m_currentImplState = "";
 }
 
-void SemanticAnalyzer::ValidateTypeExists(DataType type, const std::string& structName, const SourceLocation& loc) const
+void SemanticAnalyzer::ValidateTypeExists(const DataType type, const std::string& structName, const SourceLocation& loc) const
 {
 	if (type != DataType::INSTANCE)
 	{
@@ -1126,6 +1172,8 @@ void SemanticAnalyzer::RegisterNativeLib()
 	m_functions["print"] = { DataType::VOID, 0, "", false };
 	m_functions["read"] = { DataType::STRING, 0, "", false };
 	m_functions["panic"] = { DataType::VOID, 0, "", false };
+	m_functions["append"] = { DataType::UNKNOWN, 1, "", false };
+	m_functions["concat"] = { DataType::UNKNOWN, 1, "", false };
 
 	// file
 	m_functions["file_exists"] = { DataType::BOOL, 0, "", false };

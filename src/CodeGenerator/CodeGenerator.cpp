@@ -42,20 +42,21 @@ void CodeGenerator::Visit(CommonNode& node)
 	}
 	for (auto& child : node.children)
 	{
-		if (child)
+		if (!child)
 		{
-			child->Accept(*this);
+			continue;
+		}
+		child->Accept(*this);
 
-			if (node.type == AstNodeType::BLOCK
-				|| node.type == AstNodeType::PROGRAM)
+		if (node.type == AstNodeType::BLOCK
+			|| node.type == AstNodeType::PROGRAM)
+		{
+			if (child->type == AstNodeType::CALL
+				|| child->type == AstNodeType::METHOD_CALL
+				|| child->type == AstNodeType::MEMBER_ASSIGNMENT
+				|| child->type == AstNodeType::MATCH_EXPR)
 			{
-				if (child->type == AstNodeType::CALL
-					|| child->type == AstNodeType::METHOD_CALL
-					|| child->type == AstNodeType::MEMBER_ASSIGNMENT
-					|| child->type == AstNodeType::MATCH_EXPR)
-				{
-					PushCode(static_cast<uint8_t>(OpCode::OP_POP));
-				}
+				PushCode(static_cast<uint8_t>(OpCode::OP_POP));
 			}
 		}
 	}

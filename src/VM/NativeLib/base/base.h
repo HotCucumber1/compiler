@@ -22,3 +22,7 @@ Value NativeRandomInt(const std::vector<Value>& args);
 Value NativeToString(const std::vector<Value>& args);
 
 Value NativeToInt(const std::vector<Value>& args);
+
+Value NativeAppend(const std::vector<Value>& args);
+
+Value NativeConcat(const std::vector<Value>& args);

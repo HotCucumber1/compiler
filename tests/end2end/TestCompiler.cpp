@@ -1,4 +1,4 @@
-#include "../../src/Engine.h"
+#include "../../src/Engine/Engine.h"
 #include "../Common/StdOutRedirector.h"
 #include "../Common/TestParser.h"
 #include <catch2/catch_all.hpp>

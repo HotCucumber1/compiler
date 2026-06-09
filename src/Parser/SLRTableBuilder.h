@@ -93,11 +93,6 @@ public:
 
 	SymbolId GetSymbolId(const RuleItem& item) const
 	{
-		// for (const auto& [f, s] : m_symbolToId)
-		// {
-		// 	std::cout << f.ruleName << "[is_t=" << f.isTerminal << "] " << s << std::endl;
-		// }
-		// std::cout << "---------------------------" << std::endl;
 		const auto it = m_symbolToId.find(item);
 		return it != m_symbolToId.end()
 			? it->second

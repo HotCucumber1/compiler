@@ -1,14 +1,14 @@
 #include "Engine.h"
 
+#include "../Common/AstPrinter.h"
+#include "../Parser/Grammar/GrammarReader.h"
+#include "../Parser/Parser.h"
+#include "../SematicAnalyzer/SemanticAnalyzer.h"
+#include "../Visualizer/ConsoleSchemaVisualizer.h"
+#include "../Visualizer/SchemaVisualizer.h"
 #include "CodeGenerator.h"
-#include "Common/AstPrinter.h"
 #include "Lexer.h"
-#include "Parser/Grammar/GrammarReader.h"
-#include "Parser/Parser.h"
-#include "SematicAnalyzer/SemanticAnalyzer.h"
 #include "VirtualMachine.h"
-#include "Visualizer/ConsoleSchemaVisualizer.h"
-#include "Visualizer/SchemaVisualizer.h"
 
 #include <fstream>
 #include <utility>

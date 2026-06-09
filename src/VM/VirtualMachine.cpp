@@ -743,6 +743,8 @@ void VirtualMachine::RegisterNativeLib()
 	RegisterNativeFunction("random", 2, NativeRandomInt);
 	RegisterNativeFunction("to_str", 1, NativeToString);
 	RegisterNativeFunction("to_int", 1, NativeToInt);
+	RegisterNativeFunction("append", 2, NativeAppend);
+	RegisterNativeFunction("concat", 2, NativeConcat);
 
 	// file
 	RegisterNativeFunction("file_read", 1, NativeFileRead);

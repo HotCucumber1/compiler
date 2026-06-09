@@ -1,5 +1,5 @@
 #pragma once
-#include "Parser/SLRTableBuilder.h"
+#include "../Parser/SLRTableBuilder.h"
 #include "Type/Chunk.h"
 
 #include <filesystem>

@@ -155,3 +155,45 @@ Value NativeToInt(const std::vector<Value>& args)
 	}
 	throw std::runtime_error("Unsupported type for to_int conversion.");
 }
+
+Value NativeAppend(const std::vector<Value>& args)
+{
+	const auto& baseArrayVal = args[0];
+	const auto& elementToAdd = args[1];
+
+	if (!IsArray(baseArrayVal))
+	{
+		throw std::runtime_error("append: first argument must be an array");
+	}
+
+	const auto originalArr = AsArray(baseArrayVal);
+	auto newArr = std::make_shared<Array>();
+
+	newArr->elements = originalArr->elements;
+	newArr->elements.push_back(elementToAdd);
+
+	return newArr;
+}
+
+Value NativeConcat(const std::vector<Value>& args)
+{
+	const auto& arr1Val = args[0];
+	const auto& arr2Val = args[1];
+
+	if (!IsArray(arr1Val) || !IsArray(arr2Val))
+	{
+		throw std::runtime_error("concat: both arguments must be arrays");
+	}
+
+	const auto arr1 = AsArray(arr1Val);
+	const auto arr2 = AsArray(arr2Val);
+
+	auto newArr = std::make_shared<Array>();
+	newArr->elements = arr1->elements;
+	newArr->elements.insert(
+		newArr->elements.end(),
+		arr2->elements.begin(),
+		arr2->elements.end());
+
+	return newArr;
+}

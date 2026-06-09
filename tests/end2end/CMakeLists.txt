@@ -9,7 +9,7 @@ add_executable(
         TestCompiler
         ../../src/Visualizer/SchemaVisualizer.cpp
         ../../src/Visualizer/ConsoleSchemaVisualizer.cpp
-        ../../src/Engine.cpp
+        ../../src/Engine/Engine.cpp
         TestCompiler.cpp)
 
 target_link_libraries(
