@@ -135,8 +135,8 @@ struct Token
 			std::cout << "IDENT_";
 		}
 		out << "TOKEN: Pos: " << pos
-			<< " Line: " << line
-			<< " Value: " << value
+			<< "Line: " << line
+			<< "Value: " << value
 			<< std::endl;
 	}
 };

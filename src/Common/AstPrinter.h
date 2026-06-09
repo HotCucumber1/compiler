@@ -75,6 +75,10 @@ public:
 
 	void Visit(MatchNode& node) override;
 
+	void Visit(BreakNode& node) override;
+
+	void Visit(ContinueNode& node) override;
+
 private:
 	int m_depth = 0;
 

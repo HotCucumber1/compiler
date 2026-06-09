@@ -318,7 +318,9 @@ void SemanticAnalyzer::Visit(WhileNode& node)
 	AcceptNode(node.condition);
 
 	EnterScope();
+	m_loopDepth++;
 	AcceptNode(node.body);
+	m_loopDepth--;
 	ExitScope();
 }
 
@@ -329,7 +331,9 @@ void SemanticAnalyzer::Visit(ForNode& node)
 	AcceptNode(node.init);
 	AcceptNode(node.condition);
 	AcceptNode(node.increment);
+	m_loopDepth++;
 	AcceptNode(node.body);
+	m_loopDepth--;
 
 	ExitScope();
 }
@@ -1044,6 +1048,22 @@ void SemanticAnalyzer::Visit(MatchNode& node)
 
 void SemanticAnalyzer::Visit(MatchCaseNode& node)
 {
+}
+
+void SemanticAnalyzer::Visit(BreakNode& node)
+{
+	if (m_loopDepth == 0)
+	{
+		throw std::runtime_error("Semantic error: 'break' outside of loop");
+	}
+}
+
+void SemanticAnalyzer::Visit(ContinueNode& node)
+{
+	if (m_loopDepth == 0)
+	{
+		throw std::runtime_error("Semantic error: 'continue' outside of loop");
+	}
 }
 
 void SemanticAnalyzer::EnterScope()

@@ -49,6 +49,8 @@ std::shared_ptr<AstNode> BuildEnumDecl(SymbolId id, const std::vector<std::share
 std::shared_ptr<AstNode> BuildMatchCase(SymbolId id, const std::vector<std::shared_ptr<AstNode>>& children);
 std::shared_ptr<AstNode> BuildMatchExpr(SymbolId id, const std::vector<std::shared_ptr<AstNode>>& children);
 std::shared_ptr<AstNode> BuildPassThrough(const std::vector<std::shared_ptr<AstNode>>& children);
+std::shared_ptr<AstNode> BuildContinue(SymbolId id);
+std::shared_ptr<AstNode> BuildBreak(SymbolId id);
 
 
 std::shared_ptr<AstNode> AstFactory::CreateNode(
@@ -178,6 +180,12 @@ std::shared_ptr<AstNode> AstFactory::CreateNode(
 			break;
 		case AstNodeType::MATCH_EXPR:
 			result = BuildMatchExpr(id, children);
+			break;
+		case AstNodeType::BREAK:
+			result = BuildBreak(id);
+			break;
+		case AstNodeType::CONTINUE:
+			result = BuildContinue(id);
 			break;
 
 		case AstNodeType::USE_DECL:
@@ -630,6 +638,15 @@ std::shared_ptr<AstNode> BuildPassThrough(const std::vector<std::shared_ptr<AstN
 	return children[0];
 }
 
+std::shared_ptr<AstNode> BuildContinue(SymbolId id)
+{
+	return std::make_shared<ContinueNode>(id);
+}
+
+std::shared_ptr<AstNode> BuildBreak(SymbolId id)
+{
+	return std::make_shared<BreakNode>(id);
+}
 
 Token GetToken(const std::shared_ptr<AstNode>& node)
 {

@@ -818,6 +818,18 @@ void AstPrinter::Visit(MatchNode& node)
 	m_depth--;
 }
 
+void AstPrinter::Visit(BreakNode& node)
+{
+	PrintIndent();
+	std::cout << "[BreakNode]" << std::endl;
+}
+
+void AstPrinter::Visit(ContinueNode& node)
+{
+	PrintIndent();
+	std::cout << "[ContinueNode]" << std::endl;
+}
+
 void AstPrinter::PrintIndent() const
 {
 	std::cout << std::string(m_depth * 2, ' ');

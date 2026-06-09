@@ -79,6 +79,10 @@ public:
 
 	void Visit(MatchCaseNode& node) override;
 
+	void Visit(BreakNode& node) override;
+
+	void Visit(ContinueNode& node) override;
+
 private:
 	void PushCode(uint8_t code);
 
@@ -94,7 +98,6 @@ private:
 
 	void PushTempAddr();
 
-
 private:
 	struct LocalVarInfo
 	{
@@ -102,6 +105,13 @@ private:
 		size_t index;
 		bool isConst;
 	};
+
+	struct LoopContext
+	{
+		std::string continueTargetLabel;
+		std::string breakTargetLabel;
+	};
+	std::vector<LoopContext> m_loopStack;
 
 	Chunk m_chunk{};
 	std::unordered_map<std::string, size_t> m_locals;

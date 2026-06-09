@@ -27,7 +27,7 @@ int main(const int argc, char* argv[])
 				dumpSchema,
 				dumpFilename,
 			},
-			false,
+			true,
 			true);
 		engine.Compile();
 

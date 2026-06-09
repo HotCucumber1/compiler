@@ -34,6 +34,8 @@ struct EnumCaseNode;
 struct EnumDeclNode;
 struct MatchCaseNode;
 struct MatchNode;
+struct BreakNode;
+struct ContinueNode;
 
 class AstVisitor
 {
@@ -107,4 +109,8 @@ public:
 	virtual void Visit(MatchCaseNode& node) = 0;
 
 	virtual void Visit(MatchNode& node) = 0;
+
+	virtual void Visit(BreakNode& node) = 0;
+
+	virtual void Visit(ContinueNode& node) = 0;
 };

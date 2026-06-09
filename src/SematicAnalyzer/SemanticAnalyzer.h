@@ -103,6 +103,10 @@ public:
 
 	void Visit(MatchCaseNode& node) override;
 
+	void Visit(BreakNode& node) override;
+
+	void Visit(ContinueNode& node) override;
+
 private:
 	void EnterScope();
 
@@ -145,6 +149,7 @@ private:
 	std::unordered_map<std::string, SymbolInfo> m_functions;
 	std::string m_currentImplSchema;
 	std::string m_currentImplState;
+	int m_loopDepth = 0;
 
 	SymbolInfo m_currentFunctionSignature{
 		DataType::UNKNOWN,

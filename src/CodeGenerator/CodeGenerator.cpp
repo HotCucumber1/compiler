@@ -277,6 +277,7 @@ void CodeGenerator::Visit(WhileNode& node)
 	const auto endLabel = GenerateLabel("while_end");
 
 	m_chunk.labels[startLabel] = m_chunk.code.size();
+	m_loopStack.push_back({ startLabel, endLabel });
 
 	if (node.condition)
 	{
@@ -299,6 +300,7 @@ void CodeGenerator::Visit(WhileNode& node)
 	m_chunk.pendingJumps.emplace_back(jumpToStartIdx, startLabel);
 
 	m_chunk.labels[endLabel] = m_chunk.code.size();
+	m_loopStack.pop_back();
 }
 
 void CodeGenerator::Visit(ForNode& node)
@@ -310,6 +312,7 @@ void CodeGenerator::Visit(ForNode& node)
 	}
 
 	const auto startLabel = GenerateLabel("for_while_start");
+	const auto incrementLabel = GenerateLabel("for_increment");
 	const auto endLabel = GenerateLabel("for_while_end");
 	m_chunk.labels[startLabel] = m_chunk.code.size();
 
@@ -326,12 +329,17 @@ void CodeGenerator::Visit(ForNode& node)
 	auto jumpToEndIdx = m_chunk.code.size();
 	PushTempAddr();
 	m_chunk.pendingJumps.emplace_back(jumpToEndIdx, endLabel);
+	m_loopStack.push_back({
+		incrementLabel,
+		endLabel,
+	});
 
 	if (node.body)
 	{
 		node.body->Accept(*this);
 	}
 
+	m_chunk.labels[incrementLabel] = m_chunk.code.size();
 	if (node.increment && !IsEmptyExpression(node.increment))
 	{
 		node.increment->Accept(*this);
@@ -343,6 +351,7 @@ void CodeGenerator::Visit(ForNode& node)
 	m_chunk.pendingJumps.emplace_back(jumpToStartIdx, startLabel);
 
 	m_chunk.labels[endLabel] = m_chunk.code.size();
+	m_loopStack.pop_back();
 	ExitScope();
 }
 
@@ -827,6 +836,34 @@ void CodeGenerator::Visit(MatchNode& node)
 
 void CodeGenerator::Visit(MatchCaseNode& node)
 {
+}
+
+void CodeGenerator::Visit(BreakNode& node)
+{
+	if (m_loopStack.empty())
+	{
+		return;
+	}
+
+	PushCode(static_cast<uint8_t>(OpCode::OP_JMP));
+	const auto jumpIdx = m_chunk.code.size();
+	PushTempAddr();
+
+	m_chunk.pendingJumps.emplace_back(jumpIdx, m_loopStack.back().breakTargetLabel);
+}
+
+void CodeGenerator::Visit(ContinueNode& node)
+{
+	if (m_loopStack.empty())
+	{
+		return;
+	}
+
+	PushCode(static_cast<uint8_t>(OpCode::OP_JMP));
+	const auto jumpIdx = m_chunk.code.size();
+	PushTempAddr();
+
+	m_chunk.pendingJumps.emplace_back(jumpIdx, m_loopStack.back().continueTargetLabel);
 }
 
 void CodeGenerator::PushCode(const uint8_t code)

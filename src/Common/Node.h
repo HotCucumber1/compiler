@@ -61,6 +61,8 @@ enum class AstNodeType : int
 	ENUM_DECL,
 	MATCH_CASE,
 	MATCH_EXPR,
+	BREAK,
+	CONTINUE,
 };
 
 static const std::unordered_map<std::string, AstNodeType> AST_NODE_TYPES = {
@@ -114,6 +116,8 @@ static const std::unordered_map<std::string, AstNodeType> AST_NODE_TYPES = {
 	{ "ENUM_DECL", AstNodeType::ENUM_DECL },
 	{ "MATCH_CASE", AstNodeType::MATCH_CASE },
 	{ "MATCH_EXPR", AstNodeType::MATCH_EXPR },
+	{ "BREAK", AstNodeType::BREAK },
+	{ "CONTINUE", AstNodeType::CONTINUE },
 };
 
 using SymbolId = int32_t;
@@ -862,6 +866,32 @@ struct MatchNode final : AstNode
 		: AstNode(id, AstNodeType::MATCH_EXPR)
 		, expr(std::move(e))
 		, cases(std::move(c))
+	{
+	}
+
+	void Accept(AstVisitor& visitor) override
+	{
+		visitor.Visit(*this);
+	}
+};
+
+struct BreakNode final : AstNode
+{
+	explicit BreakNode(const SymbolId id)
+		: AstNode(id, AstNodeType::BREAK)
+	{
+	}
+
+	void Accept(AstVisitor& visitor) override
+	{
+		visitor.Visit(*this);
+	}
+};
+
+struct ContinueNode final : AstNode
+{
+	explicit ContinueNode(const SymbolId id)
+		: AstNode(id, AstNodeType::CONTINUE)
 	{
 	}
 

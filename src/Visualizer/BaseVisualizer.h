@@ -41,4 +41,6 @@ public:
 	void Visit(EnumDeclNode& node) override {}
 	void Visit(MatchNode& node) override {}
 	void Visit(MatchCaseNode& node) override {}
+	void Visit(ContinueNode& node) override {}
+	void Visit(BreakNode& node) override {}
 };

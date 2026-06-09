@@ -24,6 +24,8 @@ SimpleStatement -> MemberAssignment : PASS_THROUGH
 SimpleStatement -> Primary = Expression : ASSIGNMENT
 SimpleStatement -> return Expression : RETURN_STATEMENT
 SimpleStatement -> return : RETURN_STATEMENT
+SimpleStatement -> continue : CONTINUE
+SimpleStatement -> break : BREAK
 
 BlockStatement -> IfStatement : PASS_THROUGH
 BlockStatement -> WhileStatement : PASS_THROUGH
