@@ -21,7 +21,7 @@ Value NativeRead(const std::vector<Value>&)
 
 Value NativeFileRead(const std::vector<Value>& args)
 {
-	const std::string path = AsString(args[0]);
+	const auto path = AsString(args[0]);
 	std::ifstream file(path);
 
 	if (!file.is_open())
@@ -58,7 +58,7 @@ Value NativeFileExists(const std::vector<Value>& args)
 
 Value NativePanic(const std::vector<Value>& args)
 {
-	const std::string message = AsString(args[0]);
+	const auto message = AsString(args[0]);
 	throw std::runtime_error("Program panic: " + message);
 }
 
@@ -83,12 +83,12 @@ Value NativeLen(const std::vector<Value>& args)
 
 Value NativeRandomInt(const std::vector<Value>& args)
 {
-	const int min = AsInt(args[0]);
-	const int max = AsInt(args[1]);
+	const auto min = AsInt(args[0]);
+	const auto max = AsInt(args[1]);
 
 	thread_local std::random_device rd;
 	thread_local std::mt19937 gen(rd());
-	std::uniform_int_distribution<int64_t> distrib(min, max);
+	std::uniform_int_distribution distrib(min, max);
 
 	return distrib(gen);
 }

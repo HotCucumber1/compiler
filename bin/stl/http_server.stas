@@ -1,0 +1,92 @@
+schema HttpServer
+{
+    state Offline() {
+        func start(int port) -> Listening
+    }
+
+    state Listening(int serverHandle) {
+        func accept() -> RequestReceived
+        func stop() -> Offline
+    }
+
+    state RequestReceived(int serverHandle, int reqHandle) {
+        func resume() -> Listening
+        func stop() -> Offline
+    }
+}
+
+schema ServerRequest
+{
+    state Init() {
+        func parse(int reqHandle) -> Parsed
+    }
+
+    state Parsed(int reqHandle, string method, string path, string body) {
+        func respond(int status, string respBody, string contentType) -> Answered
+    }
+
+    state Answered() {}
+}
+
+
+
+impl HttpServer<Offline>
+{
+    public func start(int port) -> HttpServer<Listening> {
+        int handle = http_server_start(port);
+        return new HttpServer<Listening>(handle);
+    }
+}
+
+impl HttpServer<Listening>
+{
+    public func accept() -> HttpServer<RequestReceived> {
+        int reqHandle = http_server_accept(this.serverHandle);
+        return new HttpServer<RequestReceived>(
+            this.serverHandle,
+            reqHandle
+        );
+    }
+
+    public func stop() -> HttpServer<Offline> {
+        http_server_stop(this.serverHandle);
+        return new HttpServer<Offline>();
+    }
+}
+
+impl HttpServer<RequestReceived>
+{
+    public func resume() -> HttpServer<Listening> {
+        return new HttpServer<Listening>(this.serverHandle);
+    }
+
+    public func stop() -> HttpServer<Offline> {
+        http_server_stop(this.serverHandle);
+        return new HttpServer<Offline>();
+    }
+}
+
+
+impl ServerRequest<Init>
+{
+    public func parse(int reqHandle) -> ServerRequest<Parsed> {
+        string m = http_request_method(reqHandle);
+        string p = http_request_path(reqHandle);
+        string b = http_request_body(reqHandle);
+
+        return new ServerRequest<Parsed>(reqHandle, m, p, b);
+    }
+}
+
+impl ServerRequest<Parsed>
+{
+    public func respond(int status, string respBody, string contentType) -> ServerRequest<Answered> {
+        http_request_respond(
+            this.reqHandle,
+            status,
+            respBody,
+            contentType
+        );
+        return new ServerRequest<Answered>();
+    }
+}

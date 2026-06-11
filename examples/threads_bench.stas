@@ -18,7 +18,8 @@ int s2 = burnCPU(2, ITERS);
 
 int endSeq = time();
 print("Sequential time:");
-print(endSeq - startSeq);
+int seqRes = endSeq - startSeq;
+print(seqRes);
 
 
 print("=== Parallel Test ===");
@@ -35,7 +36,8 @@ t2 = t2.join();
 
 int endPar = time();
 print("Parallel time:");
-print(endPar - startPar);
+int parRes = endPar - startPar;
+print(parRes);
 
 print("Sanity check (must be equal):");
 print(s1 + s2);

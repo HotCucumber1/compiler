@@ -1,0 +1,30 @@
+import "../bin/stl/http_server.stas"
+
+HttpServer serverInit = new HttpServer<Offline>();
+HttpServer server = serverInit.start(8080);
+
+print("Stasis Web Server is running on http://localhost:8080");
+
+while (true) {
+    HttpServer activeServer = server.accept();
+
+    ServerRequest reqInit = new ServerRequest<Init>();
+    ServerRequest req = reqInit.parse(activeServer.reqHandle);
+
+    print("--> Incoming request:");
+    print(req.method);
+    print(req.path);
+
+    string responseBody = "";
+    int status = 200;
+
+    if (req.path == "/") {
+        responseBody = "{\"status\": \"ok\", \"message\": \"Welcome to Stasis Server!\"}";
+    } else {
+        status = 404;
+        responseBody = "{\"error\": \"Not Found\"}";
+    }
+
+    ServerRequest doneReq = req.respond(status, responseBody, "application/json");
+    server = activeServer.resume();
+}

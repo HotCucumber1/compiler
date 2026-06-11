@@ -1197,6 +1197,18 @@ void SemanticAnalyzer::RegisterNativeLib()
 	m_functions["http_is_ready"] = { DataType::BOOL, 0, "", false };
 	m_functions["http_await"] = { DataType::VOID, 0, "", false };
 
+	// http server
+	m_functions["http_server_start"] = { DataType::INT, 0, "", false };
+	m_functions["http_server_stop"] = { DataType::VOID, 0, "", false };
+	m_functions["http_server_accept"] = { DataType::INT, 0, "", false };
+
+	// http request handling
+	m_functions["http_request_method"] = { DataType::STRING, 0, "", false };
+	m_functions["http_request_path"] = { DataType::STRING, 0, "", false };
+	m_functions["http_request_header"] = { DataType::STRING, 0, "", false };
+	m_functions["http_request_body"] = { DataType::STRING, 0, "", false };
+	m_functions["http_request_respond"] = { DataType::INT, 0, "", false };
+
 	// threads
 	m_functions["thread_spawn"] = { DataType::INT, 0, "", false };
 	m_functions["thread_join"] = { DataType::UNKNOWN, 0, "", false };

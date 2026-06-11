@@ -434,7 +434,7 @@ void VirtualMachine::OpCall(ExecutionContext& ctx)
 		auto native = AsNativeFunction(callee);
 		if (argCount != native->arity)
 		{
-			throw std::runtime_error("Expected " + std::to_string(native->arity) + " arguments but got " + std::to_string(argCount));
+			throw std::runtime_error(native->name + " error: Expected " + std::to_string(native->arity) + " arguments but got " + std::to_string(argCount));
 		}
 
 		std::vector<Value> args;
@@ -474,7 +474,7 @@ void VirtualMachine::OpCall(ExecutionContext& ctx)
 
 	if (argCount != function->arity)
 	{
-		throw std::runtime_error("Expected " + std::to_string(function->arity) + " arguments but got " + std::to_string(argCount));
+		throw std::runtime_error(function->name->str + " error: Expected " + std::to_string(function->arity) + " arguments but got " + std::to_string(argCount));
 	}
 
 	CallFrame frame(function);
@@ -767,6 +767,15 @@ void VirtualMachine::RegisterNativeLib()
 	RegisterNativeFunction("http_send_async", 1, NativeHttpSendAsync);
 	RegisterNativeFunction("http_is_ready", 1, NativeHttpIsReady);
 	RegisterNativeFunction("http_await", 1, NativeHttpAwait);
+
+	RegisterNativeFunction("http_server_start", 1, NativeHttpServerStart);
+	RegisterNativeFunction("http_server_stop", 1, NativeHttpServerStop);
+	RegisterNativeFunction("http_server_accept", 1, NativeHttpServerAccept);
+	RegisterNativeFunction("http_request_method", 1, NativeHttpRequestMethod);
+	RegisterNativeFunction("http_request_path", 1, NativeHttpRequestPath);
+	RegisterNativeFunction("http_request_header", 2, NativeHttpRequestHeader);
+	RegisterNativeFunction("http_request_body", 1, NativeHttpRequestBody);
+	RegisterNativeFunction("http_request_respond", 4, NativeHttpRequestRespond);
 
 	// threads
 	RegisterNativeFunction("thread_spawn", 2, [this](const std::vector<Value>& args) -> Value {

@@ -1,7 +1,8 @@
 add_library(VM STATIC
         StringPool/StringPool.cpp
         Parser/BytecodeParser.cpp
-        NativeLib/http/http.cpp
+        NativeLib/http/http_client.cpp
+        NativeLib/http/http_server.cpp
         NativeLib/sql/sql.cpp
         NativeLib/base/base.cpp
         VirtualMachine.cpp
@@ -12,7 +13,8 @@ target_include_directories(VM PUBLIC .)
 add_executable(VM_exe
         StringPool/StringPool.cpp
         Parser/BytecodeParser.cpp
-        NativeLib/http/http.cpp
+        NativeLib/http/http_client.cpp
+        NativeLib/http/http_server.cpp
         NativeLib/sql/sql.cpp
         NativeLib/base/base.cpp
         VirtualMachine.cpp
@@ -21,7 +23,8 @@ add_executable(VM_exe
 add_executable(TestVM_Unit
         StringPool/StringPool.cpp
         Parser/BytecodeParser.cpp
-        NativeLib/http/http.cpp
+        NativeLib/http/http_client.cpp
+        NativeLib/http/http_server.cpp
         NativeLib/sql/sql.cpp
         NativeLib/base/base.cpp
         VirtualMachine.cpp
