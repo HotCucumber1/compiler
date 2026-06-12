@@ -1,8 +1,10 @@
-const string a = "Hello";
-let string b = "world";
+//const string a = "Hello";
+//let string b = "world";
+//
+//print(a);
+//print(b);
+//
+//b = "goodbue";
+//print(b);
 
-print(a);
-print(b);
-
-b = "goodbue";
-print(b);
+print(!false);

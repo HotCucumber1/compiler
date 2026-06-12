@@ -135,11 +135,12 @@ SymbolId Parser::GetSymbolId(const Token& token) const
 			terminalName = TOKEN_NAMES.at(token.type);
 			break;
 		default:
-			throw std::runtime_error(
-				"File: " + token.file
-				+ "\nLine: " + std::to_string(token.line)
-				+ "\nPos: " + std::to_string(token.pos)
-				+ "\nUnknown token type in Parser: " + std::to_string(static_cast<int>(token.type)));
+			throw SyntaxError({
+								  token.file,
+								  token.line,
+								  token.pos,
+							  },
+				"Undefined toke: " + token.value);
 		}
 	}
 

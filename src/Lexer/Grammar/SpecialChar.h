@@ -8,27 +8,26 @@ inline TokenType SpecialCharGrammar(Reader& reader)
 	const auto it = SPECIAL_CHARS.find(firstChar);
 
 	reader.GetCh();
-	if (reader.IsEmpty())
+	if (!reader.IsEmpty())
+	{
+		const auto doubledIt = SPECIAL_CHARS_DOUBLE.find(firstChar);
+		if (doubledIt != SPECIAL_CHARS_DOUBLE.end())
+		{
+			const char secondChar = reader.GetNext();
+			const auto secondIt = doubledIt->second.find(secondChar);
+
+			if (secondIt != doubledIt->second.end())
+			{
+				reader.GetCh();
+				return secondIt->second;
+			}
+		}
+	}
+	if (it != SPECIAL_CHARS.end())
 	{
 		return it->second;
 	}
-
-	const auto doubledIt = SPECIAL_CHARS_DOUBLE.find(firstChar);
-	if (doubledIt == SPECIAL_CHARS_DOUBLE.end())
-	{
-		return it->second;
-	}
-
-	const char secondChar = reader.GetNext();
-
-	const auto secondIt = doubledIt->second.find(secondChar);
-	if (secondIt == doubledIt->second.end())
-	{
-		return it->second;
-	}
-
-	reader.GetCh();
-	return secondIt->second;
+	return TokenType::ERROR;
 }
 
 inline bool IsSpecialChar(const char c)
