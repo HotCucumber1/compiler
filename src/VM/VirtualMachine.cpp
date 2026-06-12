@@ -260,10 +260,30 @@ void VirtualMachine::OpMulti(ExecutionContext& ctx)
 
 void VirtualMachine::OpDiv(ExecutionContext& ctx)
 {
-	const auto first = Pop(ctx);
-	const auto second = Pop(ctx);
+	const auto rightVal = Pop(ctx);
+	const auto leftVal = Pop(ctx);
 
-	Push(ctx, second / first);
+	double right = 0.0;
+	double left = 0.0;
+
+	if (std::holds_alternative<int64_t>(rightVal))
+	{
+		right = static_cast<double>(std::get<int64_t>(rightVal));
+	}
+	else if (std::holds_alternative<double>(rightVal))
+	{
+		right = std::get<double>(rightVal);
+	}
+
+	if (std::holds_alternative<int64_t>(leftVal))
+	{
+		left = static_cast<double>(std::get<int64_t>(leftVal));
+	}
+	else if (std::holds_alternative<double>(leftVal))
+	{
+		left = std::get<double>(leftVal);
+	}
+	Push(ctx, left / right);
 }
 
 void VirtualMachine::OpMod(ExecutionContext& ctx)

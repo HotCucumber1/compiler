@@ -1,0 +1,6 @@
+let int a = 5;
+let int b = 4;
+
+let float c = 5 / 0;
+
+print(c);

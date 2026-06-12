@@ -4,7 +4,6 @@
 #include <ranges>
 #include <unordered_set>
 
-void AcceptNode(AstNode& node);
 bool IsTsopMatch(const std::string& left, const std::string& right);
 
 void SemanticAnalyzer::Analyze(const std::shared_ptr<AstNode>& root)
@@ -37,6 +36,25 @@ void SemanticAnalyzer::Visit(BinaryOpNode& node)
 
 	if (node.left && node.right)
 	{
+		if (node.op.value == "/" || node.op.value == "%")
+		{
+			if (const auto literalRight = std::dynamic_pointer_cast<LiteralNode>(node.right))
+			{
+				bool isZero = false;
+				try
+				{
+					isZero = std::stod(literalRight->token.value) == 0.0;
+				}
+				catch (const std::exception&)
+				{
+				}
+				if (isZero)
+				{
+					throw SemanticError(node.location, "Division by zero.");
+				}
+			}
+		}
+
 		const auto leftType = node.left->evaluatedType;
 		const auto rightType = node.right->evaluatedType;
 
@@ -59,7 +77,7 @@ void SemanticAnalyzer::Visit(BinaryOpNode& node)
 		{
 			node.evaluatedType = DataType::BOOL;
 		}
-		else if (isNumericMix)
+		else if (node.op.value == "/" || isNumericMix)
 		{
 			node.evaluatedType = DataType::FLOAT;
 		}
@@ -135,7 +153,10 @@ void SemanticAnalyzer::Visit(VarDeclNode& node)
 
 		if (node.expr->evaluatedType != DataType::UNKNOWN && node.expr->evaluatedType != node.varType)
 		{
-			throw SemanticError(node.location, "Type mismatch for " + node.varName);
+			if (!(node.varType == DataType::FLOAT && node.expr->evaluatedType == DataType::INT))
+			{
+				throw SemanticError(node.location, "Type mismatch for " + node.varName);
+			}
 		}
 		if (node.expr->arrayDepth != node.arrayDepth)
 		{
@@ -273,7 +294,10 @@ void SemanticAnalyzer::Visit(AssignmentNode& node)
 	}
 	else if (node.expr->evaluatedType != DataType::UNKNOWN && node.expr->evaluatedType != varInfoPtr->type)
 	{
-		throw SemanticError(node.location, "Type mismatch in assignment to '" + node.varName + "'");
+		if (!(varInfoPtr->type == DataType::FLOAT && node.expr->evaluatedType == DataType::INT))
+		{
+			throw SemanticError(node.location, "Type mismatch in assignment to '" + node.varName + "'");
+		}
 	}
 
 	if (node.expr->arrayDepth != varInfoPtr->arrayDepth)
@@ -701,9 +725,12 @@ void SemanticAnalyzer::Visit(ReturnNode& node)
 		node.expr->Accept(*this);
 		if (m_currentFunctionSignature.type != DataType::UNKNOWN)
 		{
-			if (node.expr->evaluatedType != m_currentFunctionSignature.type
-				|| node.expr->arrayDepth != m_currentFunctionSignature.arrayDepth
-				|| node.expr->structName != m_currentFunctionSignature.structName)
+			const bool isFloatPromotion = (m_currentFunctionSignature.type == DataType::FLOAT && node.expr->evaluatedType == DataType::INT);
+
+			if (!isFloatPromotion
+				&& (node.expr->evaluatedType != m_currentFunctionSignature.type
+					|| node.expr->arrayDepth != m_currentFunctionSignature.arrayDepth
+					|| node.expr->structName != m_currentFunctionSignature.structName))
 			{
 				auto errorMsg = "Return type mismatch. Expected type " + DATA_TYPE_NAMES.at(m_currentFunctionSignature.type);
 				if (m_currentFunctionSignature.arrayDepth > 0)
