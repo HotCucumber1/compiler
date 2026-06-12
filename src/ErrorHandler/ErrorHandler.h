@@ -39,7 +39,3 @@ public:
 	{
 	}
 };
-
-// throw std::runtime_error(
-// 				"Syntax error (" + std::to_string(currentToken.line) + ':' + std::to_string(currentToken.pos)
-// 				+ "): Unexpected token '" + currentToken.value + "'");

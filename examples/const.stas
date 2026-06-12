@@ -1,0 +1,8 @@
+const string a = "Hello";
+let string b = "world";
+
+print(a);
+print(b);
+
+b = "goodbue";
+print(b);

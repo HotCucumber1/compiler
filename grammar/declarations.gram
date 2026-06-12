@@ -1,3 +1,2 @@
 DeclStatement -> let Type IDENTIFIER = Expression : VAR_DECL
-
-ConstDeclStatement -> const DeclStatement : CONST_DECL
+ConstDeclStatement -> const Type IDENTIFIER = Expression : VAR_DECL

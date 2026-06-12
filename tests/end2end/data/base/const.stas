@@ -1,0 +1,10 @@
+// ERROR: Cannot assign to constant variable 'a'
+
+const string a = "Hello";
+let string b = "world";
+
+print(a);
+print(b);
+
+a = "goodbye";
+print(a);

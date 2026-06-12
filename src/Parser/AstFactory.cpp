@@ -16,7 +16,6 @@ SourceLocation ExtractLocation(const std::vector<std::shared_ptr<AstNode>>& chil
 std::shared_ptr<AstNode> BuildBasicType(AstNodeType type, SymbolId id, const std::vector<std::shared_ptr<AstNode>>& children);
 std::shared_ptr<AstNode> BuildProgram(SymbolId id, const std::vector<std::shared_ptr<AstNode>>& children);
 std::shared_ptr<AstNode> BuildVarDecl(SymbolId id, const std::vector<std::shared_ptr<AstNode>>& children);
-std::shared_ptr<AstNode> BuildConstDecl(SymbolId id, const std::vector<std::shared_ptr<AstNode>>& children);
 std::shared_ptr<AstNode> BuildAssignment(SymbolId id, const std::vector<std::shared_ptr<AstNode>>& children);
 std::shared_ptr<AstNode> BuildBinaryOp(SymbolId id, const std::vector<std::shared_ptr<AstNode>>& children);
 std::shared_ptr<AstNode> BuildUnaryOp(SymbolId id, const std::vector<std::shared_ptr<AstNode>>& children);
@@ -82,10 +81,8 @@ std::shared_ptr<AstNode> AstFactory::CreateNode(
 			result = BuildProgram(id, children);
 			break;
 		case AstNodeType::VAR_DECL:
-			result = BuildVarDecl(id, children);
-			break;
 		case AstNodeType::CONST_DECL:
-			result = BuildConstDecl(id, children);
+			result = BuildVarDecl(id, children);
 			break;
 		case AstNodeType::ASSIGNMENT:
 			result = BuildAssignment(id, children);
@@ -232,6 +229,7 @@ std::shared_ptr<AstNode> BuildVarDecl(SymbolId id, const std::vector<std::shared
 	int typeIdx = 0;
 	int idIdx = 1;
 	int exprIdx = 3;
+	bool isConst = false;
 
 	if (auto term = std::dynamic_pointer_cast<TerminalNode>(children[0]))
 	{
@@ -241,7 +239,15 @@ std::shared_ptr<AstNode> BuildVarDecl(SymbolId id, const std::vector<std::shared
 			idIdx = 2;
 			exprIdx = 4;
 		}
+		else if (term->token.value == "const")
+		{
+			typeIdx = 1;
+			idIdx = 2;
+			exprIdx = 4;
+			isConst = true;
+		}
 	}
+
 	auto [dataType, depth, structName] = ExtractTypeInfo(children[typeIdx]);
 
 	std::shared_ptr<AstNode> val = nullptr;
@@ -250,20 +256,7 @@ std::shared_ptr<AstNode> BuildVarDecl(SymbolId id, const std::vector<std::shared
 		val = children[exprIdx];
 	}
 
-	return std::make_shared<VarDeclNode>(id, GetToken(children[idIdx]).value, val, false, depth, dataType, structName);
-}
-
-std::shared_ptr<AstNode> BuildConstDecl(SymbolId id, const std::vector<std::shared_ptr<AstNode>>& children)
-{
-	if (children.size() >= 2)
-	{
-		if (auto varDecl = std::dynamic_pointer_cast<VarDeclNode>(children[1]))
-		{
-			varDecl->isConst = true;
-			return varDecl;
-		}
-	}
-	throw std::runtime_error("AST Factory error: Invalid CONST_DECL");
+	return std::make_shared<VarDeclNode>(id, GetToken(children[idIdx]).value, val, isConst, depth, dataType, structName);
 }
 
 std::shared_ptr<AstNode> BuildAssignment(SymbolId id, const std::vector<std::shared_ptr<AstNode>>& children)

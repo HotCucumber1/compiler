@@ -208,7 +208,7 @@ void SemanticAnalyzer::Visit(VarAccessNode& node)
 			const auto& varInfo = itSym->at(node.varName);
 			if (varInfo.isMoved)
 			{
-				throw SemanticError(node.location, "Semantic error: Use of moved variable '" + node.varName + "'. Ownership was transferred.");
+				throw SemanticError(node.location, "Use of moved variable '" + node.varName + "'. Ownership was transferred.");
 			}
 
 			node.evaluatedType = varInfo.type;
@@ -348,7 +348,7 @@ void SemanticAnalyzer::Visit(CallNode& node)
 	{
 		if (node.args.size() != 2)
 		{
-			throw SemanticError(node.location, "Semantic error: '" + node.funcName + "' expects exactly 2 arguments.");
+			throw SemanticError(node.location, "'" + node.funcName + "' expects exactly 2 arguments.");
 		}
 
 		const auto& baseArg = node.args[0];
@@ -356,7 +356,7 @@ void SemanticAnalyzer::Visit(CallNode& node)
 
 		if (baseArg->arrayDepth == 0)
 		{
-			throw SemanticError(node.location, "Semantic error: First argument to '" + node.funcName + "' must be an array.");
+			throw SemanticError(node.location, "First argument to '" + node.funcName + "' must be an array.");
 		}
 
 		if (node.funcName == "append")
@@ -873,7 +873,7 @@ void SemanticAnalyzer::Visit(MethodDeclNode& node)
 	}
 	if (transitions.at(node.name).returnState != node.targetState->stateName)
 	{
-		throw SemanticError(node.location, "Semantic error: Method '" + node.name + "' must return state '" + transitions.at(node.name).returnState + "', but returns '" + node.targetState->stateName + "'.");
+		throw SemanticError(node.location, "Method '" + node.name + "' must return state '" + transitions.at(node.name).returnState + "', but returns '" + node.targetState->stateName + "'.");
 	}
 
 	EnterScope();
@@ -940,14 +940,14 @@ void SemanticAnalyzer::Visit(MethodCallNode& node)
 	AcceptNode(node.object);
 	if (node.object->evaluatedType != DataType::INSTANCE || node.object->structName.empty())
 	{
-		throw SemanticError(node.location, "Semantic error: Cannot call method '." + node.methodName + "' on a non-TSOP object or undefined variable.");
+		throw SemanticError(node.location, "Cannot call method '." + node.methodName + "' on a non-TSOP object or undefined variable.");
 	}
 
 	const auto objStructName = node.object->structName;
 	const auto delimPos = objStructName.find('_');
 	if (delimPos == std::string::npos)
 	{
-		throw SemanticError(node.location, "Semantic error: Object '" + objStructName + "' is not a valid TSOP state.");
+		throw SemanticError(node.location, "Object '" + objStructName + "' is not a valid TSOP state.");
 	}
 
 	const auto schema = objStructName.substr(0, delimPos);
@@ -956,7 +956,7 @@ void SemanticAnalyzer::Visit(MethodCallNode& node)
 	const auto& [transitions, fieldCount] = m_schemas.at(schema).states.at(state);
 	if (!transitions.contains(node.methodName))
 	{
-		throw SemanticError(node.location, "Semantic error: Method '" + node.methodName + "' does not exist in state '" + schema + "<" + state + ">'.");
+		throw SemanticError(node.location, "Method '" + node.methodName + "' does not exist in state '" + schema + "<" + state + ">'.");
 	}
 
 	const auto& [returnState, paramTypes, paramStructNames] = transitions.at(node.methodName);
@@ -1098,7 +1098,7 @@ void SemanticAnalyzer::Visit(BreakNode& node)
 {
 	if (m_loopDepth == 0)
 	{
-		throw std::runtime_error("Semantic error: 'break' outside of loop");
+		throw std::runtime_error("'break' outside of loop");
 	}
 }
 
@@ -1106,7 +1106,7 @@ void SemanticAnalyzer::Visit(ContinueNode& node)
 {
 	if (m_loopDepth == 0)
 	{
-		throw std::runtime_error("Semantic error: 'continue' outside of loop");
+		throw std::runtime_error("'continue' outside of loop");
 	}
 }
 
