@@ -13,5 +13,5 @@ func findMagicNumber() : int {
 print(findMagicNumber());
 
 // Убеждаемся, что стек не "поехал" после раннего выхода, вызвав функцию еще раз
-int x = findMagicNumber();
+let int x = findMagicNumber();
 print(x);

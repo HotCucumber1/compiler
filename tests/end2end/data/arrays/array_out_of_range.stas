@@ -1,5 +1,4 @@
 // ERROR: Array index out of range
 
-int[] arr = [1, 2, 3];
-// Попытка прочитать 5-й элемент в массиве из 3-х элементов
+let int[] arr = [1, 2, 3];
 print(arr[5]);

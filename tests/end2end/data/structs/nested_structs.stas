@@ -9,7 +9,7 @@ struct Outer {
     Inner in;
 }
 
-Outer o = Outer { Inner { 100 } };
+let Outer o = Outer { Inner { 100 } };
 print(o.in.val);
 
 o.in.val = 200;

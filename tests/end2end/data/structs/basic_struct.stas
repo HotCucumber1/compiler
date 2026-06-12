@@ -6,7 +6,7 @@ struct Point {
     int y;
 }
 
-Point p = Point { 10, 20 };
+let Point p = Point { 10, 20 };
 print(p.x);
 
 p.y = 50;

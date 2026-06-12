@@ -1,7 +1,7 @@
 // EXPECT: 50
 // EXPECT: 100
 
-int multiplier = 10;
+let int multiplier = 10;
 
 func applyMultiplier(int x) use (int multiplier) : int {
     return x * multiplier;

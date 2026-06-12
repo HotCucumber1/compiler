@@ -9,5 +9,5 @@ schema Door {
     }
 }
 
-Door d = new Door<Closed>();
+let Door d = new Door<Closed>();
 d = d.close();

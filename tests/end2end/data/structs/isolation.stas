@@ -5,8 +5,8 @@ struct Test {
     int a;
 }
 
-int a = 999;
-Test t = Test { 111 };
+let int a = 999;
+let Test t = Test { 111 };
 
 print(t.a);
 print(a);

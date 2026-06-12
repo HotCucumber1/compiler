@@ -2,7 +2,7 @@
 // EXPECT: 2
 // EXPECT: 99
 
-int i = 1;
+let int i = 1;
 while (i < 5) {
     if (i == 3) {
         break;

@@ -4,7 +4,7 @@ struct DataPayload {
     int value;
 }
 
-DataPayload d1 = DataPayload { 42 };
-DataPayload d2 = move d1;
+let DataPayload d1 = DataPayload { 42 };
+let DataPayload d2 = move d1;
 
 print(d2.value);

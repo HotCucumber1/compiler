@@ -2,7 +2,7 @@
 // EXPECT: 300
 // EXPECT: 500
 
-int a = 10;
+let int a = 10;
 
 if (a > 5) {
     print(100);

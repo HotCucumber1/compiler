@@ -2,7 +2,7 @@
 // EXPECT: 30
 // EXPECT: 99
 
-int[] arr = [10, 20, 30];
+let int[] arr = [10, 20, 30];
 print(arr[0]);
 print(arr[2]);
 

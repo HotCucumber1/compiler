@@ -367,7 +367,7 @@ void SemanticAnalyzer::Visit(CallNode& node)
 					|| baseArg->arrayDepth - 1 != extArg->arrayDepth
 					|| baseArg->structName != extArg->structName)
 				{
-					throw SemanticError(node.location, "Semantic error: Type mismatch in 'append'. Second argument must be a single element of the array's type.");
+					throw SemanticError(node.location, "Type mismatch in 'append'. Second argument must be a single element of the array's type.");
 				}
 			}
 		}
@@ -379,7 +379,7 @@ void SemanticAnalyzer::Visit(CallNode& node)
 					|| baseArg->arrayDepth != extArg->arrayDepth
 					|| baseArg->structName != extArg->structName)
 				{
-					throw SemanticError(node.location, "Semantic error: Type mismatch in 'concat'. Both arguments must be arrays of the exact same type and depth.");
+					throw SemanticError(node.location, "Type mismatch in 'concat'. Both arguments must be arrays of the exact same type and depth.");
 				}
 			}
 		}
@@ -399,9 +399,7 @@ void SemanticAnalyzer::Visit(CallNode& node)
 	}
 	else
 	{
-		node.evaluatedType = DataType::UNKNOWN;
-		node.arrayDepth = 0;
-		node.structName = "";
+		throw SemanticError(node.location, "Call to undefined function '" + node.funcName + "'.");
 	}
 }
 

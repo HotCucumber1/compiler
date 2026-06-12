@@ -1,0 +1,21 @@
+import "../bin/stl/map.stas"
+
+let StringMap myMap = map_new();
+
+myMap = map_set(myMap, "language", "Stasis");
+myMap = map_set(myMap, "creator", "Dmitriy");
+myMap = map_set(myMap, "speed", "Fast");
+
+myMap = map_set(myMap, "speed", "Blazing Fast!");
+
+let string lang = map_get(myMap, "language");
+let string speed = map_get(myMap, "speed");
+
+print(lang);
+print(speed);
+
+if (map_contains(myMap, "version")) {
+    print("Version exists!");
+} else {
+    print("No version found.");
+}

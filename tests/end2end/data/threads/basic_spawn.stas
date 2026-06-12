@@ -4,7 +4,7 @@ func threadTask(int x): int {
     return x * 2;
 }
 
-int handle = thread_spawn(threadTask, [50]);
+let int handle = thread_spawn(threadTask, [50]);
 
-int result = thread_join(handle);
+let int result = thread_join(handle);
 print(result);

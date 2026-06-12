@@ -3,7 +3,7 @@
 // EXPECT: 4
 // EXPECT: 99
 
-int i = 0;
+let int i = 0;
 while (i < 4) {
     i = i + 1;
     if (i == 3) {

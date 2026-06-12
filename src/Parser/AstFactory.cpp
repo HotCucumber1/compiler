@@ -52,7 +52,6 @@ std::shared_ptr<AstNode> BuildPassThrough(const std::vector<std::shared_ptr<AstN
 std::shared_ptr<AstNode> BuildContinue(SymbolId id);
 std::shared_ptr<AstNode> BuildBreak(SymbolId id);
 
-
 std::shared_ptr<AstNode> AstFactory::CreateNode(
 	AstNodeType type,
 	const SymbolId id,
@@ -230,9 +229,28 @@ std::shared_ptr<AstNode> BuildProgram(SymbolId id, const std::vector<std::shared
 
 std::shared_ptr<AstNode> BuildVarDecl(SymbolId id, const std::vector<std::shared_ptr<AstNode>>& children)
 {
-	auto [dataType, depth, structName] = ExtractTypeInfo(children[0]);
-	auto val = (children.size() < 4) ? nullptr : children[3];
-	return std::make_shared<VarDeclNode>(id, GetToken(children[1]).value, val, false, depth, dataType, structName);
+	int typeIdx = 0;
+	int idIdx = 1;
+	int exprIdx = 3;
+
+	if (auto term = std::dynamic_pointer_cast<TerminalNode>(children[0]))
+	{
+		if (term->token.value == "let")
+		{
+			typeIdx = 1;
+			idIdx = 2;
+			exprIdx = 4;
+		}
+	}
+	auto [dataType, depth, structName] = ExtractTypeInfo(children[typeIdx]);
+
+	std::shared_ptr<AstNode> val = nullptr;
+	if (children.size() > exprIdx)
+	{
+		val = children[exprIdx];
+	}
+
+	return std::make_shared<VarDeclNode>(id, GetToken(children[idIdx]).value, val, false, depth, dataType, structName);
 }
 
 std::shared_ptr<AstNode> BuildConstDecl(SymbolId id, const std::vector<std::shared_ptr<AstNode>>& children)

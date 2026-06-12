@@ -9,7 +9,7 @@ func processor(HeavyPayload payload): int {
     return payload.data;
 }
 
-HeavyPayload myData = HeavyPayload { 512 };
+let HeavyPayload myData = HeavyPayload { 512 };
 
-int handle = thread_spawn(processor, [move myData]);
+let int handle = thread_spawn(processor, [move myData]);
 print(myData.data);

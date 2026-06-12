@@ -4,8 +4,8 @@
 // EXPECT: 2.5
 // EXPECT: 20
 
-int a = 7;
-float b = 3.5;
+let int a = 7;
+let float b = 3.5;
 
 // int + float
 print(a + b);
@@ -17,8 +17,8 @@ print(a - b);
 print(b * a);
 
 // float / int
-float c = 5.0;
-int d = 2;
+let float c = 5.0;
+let int d = 2;
 print(c / d);
 
 print(10 + 5.0 * 2);

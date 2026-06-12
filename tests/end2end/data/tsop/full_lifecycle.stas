@@ -25,6 +25,6 @@ impl Door<Open> {
     }
 }
 
-Door d = new Door<Closed>();
+let Door d = new Door<Closed>();
 d = d.open();
 d = d.close();

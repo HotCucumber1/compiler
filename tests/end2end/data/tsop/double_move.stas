@@ -5,7 +5,7 @@ struct SecureData
     int secret;
 }
 
-SecureData d1 = SecureData { 777 };
-SecureData d2 = move d1;
+let SecureData d1 = SecureData { 777 };
+let SecureData d2 = move d1;
 
-SecureData d3 = move d1;
+let SecureData d3 = move d1;

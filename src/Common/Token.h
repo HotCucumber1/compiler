@@ -16,11 +16,6 @@ enum class TokenType
 	CONST,
 	VOID,
 
-	VAR,
-	MAIN,
-	END,
-	BEGIN,
-
 	// Base types
 	TYPE_INT,
 	TYPE_FLOAT,
@@ -55,13 +50,7 @@ enum class TokenType
 	RETURN,
 	PUBLIC,
 	PRIVATE,
-	IMPLEMENTS,
-	EXTENDS,
-	THROW,
-	TRY,
-	CATCH,
 	NEW,
-	FINALLY,
 	STRUCT,
 	IMPORT,
 	USE,
@@ -72,6 +61,7 @@ enum class TokenType
 	CASE,
 	MATCH,
 	MOVE,
+	LET,
 
 	// Math
 	OP_PLUS,
@@ -155,13 +145,7 @@ static const std::unordered_map<std::string, TokenType> KEYWORDS = {
 	{ "return", TokenType::RETURN },
 	{ "public", TokenType::PUBLIC },
 	{ "private", TokenType::PRIVATE },
-	{ "implements", TokenType::IMPLEMENTS },
-	{ "extends", TokenType::EXTENDS },
-	{ "throw", TokenType::THROW },
-	{ "try", TokenType::TRY },
-	{ "catch", TokenType::CATCH },
 	{ "new", TokenType::NEW },
-	{ "finally", TokenType::FINALLY },
 	{ "import", TokenType::IMPORT },
 	{ "use", TokenType::USE },
 	{ "schema", TokenType::SCHEMA },
@@ -171,6 +155,7 @@ static const std::unordered_map<std::string, TokenType> KEYWORDS = {
 	{ "case", TokenType::CASE },
 	{ "match", TokenType::MATCH },
 	{ "move", TokenType::MOVE },
+	{ "let", TokenType::LET },
 
 	{ "int", TokenType::TYPE_INT },
 	{ "float", TokenType::TYPE_FLOAT },
@@ -181,11 +166,6 @@ static const std::unordered_map<std::string, TokenType> KEYWORDS = {
 	{ "bool", TokenType::TYPE_BOOL },
 	{ "void", TokenType::VOID },
 	{ "closure", TokenType::TYPE_CLOSURE },
-
-	{ "var", TokenType::VAR },
-	{ "main", TokenType::MAIN },
-	{ "end", TokenType::END },
-	{ "begin", TokenType::BEGIN },
 	{ "struct", TokenType::STRUCT },
 };
 
@@ -297,13 +277,7 @@ const std::unordered_map<TokenType, std::string> TOKEN_NAMES = {
 	{ TokenType::RETURN, "RETURN" },
 	{ TokenType::PUBLIC, "PUBLIC" },
 	{ TokenType::PRIVATE, "PRIVATE" },
-	{ TokenType::IMPLEMENTS, "IMPLEMENTS" },
-	{ TokenType::EXTENDS, "EXTENDS" },
-	{ TokenType::THROW, "THROW" },
-	{ TokenType::TRY, "TRY" },
-	{ TokenType::CATCH, "CATCH" },
 	{ TokenType::NEW, "NEW" },
-	{ TokenType::FINALLY, "FINALLY" },
 	{ TokenType::STRUCT, "STRUCT" },
 	{ TokenType::IMPORT, "IMPORT" },
 	{ TokenType::IMPL, "IMPL" },
@@ -340,11 +314,6 @@ const std::unordered_map<TokenType, std::string> TOKEN_NAMES = {
 
 	// Error
 	{ TokenType::ERROR, "ERROR" },
-
-	{ TokenType::VAR, "VAR" },
-	{ TokenType::MAIN, "MAIN" },
-	{ TokenType::END, "END" },
-	{ TokenType::BEGIN, "BEGIN" },
 };
 
 inline void PrintToken(const Token& token)

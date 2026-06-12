@@ -1,12 +1,12 @@
 // EXPECT: 150
 
-int baseValue = 50;
+let int baseValue = 50;
 
 func worker(int multiplier) use (int baseValue) : int {
     return baseValue * multiplier;
 }
 
-int handle = thread_spawn(worker, [3]);
-int res = thread_join(handle);
+let int handle = thread_spawn(worker, [3]);
+let int res = thread_join(handle);
 
 print(res);

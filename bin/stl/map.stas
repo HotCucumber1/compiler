@@ -1,0 +1,57 @@
+struct KeyValue
+{
+    string key;
+    string value;
+}
+
+struct StringMap
+{
+    KeyValue[] entries;
+}
+
+func map_new(): StringMap {
+    let KeyValue[] emptyArr = [];
+    return StringMap{
+        emptyArr
+    };
+}
+
+func map_set(StringMap m, string k, string v): StringMap {
+    let int length = len(m.entries);
+    let bool found = false;
+
+    for (int i = 0; i < length; i = i + 1) {
+        if (m.entries[i].key == k) {
+            m.entries[i].value = v;
+            found = true;
+            break;
+        }
+    }
+    if (not found) {
+        let KeyValue newPair = KeyValue { k, v };
+        m.entries = append(m.entries, newPair);
+    }
+    return m;
+}
+
+func map_get(StringMap m, string k): string {
+    let int length = len(m.entries);
+
+    for (int i = 0; i < length; i = i + 1) {
+        if (m.entries[i].key == k) {
+            return m.entries[i].value;
+        }
+    }
+    return "";
+}
+
+func map_contains(StringMap m, string k): bool {
+    let int length = len(m.entries);
+
+    for (int i = 0; i < length; i = i + 1) {
+        if (m.entries[i].key == k) {
+            return true;
+        }
+    }
+    return false;
+}
