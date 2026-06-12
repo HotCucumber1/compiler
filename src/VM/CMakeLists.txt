@@ -4,6 +4,7 @@ add_library(VM STATIC
         NativeLib/http/http_client.cpp
         NativeLib/http/http_server.cpp
         NativeLib/sql/sql.cpp
+        NativeLib/json/json.cpp
         NativeLib/base/base.cpp
         VirtualMachine.cpp
 )
@@ -16,6 +17,7 @@ add_executable(VM_exe
         NativeLib/http/http_client.cpp
         NativeLib/http/http_server.cpp
         NativeLib/sql/sql.cpp
+        NativeLib/json/json.cpp
         NativeLib/base/base.cpp
         VirtualMachine.cpp
         main.cpp)
@@ -26,6 +28,7 @@ add_executable(TestVM_Unit
         NativeLib/http/http_client.cpp
         NativeLib/http/http_server.cpp
         NativeLib/sql/sql.cpp
+        NativeLib/json/json.cpp
         NativeLib/base/base.cpp
         VirtualMachine.cpp
         tests/Unit.cpp

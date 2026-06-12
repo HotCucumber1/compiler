@@ -1,4 +1,5 @@
 #include "VirtualMachine.h"
+#include "NativeLib/json/json.h"
 #include "NativeLib/NativeLib.h"
 #include "NativeLib/threads/thread.h"
 #include "OpCode.h"
@@ -796,6 +797,10 @@ void VirtualMachine::RegisterNativeLib()
 	RegisterNativeFunction("http_request_header", 2, NativeHttpRequestHeader);
 	RegisterNativeFunction("http_request_body", 1, NativeHttpRequestBody);
 	RegisterNativeFunction("http_request_respond", 4, NativeHttpRequestRespond);
+
+	// json
+	RegisterNativeFunction("native_json_to_map", 1, NativeJsonToMap);
+	RegisterNativeFunction("native_map_to_json", 1, NativeMapToJson);
 
 	// threads
 	RegisterNativeFunction("thread_spawn", 2, [this](const std::vector<Value>& args) -> Value {

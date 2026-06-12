@@ -1237,6 +1237,10 @@ void SemanticAnalyzer::RegisterNativeLib()
 	// threads
 	m_functions["thread_spawn"] = { DataType::INT, 0, "", false };
 	m_functions["thread_join"] = { DataType::UNKNOWN, 0, "", false };
+
+	// json
+	m_functions["native_json_to_map"] = { DataType::INSTANCE, 0, "StringMap", false };
+	m_functions["native_map_to_json"] = { DataType::STRING, 0, "", false };
 }
 
 bool IsTsopMatch(const std::string& left, const std::string& right)

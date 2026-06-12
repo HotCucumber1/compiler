@@ -1,0 +1,14 @@
+import "../bin/stl/json.stas"
+
+let JsonConverter converter = new JsonConverter<Idle>();
+
+let string rawJson = "{\"name\": \"Stasis\", \"version\": \"1.0\"}";
+let JsonConverter parsedState = converter.parse(rawJson);
+
+let StringMap myMap = parsedState.resultMap;
+print(map_get(myMap, "name"));
+
+let JsonConverter jsonState = parsedState
+    .reset()
+    .stringify(myMap);
+print(jsonState.resultJson);

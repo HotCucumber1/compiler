@@ -1,0 +1,44 @@
+import "./map.stas"
+
+schema JsonConverter
+{
+    state Idle() {
+        func parse(string jsonStr) -> MapReady
+        func stringify(StringMap map) -> JsonReady
+    }
+
+    state MapReady(StringMap resultMap) {
+        func reset() -> Idle
+    }
+
+    state JsonReady(string resultJson) {
+        func reset() -> Idle
+    }
+}
+
+impl JsonConverter<Idle>
+{
+    public func parse(string jsonStr) -> JsonConverter<MapReady> {
+        let StringMap m = native_json_to_map(jsonStr);
+        return new JsonConverter<MapReady>(m);
+    }
+
+    public func stringify(StringMap m) -> JsonConverter<JsonReady> {
+        let string jsonStr = native_map_to_json(m);
+        return new JsonConverter<JsonReady>(jsonStr);
+    }
+}
+
+impl JsonConverter<MapReady>
+{
+    public func reset() -> JsonConverter<Idle> {
+        return new JsonConverter<Idle>();
+    }
+}
+
+impl JsonConverter<JsonReady>
+{
+    public func reset() -> JsonConverter<Idle> {
+        return new JsonConverter<Idle>();
+    }
+}
