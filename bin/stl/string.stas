@@ -1,4 +1,4 @@
-schema String
+schema StringBuilder
 {
     state Ready(string text) {
         func append(string str) -> Ready
@@ -6,7 +6,7 @@ schema String
     }
 }
 
-impl String<Ready>
+impl StringBuilder<Ready>
 {
     public func append(string str) -> StringBuilder<Ready> {
         return new StringBuilder<Ready>(this.text + str);

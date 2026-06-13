@@ -253,6 +253,13 @@
             "structName": "",
             "type": "INT"
         },
+        "time": {
+            "arrayDepth": 0,
+            "isConst": false,
+            "isMoved": false,
+            "structName": "",
+            "type": "INT"
+        },
         "to_int": {
             "arrayDepth": 0,
             "isConst": false,

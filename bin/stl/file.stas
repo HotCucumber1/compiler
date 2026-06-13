@@ -18,7 +18,7 @@ impl File<Closed>
         if (not file_exists(this.path)) {
             panic("Failed to open file");
         }
-        string text = file_read(this.path);
+        let string text = file_read(this.path);
         return new File<Opened>(this.path, text);
     }
 }
@@ -34,7 +34,7 @@ impl File<Opened>
     }
 
     public func save() -> File<Opened> {
-        bool success = file_write(this.path, this.content);
+        let bool success = file_write(this.path, this.content);
         return new File<Opened>(this.path, this.content);
     }
 
