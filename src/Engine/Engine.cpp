@@ -206,7 +206,7 @@ void Engine::ResolveImports(
 				std::cout << "      -> Resolving import: " << importNode->filePath << std::endl;
 			}
 
-			std::string importedSource = ReadFile(importPathStr);
+			const auto importedSource = ReadFile(importPathStr);
 			auto importedAst = BuildAST(importedSource, importPathStr, slrBuilder);
 			ResolveImports(parsedFiles, importStack, importedAst, slrBuilder, importPath.parent_path());
 

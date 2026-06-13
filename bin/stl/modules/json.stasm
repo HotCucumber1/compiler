@@ -1,0 +1,430 @@
+{
+    "enums": {},
+    "functions": {
+        "ai_parse_response": {
+            "arrayDepth": 0,
+            "isConst": false,
+            "isMoved": false,
+            "structName": "",
+            "type": "STRING"
+        },
+        "append": {
+            "arrayDepth": 1,
+            "isConst": false,
+            "isMoved": false,
+            "structName": "",
+            "type": "UNKNOWN"
+        },
+        "concat": {
+            "arrayDepth": 1,
+            "isConst": false,
+            "isMoved": false,
+            "structName": "",
+            "type": "UNKNOWN"
+        },
+        "db_connect": {
+            "arrayDepth": 0,
+            "isConst": false,
+            "isMoved": false,
+            "structName": "",
+            "type": "INT"
+        },
+        "db_disconnect": {
+            "arrayDepth": 0,
+            "isConst": false,
+            "isMoved": false,
+            "structName": "",
+            "type": "VOID"
+        },
+        "db_execute": {
+            "arrayDepth": 2,
+            "isConst": false,
+            "isMoved": false,
+            "structName": "",
+            "type": "STRING"
+        },
+        "file_exists": {
+            "arrayDepth": 0,
+            "isConst": false,
+            "isMoved": false,
+            "structName": "",
+            "type": "BOOL"
+        },
+        "file_read": {
+            "arrayDepth": 0,
+            "isConst": false,
+            "isMoved": false,
+            "structName": "",
+            "type": "STRING"
+        },
+        "file_write": {
+            "arrayDepth": 0,
+            "isConst": false,
+            "isMoved": false,
+            "structName": "",
+            "type": "BOOL"
+        },
+        "http_await": {
+            "arrayDepth": 0,
+            "isConst": false,
+            "isMoved": false,
+            "structName": "",
+            "type": "VOID"
+        },
+        "http_cleanup": {
+            "arrayDepth": 0,
+            "isConst": false,
+            "isMoved": false,
+            "structName": "",
+            "type": "VOID"
+        },
+        "http_init": {
+            "arrayDepth": 0,
+            "isConst": false,
+            "isMoved": false,
+            "structName": "",
+            "type": "INT"
+        },
+        "http_is_ready": {
+            "arrayDepth": 0,
+            "isConst": false,
+            "isMoved": false,
+            "structName": "",
+            "type": "BOOL"
+        },
+        "http_request_body": {
+            "arrayDepth": 0,
+            "isConst": false,
+            "isMoved": false,
+            "structName": "",
+            "type": "STRING"
+        },
+        "http_request_header": {
+            "arrayDepth": 0,
+            "isConst": false,
+            "isMoved": false,
+            "structName": "",
+            "type": "STRING"
+        },
+        "http_request_method": {
+            "arrayDepth": 0,
+            "isConst": false,
+            "isMoved": false,
+            "structName": "",
+            "type": "STRING"
+        },
+        "http_request_path": {
+            "arrayDepth": 0,
+            "isConst": false,
+            "isMoved": false,
+            "structName": "",
+            "type": "STRING"
+        },
+        "http_request_respond": {
+            "arrayDepth": 0,
+            "isConst": false,
+            "isMoved": false,
+            "structName": "",
+            "type": "INT"
+        },
+        "http_response": {
+            "arrayDepth": 0,
+            "isConst": false,
+            "isMoved": false,
+            "structName": "",
+            "type": "STRING"
+        },
+        "http_send": {
+            "arrayDepth": 0,
+            "isConst": false,
+            "isMoved": false,
+            "structName": "",
+            "type": "VOID"
+        },
+        "http_send_async": {
+            "arrayDepth": 0,
+            "isConst": false,
+            "isMoved": false,
+            "structName": "",
+            "type": "VOID"
+        },
+        "http_server_accept": {
+            "arrayDepth": 0,
+            "isConst": false,
+            "isMoved": false,
+            "structName": "",
+            "type": "INT"
+        },
+        "http_server_start": {
+            "arrayDepth": 0,
+            "isConst": false,
+            "isMoved": false,
+            "structName": "",
+            "type": "INT"
+        },
+        "http_server_stop": {
+            "arrayDepth": 0,
+            "isConst": false,
+            "isMoved": false,
+            "structName": "",
+            "type": "VOID"
+        },
+        "http_setopt": {
+            "arrayDepth": 0,
+            "isConst": false,
+            "isMoved": false,
+            "structName": "",
+            "type": "VOID"
+        },
+        "http_status": {
+            "arrayDepth": 0,
+            "isConst": false,
+            "isMoved": false,
+            "structName": "",
+            "type": "INT"
+        },
+        "json_escape": {
+            "arrayDepth": 0,
+            "isConst": false,
+            "isMoved": false,
+            "structName": "",
+            "type": "STRING"
+        },
+        "len": {
+            "arrayDepth": 0,
+            "isConst": false,
+            "isMoved": false,
+            "structName": "",
+            "type": "INT"
+        },
+        "map_contains": {
+            "arrayDepth": 0,
+            "isConst": false,
+            "isMoved": false,
+            "structName": "",
+            "type": "BOOL"
+        },
+        "map_get": {
+            "arrayDepth": 0,
+            "isConst": false,
+            "isMoved": false,
+            "structName": "",
+            "type": "STRING"
+        },
+        "map_new": {
+            "arrayDepth": 0,
+            "isConst": false,
+            "isMoved": false,
+            "structName": "StringMap",
+            "type": "INSTANCE"
+        },
+        "map_set": {
+            "arrayDepth": 0,
+            "isConst": false,
+            "isMoved": false,
+            "structName": "StringMap",
+            "type": "INSTANCE"
+        },
+        "native_json_to_map": {
+            "arrayDepth": 0,
+            "isConst": false,
+            "isMoved": false,
+            "structName": "StringMap",
+            "type": "INSTANCE"
+        },
+        "native_map_to_json": {
+            "arrayDepth": 0,
+            "isConst": false,
+            "isMoved": false,
+            "structName": "",
+            "type": "STRING"
+        },
+        "panic": {
+            "arrayDepth": 0,
+            "isConst": false,
+            "isMoved": false,
+            "structName": "",
+            "type": "VOID"
+        },
+        "print": {
+            "arrayDepth": 0,
+            "isConst": false,
+            "isMoved": false,
+            "structName": "",
+            "type": "VOID"
+        },
+        "read": {
+            "arrayDepth": 0,
+            "isConst": false,
+            "isMoved": false,
+            "structName": "",
+            "type": "STRING"
+        },
+        "sql_escape": {
+            "arrayDepth": 0,
+            "isConst": false,
+            "isMoved": false,
+            "structName": "",
+            "type": "STRING"
+        },
+        "thread_join": {
+            "arrayDepth": 0,
+            "isConst": false,
+            "isMoved": false,
+            "structName": "",
+            "type": "UNKNOWN"
+        },
+        "thread_spawn": {
+            "arrayDepth": 0,
+            "isConst": false,
+            "isMoved": false,
+            "structName": "",
+            "type": "INT"
+        },
+        "time": {
+            "arrayDepth": 0,
+            "isConst": false,
+            "isMoved": false,
+            "structName": "",
+            "type": "INT"
+        },
+        "to_int": {
+            "arrayDepth": 0,
+            "isConst": false,
+            "isMoved": false,
+            "structName": "",
+            "type": "INT"
+        },
+        "to_str": {
+            "arrayDepth": 0,
+            "isConst": false,
+            "isMoved": false,
+            "structName": "",
+            "type": "STRING"
+        }
+    },
+    "schemas": {
+        "JsonConverter": {
+            "states": {
+                "Idle": {
+                    "fieldCount": 0,
+                    "transitions": {
+                        "parse": {
+                            "paramStructNames": [
+                                ""
+                            ],
+                            "paramTypes": [
+                                "STRING"
+                            ],
+                            "returnState": "MapReady"
+                        },
+                        "stringify": {
+                            "paramStructNames": [
+                                "StringMap"
+                            ],
+                            "paramTypes": [
+                                "INSTANCE"
+                            ],
+                            "returnState": "JsonReady"
+                        }
+                    }
+                },
+                "JsonReady": {
+                    "fieldCount": 1,
+                    "transitions": {
+                        "reset": {
+                            "paramStructNames": [],
+                            "paramTypes": [],
+                            "returnState": "Idle"
+                        }
+                    }
+                },
+                "MapReady": {
+                    "fieldCount": 1,
+                    "transitions": {
+                        "reset": {
+                            "paramStructNames": [],
+                            "paramTypes": [],
+                            "returnState": "Idle"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "structs": {
+        "JsonConverter_Idle": {
+            "fieldCount": 0,
+            "fieldTypes": {},
+            "orderedFields": []
+        },
+        "JsonConverter_JsonReady": {
+            "fieldCount": 1,
+            "fieldTypes": {
+                "resultJson": {
+                    "arrayDepth": 0,
+                    "isConst": false,
+                    "isMoved": false,
+                    "structName": "",
+                    "type": "STRING"
+                }
+            },
+            "orderedFields": [
+                "resultJson"
+            ]
+        },
+        "JsonConverter_MapReady": {
+            "fieldCount": 1,
+            "fieldTypes": {
+                "resultMap": {
+                    "arrayDepth": 0,
+                    "isConst": false,
+                    "isMoved": false,
+                    "structName": "StringMap",
+                    "type": "INSTANCE"
+                }
+            },
+            "orderedFields": [
+                "resultMap"
+            ]
+        },
+        "KeyValue": {
+            "fieldCount": 2,
+            "fieldTypes": {
+                "key": {
+                    "arrayDepth": 0,
+                    "isConst": false,
+                    "isMoved": false,
+                    "structName": "",
+                    "type": "STRING"
+                },
+                "value": {
+                    "arrayDepth": 0,
+                    "isConst": false,
+                    "isMoved": false,
+                    "structName": "",
+                    "type": "STRING"
+                }
+            },
+            "orderedFields": [
+                "key",
+                "value"
+            ]
+        },
+        "StringMap": {
+            "fieldCount": 1,
+            "fieldTypes": {
+                "entries": {
+                    "arrayDepth": 1,
+                    "isConst": false,
+                    "isMoved": false,
+                    "structName": "KeyValue",
+                    "type": "INSTANCE"
+                }
+            },
+            "orderedFields": [
+                "entries"
+            ]
+        }
+    }
+}
