@@ -14,7 +14,7 @@ schema Thread
 impl Thread<Idle>
 {
     public func spawn(closure target, int[] args) -> Thread<Running> {
-        int handle = thread_spawn(target, args);
+        let int handle = thread_spawn(target, args);
         return new Thread<Running>(handle);
     }
 }
@@ -22,7 +22,7 @@ impl Thread<Idle>
 impl Thread<Running>
 {
     public func join() -> Thread<Completed> {
-        int res = thread_join(this.handle);
+        let int res = thread_join(this.handle);
         return new Thread<Completed>(res);
     }
 }

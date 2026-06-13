@@ -5,6 +5,7 @@ struct Params
 	bool printSchema = false;
 	bool dumpSchema = false;
 	bool buildModule = false;
+	std::string moduleOutputDir;
 	std::string dumpFilename;
 	std::string sourceFilePath;
 };
@@ -18,6 +19,7 @@ int main(const int argc, char* argv[])
 		const auto [printSchema,
 			dumpSchema,
 			buildModule,
+			moduleOutputDir,
 			dumpFilename,
 			sourceFilePath]
 			= ParseParams(argc, argv);
@@ -29,6 +31,7 @@ int main(const int argc, char* argv[])
 				dumpSchema,
 				buildModule,
 				dumpFilename,
+				moduleOutputDir,
 			},
 			false,
 			true);
@@ -56,11 +59,7 @@ int main(const int argc, char* argv[])
 
 Params ParseParams(const int argc, char* argv[])
 {
-	bool printSchema = false;
-	bool dumpSchema = false;
-	bool buildModule = false;
-	std::string dumpFilename;
-	std::string sourceFilePath;
+	Params params;
 
 	for (int i = 1; i < argc; ++i)
 	{
@@ -68,11 +67,18 @@ Params ParseParams(const int argc, char* argv[])
 
 		if (arg == "--print-schema")
 		{
-			printSchema = true;
+			params.printSchema = true;
 		}
 		else if (arg == "--build-module")
 		{
-			buildModule = true;
+			if (i + 1 >= argc)
+			{
+				throw std::runtime_error(
+					"Критическая ошибка: Флаг --build-module требует указания директории.\n"
+					"Использование: --build-module <path/to/output_dir>");
+			}
+			params.moduleOutputDir = argv[++i];
+			params.buildModule = true;
 		}
 		else if (arg == "--dump-schema")
 		{
@@ -82,37 +88,30 @@ Params ParseParams(const int argc, char* argv[])
 					"Критическая ошибка: Флаг --dump-schema требует указания имени файла.\n"
 					"Использование: --dump-schema <filename.md>");
 			}
+			params.dumpFilename = argv[++i];
 
-			dumpFilename = argv[++i];
-
-			if (dumpFilename.length() < 3
-				|| dumpFilename.substr(dumpFilename.length() - 3) != ".md")
+			if (params.dumpFilename.length() < 3
+				|| params.dumpFilename.substr(params.dumpFilename.length() - 3) != ".md")
 			{
-				throw std::runtime_error("Ошибка валидации: Файл '" + dumpFilename + "' должен иметь расширение .md");
+				throw std::runtime_error("Ошибка валидации: Файл '" + params.dumpFilename + "' должен иметь расширение .md");
 			}
-			dumpSchema = true;
+			params.dumpSchema = true;
 		}
 		else
 		{
-			sourceFilePath = arg;
+			params.sourceFilePath = arg;
 		}
 	}
 
-	if (sourceFilePath.empty())
+	if (params.sourceFilePath.empty())
 	{
 		throw std::runtime_error(
-			"Использование: " + std::string(argv[0]) + " [флаги] <source_file.my_lang>\n"
+			"Использование: " + std::string(argv[0]) + " [флаги] <source_file.stas>\n"
 													   "Доступные флаги:\n"
-													   "  --print-schema             Вывести схему конечного автомата в консоль\n"
-													   "  --build-module             Скомпилировать файл как модуль (.stasm и .stasbc)\n"
-													   "  --dump-schema <file.md>    Сохранить схему в формате Mermaid (.md)\n");
+													   "  --print-schema                     Вывести схему конечного автомата в консоль\n"
+													   "  --dump-schema <file.md>            Сохранить схему в формате Mermaid (.md)\n"
+													   "  --build-module <output_dir>        Скомпилировать файл как модуль и сохранить в указанную директорию\n");
 	}
 
-	return {
-		printSchema,
-		dumpSchema,
-		buildModule,
-		dumpFilename,
-		sourceFilePath,
-	};
+	return params;
 }

@@ -12,6 +12,7 @@ struct CompileFlags
 	bool dumpSchema;
 	bool buildModule;
 	std::string dumpFile;
+	std::string moduleOutputDir;
 };
 
 class Engine

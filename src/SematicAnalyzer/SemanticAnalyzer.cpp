@@ -518,6 +518,7 @@ void SemanticAnalyzer::Visit(StructDeclNode& node)
 				varDecl->structName,
 				varDecl->isConst
 			};
+			signature.orderedFields.push_back(varDecl->varName);
 			signature.fieldCount++;
 		}
 		AcceptNode(field);
@@ -852,6 +853,7 @@ void SemanticAnalyzer::Visit(SchemaDeclNode& node)
 						varDecl->structName,
 						varDecl->isConst
 					};
+					structSig.orderedFields.push_back(varDecl->varName);
 				}
 			}
 			m_structSignatures[node.name + "_" + state->name] = std::move(structSig);
@@ -1206,6 +1208,7 @@ void SemanticAnalyzer::AcceptNode(const std::shared_ptr<AstNode>& node)
 void SemanticAnalyzer::RegisterNativeLib()
 {
 	// base
+	m_functions["time"] = { DataType::INT, 0, "", false };
 	m_functions["len"] = { DataType::INT, 0, "", false };
 	m_functions["to_int"] = { DataType::INT, 0, "", false };
 	m_functions["to_str"] = { DataType::STRING, 0, "", false };

@@ -82,22 +82,27 @@ void Engine::Compile()
 
 	if (m_flags.buildModule)
 	{
-		auto basePath = std::filesystem::path(m_exePath);
+		auto sourcePath = std::filesystem::path(m_exePath);
+		auto outDir = std::filesystem::path(m_flags.moduleOutputDir);
+		if (!std::filesystem::exists(outDir))
+		{
+			std::filesystem::create_directories(outDir);
+		}
 
-		auto stasmPath = basePath;
+		auto stasmPath = outDir / sourcePath.filename();
 		stasmPath.replace_extension(".stasm");
-		analyser.ExportModuleMetadata(stasmPath);
+		analyser.ExportModuleMetadata(stasmPath.string());
 
-		auto stasbPath = basePath;
+		auto stasbPath = outDir / sourcePath.filename();
 		stasbPath.replace_extension(".stasbc");
-		generator.ExportModuleBytecode(stasbPath);
+		generator.ExportModuleBytecode(stasbPath.string());
 
 		if (m_printLogs)
 		{
 			std::cout << "[5/5] Module successfully built!\n      Metadata: "
-					  << stasmPath
-					  << "\n      Bytecode: " << stasbPath << std::endl;
+					  << stasmPath.string() << "\n      Bytecode: " << stasbPath.string() << std::endl;
 		}
+
 		return;
 	}
 	if (m_printLogs)

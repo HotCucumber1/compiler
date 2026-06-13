@@ -628,17 +628,13 @@ void CodeGenerator::Visit(ImportNode& node)
 
 		nlohmann::json jsonData;
 		in >> jsonData;
+
 		auto structs = jsonData["structs"];
 		for (auto it = structs.begin(); it != structs.end(); ++it)
 		{
 			std::string structName = it.key();
-			std::vector<std::string> fieldNames;
 
-			auto fieldTypes = it.value()["fieldTypes"];
-			for (auto fIt = fieldTypes.begin(); fIt != fieldTypes.end(); ++fIt)
-			{
-				fieldNames.push_back(fIt.key());
-			}
+			const auto fieldNames = it.value()["orderedFields"].get<std::vector<std::string>>();
 			m_structs[structName] = fieldNames;
 		}
 	}

@@ -144,8 +144,9 @@ private:
 	struct StructSignature
 	{
 		std::unordered_map<std::string, SymbolInfo> fieldTypes;
+		std::vector<std::string> orderedFields;
 		size_t fieldCount = 0;
-		NLOHMANN_DEFINE_TYPE_INTRUSIVE(StructSignature, fieldCount, fieldTypes);
+		NLOHMANN_DEFINE_TYPE_INTRUSIVE(StructSignature, fieldCount, orderedFields, fieldTypes)
 	};
 
 	struct EnumSignature

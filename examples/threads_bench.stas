@@ -1,32 +1,36 @@
-import "../bin/stl/thread.stas"
+import "../bin/stl/modules/thread.stasm"
 
-func burnCPU(int id, int iterations) : int {
-    int sum = 0;
+func burnCPU(int id, int iterations): float {
+    let float sum = 0;
     for (int i = 0; i < iterations; i = i + 1) {
         sum = sum + (i * 2) / 2;
     }
     return sum;
 }
 
-int ITERS = 1000000;
+
+
+const int ITERS = 1000000;
 
 print("=== Sequential Test ===");
-int startSeq = time();
+const int startSeq = time();
 
-int s1 = burnCPU(1, ITERS);
-int s2 = burnCPU(2, ITERS);
+const float s1 = burnCPU(1, ITERS);
+const float s2 = burnCPU(2, ITERS);
 
-int endSeq = time();
+const int endSeq = time();
 print("Sequential time:");
-int seqRes = endSeq - startSeq;
+const int seqRes = endSeq - startSeq;
 print(seqRes);
 
 
-print("=== Parallel Test ===");
-int startPar = time();
 
-Thread t1 = new Thread<Idle>();
-Thread t2 = new Thread<Idle>();
+
+print("=== Parallel Test ===");
+const int startPar = time();
+
+let Thread t1 = new Thread<Idle>();
+let Thread t2 = new Thread<Idle>();
 
 t1 = t1.spawn(burnCPU, [1, ITERS]);
 t2 = t2.spawn(burnCPU, [2, ITERS]);
@@ -34,11 +38,14 @@ t2 = t2.spawn(burnCPU, [2, ITERS]);
 t1 = t1.join();
 t2 = t2.join();
 
-int endPar = time();
+const int endPar = time();
 print("Parallel time:");
-int parRes = endPar - startPar;
+const int parRes = endPar - startPar;
 print(parRes);
 
 print("Sanity check (must be equal):");
 print(s1 + s2);
 print(t1.result + t2.result);
+
+print("Speed up: ");
+print(seqRes / parRes);
