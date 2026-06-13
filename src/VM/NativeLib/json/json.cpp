@@ -80,12 +80,25 @@ Value NativeMapToJson(const std::vector<Value>& args)
 			const auto kvInstance = AsInstance(elem);
 			if (kvInstance->fields.contains("key") && kvInstance->fields.contains("value"))
 			{
-				std::string k = AsString(kvInstance->fields["key"]);
-				std::string v = AsString(kvInstance->fields["value"]);
+				const auto k = AsString(kvInstance->fields["key"]);
+				const auto v = AsString(kvInstance->fields["value"]);
 				jsonObj[k] = v;
 			}
 		}
 	}
 
 	return MakeString(jsonObj.dump());
+}
+
+Value NativeJsonEscape(const std::vector<Value>& args)
+{
+	const auto input = AsString(args[0]);
+	const nlohmann::json j = input;
+	auto dumped = j.dump();
+
+	if (dumped.length() >= 2)
+	{
+		dumped = dumped.substr(1, dumped.length() - 2);
+	}
+	return MakeString(dumped);
 }

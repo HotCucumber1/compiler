@@ -74,3 +74,28 @@ Value NativeDBDisconnect(const std::vector<Value>& args)
 	mysql_close(conn);
 	return Value{};
 }
+
+Value NativeSqlEscape(const std::vector<Value>& args)
+{
+	const auto input = AsString(args[0]);
+	std::string output;
+	output.reserve(input.length() + 10);
+
+	for (char c : input)
+	{
+		if (c == '\'')
+		{
+			output += "''";
+		}
+		else if (c == '\\')
+		{
+			output += "\\\\";
+		}
+		else
+		{
+			output += c;
+		}
+	}
+
+	return MakeString(output);
+}

@@ -13,8 +13,8 @@ schema Database
 impl Database<Disconnected>
 {
     public func connect() -> Database<Connected> {
-        int handle = db_connect(this.host, this.user, this.pass, this.dbName);
-        string[][] emptyResult = [[]];
+        let int handle = db_connect(this.host, this.user, this.pass, this.dbName);
+        let string[][] emptyResult = [[]];
         return new Database<Connected>(this.host, this.user, this.pass, this.dbName, handle, emptyResult);
     }
 }
@@ -22,7 +22,7 @@ impl Database<Disconnected>
 impl Database<Connected>
 {
     public func execute(string query) -> Database<Connected> {
-        string[][] rows = db_execute(this.handle, query);
+        let string[][] rows = db_execute(this.handle, query);
         return new Database<Connected>(this.host, this.user, this.pass, this.dbName, this.handle, rows);
     }
 

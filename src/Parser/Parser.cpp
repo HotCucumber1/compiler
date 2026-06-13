@@ -140,7 +140,7 @@ SymbolId Parser::GetSymbolId(const Token& token) const
 								  token.line,
 								  token.pos,
 							  },
-				"Undefined toke: " + token.value);
+				"Undefined token: " + token.value);
 		}
 	}
 

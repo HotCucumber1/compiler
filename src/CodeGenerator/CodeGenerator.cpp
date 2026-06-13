@@ -144,7 +144,7 @@ void CodeGenerator::Visit(VarDeclNode& node)
 {
 	if (m_scopes.back().contains(node.varName))
 	{
-		throw std::runtime_error("Variable already declared: " + node.varName);
+		throw SemanticError(node.location, "Variable already declared: " + node.varName);
 	}
 
 	const auto idx = m_nextLocalIdx++;

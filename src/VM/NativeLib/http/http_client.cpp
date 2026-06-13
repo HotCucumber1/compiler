@@ -13,12 +13,14 @@ struct HttpContext
 	long statusCode;
 	std::atomic<bool> isDone = false;
 	std::thread worker;
+	char errorBuffer[CURL_ERROR_SIZE];
 
 	HttpContext()
 	{
 		curl = curl_easy_init();
 		headers = nullptr;
 		statusCode = 0;
+		errorBuffer[0] = '\0';
 	}
 
 	~HttpContext()
@@ -68,6 +70,19 @@ Value NativeHttpInit(const std::vector<Value>&)
 	curl_easy_setopt(ctx->curl, CURLOPT_WRITEFUNCTION, WriteCallback);
 	curl_easy_setopt(ctx->curl, CURLOPT_WRITEDATA, &ctx->responseBody);
 
+	// TODO сделать реализацию на stasis, убрать отключение ssl отсюда
+	curl_easy_setopt(ctx->curl, CURLOPT_ERRORBUFFER, ctx->errorBuffer);
+
+	curl_easy_setopt(ctx->curl, CURLOPT_SSL_VERIFYPEER, 0L);
+	curl_easy_setopt(ctx->curl, CURLOPT_SSL_VERIFYHOST, 0L);
+	curl_easy_setopt(ctx->curl, CURLOPT_NOSIGNAL, 1L);
+	curl_easy_setopt(ctx->curl, CURLOPT_TCP_KEEPALIVE, 1L);
+	curl_easy_setopt(ctx->curl, CURLOPT_TCP_KEEPIDLE, 5L);
+	curl_easy_setopt(ctx->curl, CURLOPT_TCP_KEEPINTVL, 5L);
+	curl_easy_setopt(ctx->curl, CURLOPT_USERAGENT, "curl/7.84.0 Stasis-VM/1.0");
+
+	curl_easy_setopt(ctx->curl, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
+
 	g_httpContexts[handle] = std::move(ctx);
 	return handle;
 }
@@ -92,7 +107,7 @@ Value NativeHttpSetOpt(const std::vector<Value>& args)
 	}
 	else if (optType == "BODY")
 	{
-		curl_easy_setopt(ctx->curl, CURLOPT_POSTFIELDS, val.c_str());
+		curl_easy_setopt(ctx->curl, CURLOPT_COPYPOSTFIELDS, val.c_str());
 	}
 	else if (optType == "TIMEOUT")
 	{
@@ -144,6 +159,8 @@ Value NativeHttpCleanup(const std::vector<Value>& args)
 Value NativeHttpSendAsync(const std::vector<Value>& args)
 {
 	const auto ctx = GetContextOrThrow(AsInt(args[0]));
+	ctx->headers = curl_slist_append(ctx->headers, "Expect:");
+
 	if (ctx->headers)
 	{
 		curl_easy_setopt(ctx->curl, CURLOPT_HTTPHEADER, ctx->headers);
@@ -155,7 +172,12 @@ Value NativeHttpSendAsync(const std::vector<Value>& args)
 		if (res != CURLE_OK)
 		{
 			ctx->statusCode = 0;
-			ctx->responseBody = std::string(curl_easy_strerror(res));
+			std::string detailedError = ctx->errorBuffer;
+			if (detailedError.empty())
+			{
+				detailedError = curl_easy_strerror(res);
+			}
+			ctx->responseBody = "Curl Error: " + detailedError;
 		}
 		else
 		{

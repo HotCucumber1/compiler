@@ -1,4 +1,5 @@
 #include "VirtualMachine.h"
+#include "NativeLib/extra/ai_resp.h"
 #include "NativeLib/json/json.h"
 #include "NativeLib/NativeLib.h"
 #include "NativeLib/threads/thread.h"
@@ -776,6 +777,7 @@ void VirtualMachine::RegisterNativeLib()
 	RegisterNativeFunction("db_connect", 4, NativeDBConnect);
 	RegisterNativeFunction("db_execute", 2, NativeDBExecute);
 	RegisterNativeFunction("db_disconnect", 1, NativeDBDisconnect);
+	RegisterNativeFunction("sql_escape", 1, NativeSqlEscape);
 
 	// http
 	RegisterNativeFunction("http_init", 0, NativeHttpInit);
@@ -801,6 +803,9 @@ void VirtualMachine::RegisterNativeLib()
 	// json
 	RegisterNativeFunction("native_json_to_map", 1, NativeJsonToMap);
 	RegisterNativeFunction("native_map_to_json", 1, NativeMapToJson);
+	RegisterNativeFunction("json_escape", 1, NativeJsonEscape);
+
+	RegisterNativeFunction("ai_parse_response", 1, NativeAiParseResponse);
 
 	// threads
 	RegisterNativeFunction("thread_spawn", 2, [this](const std::vector<Value>& args) -> Value {

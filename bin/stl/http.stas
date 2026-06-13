@@ -23,7 +23,7 @@ schema HttpRequest
 impl HttpRequest<Idle>
 {
     public func init() -> HttpRequest<Build> {
-        int handle = http_init();
+        let int handle = http_init();
         return new HttpRequest<Build>(handle);
     }
 }
@@ -66,8 +66,8 @@ impl HttpRequest<Pending>
     public func await() -> HttpRequest<Response> {
         http_await(this.handle);
 
-        int status = http_status(this.handle);
-        string resp = http_response(this.handle);
+        let int status = http_status(this.handle);
+        let string resp = http_response(this.handle);
 
         http_cleanup(this.handle);
         return new HttpRequest<Response>(status, resp);

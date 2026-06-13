@@ -679,18 +679,26 @@ std::shared_ptr<AstNode> AppendToList(SymbolId id, const std::vector<std::shared
 	auto block = std::make_shared<CommonNode>(id, AstNodeType::BLOCK, std::vector<std::shared_ptr<AstNode>>{});
 
 	block->location = ExtractLocation(children);
+
+	if (children.empty())
+	{
+		return block;
+	}
+
 	if (children.size() == 1)
 	{
 		if (children[0])
 		{
-			block->children.push_back(children[0]);
+			auto head = UnwrapList(children[0]);
+			block->children.insert(block->children.end(), head.begin(), head.end());
 		}
 	}
 	else if (children.size() >= 2)
 	{
 		if (children[0])
 		{
-			block->children.push_back(children[0]);
+			auto head = UnwrapList(children[0]);
+			block->children.insert(block->children.end(), head.begin(), head.end());
 		}
 		auto tail = UnwrapList(children[children.size() - 1]);
 		block->children.insert(block->children.end(), tail.begin(), tail.end());

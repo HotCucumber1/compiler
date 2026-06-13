@@ -23,9 +23,19 @@ void SemanticAnalyzer::Visit(TerminalNode& node)
 
 void SemanticAnalyzer::Visit(CommonNode& node)
 {
+	const bool isBlock = (node.type == AstNodeType::BLOCK);
+
+	if (isBlock)
+	{
+		EnterScope();
+	}
 	for (const auto& child : node.children)
 	{
 		AcceptNode(child);
+	}
+	if (isBlock)
+	{
+		ExitScope();
 	}
 }
 
@@ -1193,7 +1203,7 @@ void SemanticAnalyzer::RegisterNativeLib()
 	// base
 	m_functions["len"] = { DataType::INT, 0, "", false };
 	m_functions["to_int"] = { DataType::INT, 0, "", false };
-	m_functions["to_string"] = { DataType::STRING, 0, "", false };
+	m_functions["to_str"] = { DataType::STRING, 0, "", false };
 	m_functions["print"] = { DataType::VOID, 0, "", false };
 	m_functions["read"] = { DataType::STRING, 0, "", false };
 	m_functions["panic"] = { DataType::VOID, 0, "", false };
@@ -1209,6 +1219,7 @@ void SemanticAnalyzer::RegisterNativeLib()
 	m_functions["db_connect"] = { DataType::INT, 0, "", false };
 	m_functions["db_execute"] = { DataType::STRING, 2, "", false };
 	m_functions["db_disconnect"] = { DataType::VOID, 0, "", false };
+	m_functions["sql_escape"] = { DataType::STRING, 0, "", false };
 
 	// http
 	m_functions["http_init"] = { DataType::INT, 0, "", false };
@@ -1241,6 +1252,9 @@ void SemanticAnalyzer::RegisterNativeLib()
 	// json
 	m_functions["native_json_to_map"] = { DataType::INSTANCE, 0, "StringMap", false };
 	m_functions["native_map_to_json"] = { DataType::STRING, 0, "", false };
+	m_functions["json_escape"] = { DataType::STRING, 0, "", false };
+
+	m_functions["ai_parse_response"] = { DataType::STRING, 0, "", false };
 }
 
 bool IsTsopMatch(const std::string& left, const std::string& right)

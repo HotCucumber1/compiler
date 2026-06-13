@@ -73,12 +73,12 @@ Value NativeHttpServerStart(const std::vector<Value>& args)
 	ctx->running = true;
 	ctx->server = std::make_unique<httplib::Server>();
 
-	ctx->server->set_pre_routing_handler([weakCtx = std::weak_ptr(ctx), handle](const httplib::Request& req, httplib::Response& res) -> httplib::Server::HandlerResponse {
+	auto handler = [weakCtx = std::weak_ptr(ctx), handle](const httplib::Request& req, httplib::Response& res) {
 		const auto ctx = weakCtx.lock();
 		if (!ctx)
 		{
 			res.status = 503;
-			return httplib::Server::HandlerResponse::Handled;
+			return;
 		}
 
 		const auto reqHandle = g_nextRequestHandle++;
@@ -107,8 +107,15 @@ Value NativeHttpServerStart(const std::vector<Value>& args)
 			std::lock_guard lock(g_requestsMutex);
 			g_requests.erase(reqHandle);
 		}
-		return httplib::Server::HandlerResponse::Handled;
-	});
+	};
+
+	// 2. Регистрируем этот обработчик на все пути (.*) и все популярные HTTP-методы
+	ctx->server->Get(".*", handler);
+	ctx->server->Post(".*", handler);
+	ctx->server->Put(".*", handler);
+	ctx->server->Patch(".*", handler);
+	ctx->server->Delete(".*", handler);
+	ctx->server->Options(".*", handler);
 
 	ctx->serverThread = std::thread([ctx]() {
 		ctx->server->listen("0.0.0.0", ctx->port);
@@ -285,6 +292,10 @@ Value NativeHttpRequestRespond(const std::vector<Value>& args)
 		reqCtx->res.status = status;
 		reqCtx->res.set_content(body, contentType);
 		reqCtx->responded = true;
+
+		reqCtx->res.set_header("Access-Control-Allow-Origin", "*");
+		reqCtx->res.set_header("Access-Control-Allow-Methods", "POST, GET, OPTIONS");
+		reqCtx->res.set_header("Access-Control-Allow-Headers", "Content-Type");
 	}
 	reqCtx->respCv.notify_one();
 	return serverHandle;

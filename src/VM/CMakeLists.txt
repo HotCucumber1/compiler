@@ -6,6 +6,7 @@ add_library(VM STATIC
         NativeLib/sql/sql.cpp
         NativeLib/json/json.cpp
         NativeLib/base/base.cpp
+        NativeLib/extra/ai_resp.cpp
         VirtualMachine.cpp
 )
 target_include_directories(VM PUBLIC .)

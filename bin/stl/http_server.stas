@@ -33,7 +33,7 @@ schema ServerRequest
 impl HttpServer<Offline>
 {
     public func start(int port) -> HttpServer<Listening> {
-        int handle = http_server_start(port);
+        let int handle = http_server_start(port);
         return new HttpServer<Listening>(handle);
     }
 }
@@ -41,7 +41,7 @@ impl HttpServer<Offline>
 impl HttpServer<Listening>
 {
     public func accept() -> HttpServer<RequestReceived> {
-        int reqHandle = http_server_accept(this.serverHandle);
+        let int reqHandle = http_server_accept(this.serverHandle);
         return new HttpServer<RequestReceived>(
             this.serverHandle,
             reqHandle
@@ -70,9 +70,9 @@ impl HttpServer<RequestReceived>
 impl ServerRequest<Init>
 {
     public func parse(int reqHandle) -> ServerRequest<Parsed> {
-        string m = http_request_method(reqHandle);
-        string p = http_request_path(reqHandle);
-        string b = http_request_body(reqHandle);
+        let string m = http_request_method(reqHandle);
+        let string p = http_request_path(reqHandle);
+        let string b = http_request_body(reqHandle);
 
         return new ServerRequest<Parsed>(reqHandle, m, p, b);
     }
