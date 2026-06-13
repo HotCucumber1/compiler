@@ -1,4 +1,5 @@
 #pragma once
+#include "../../lib/json.hpp"
 #include <string>
 #include <unordered_map>
 
@@ -24,3 +25,16 @@ const std::unordered_map<DataType, std::string> DATA_TYPE_NAMES = {
 	{ DataType::FUNC, "func" },
 	{ DataType::UNKNOWN, "unknown" },
 };
+
+NLOHMANN_JSON_SERIALIZE_ENUM(
+	DataType,
+	{
+		{ DataType::UNKNOWN, "UNKNOWN" },
+		{ DataType::INT, "INT" },
+		{ DataType::FLOAT, "FLOAT" },
+		{ DataType::BOOL, "BOOL" },
+		{ DataType::STRING, "STRING" },
+		{ DataType::VOID, "VOID" },
+		{ DataType::INSTANCE, "INSTANCE" },
+		{ DataType::FUNC, "FUNC" },
+	});

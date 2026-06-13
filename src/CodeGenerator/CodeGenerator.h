@@ -11,6 +11,10 @@ class CodeGenerator final : public AstVisitor
 public:
 	std::unique_ptr<Chunk> Generate(const std::shared_ptr<AstNode>& root);
 
+	void ExportModuleBytecode(const std::string& filepath) const;
+
+	static std::unique_ptr<Chunk> ImportModuleBytecode(const std::string& filepath);
+
 	void Visit(TerminalNode& node) override;
 
 	void Visit(CommonNode& node) override;

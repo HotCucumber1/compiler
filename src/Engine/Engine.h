@@ -10,6 +10,7 @@ struct CompileFlags
 {
 	bool printSchema;
 	bool dumpSchema;
+	bool buildModule;
 	std::string dumpFile;
 };
 
@@ -50,4 +51,5 @@ private:
 	CompileFlags m_flags;
 	bool m_printAst;
 	bool m_printLogs;
+	std::vector<std::string> m_importedModules;
 };

@@ -10,6 +10,8 @@ struct SymbolInfo
 	std::string structName;
 	bool isConst;
 	bool isMoved;
+
+	NLOHMANN_DEFINE_TYPE_INTRUSIVE(SymbolInfo, type, arrayDepth, structName, isConst, isMoved);
 };
 
 struct MethodSignature
@@ -17,17 +19,23 @@ struct MethodSignature
 	std::string returnState;
 	std::vector<DataType> paramTypes;
 	std::vector<std::string> paramStructNames;
+
+	NLOHMANN_DEFINE_TYPE_INTRUSIVE(MethodSignature, returnState, paramTypes, paramStructNames);
 };
 
 struct StateSignature
 {
 	std::unordered_map<std::string, MethodSignature> transitions;
 	size_t fieldCount = 0;
+
+	NLOHMANN_DEFINE_TYPE_INTRUSIVE(StateSignature, fieldCount, transitions);
 };
 
 struct SchemaSignature
 {
 	std::unordered_map<std::string, StateSignature> states;
+
+	NLOHMANN_DEFINE_TYPE_INTRUSIVE(SchemaSignature, states);
 };
 
 class SemanticAnalyzer final : public AstVisitor
@@ -107,6 +115,10 @@ public:
 
 	void Visit(ContinueNode& node) override;
 
+	void ExportModuleMetadata(const std::string& filepath) const;
+
+	void ImportModuleMetadata(const std::string& filepath);
+
 private:
 	void EnterScope();
 
@@ -133,12 +145,14 @@ private:
 	{
 		std::unordered_map<std::string, SymbolInfo> fieldTypes;
 		size_t fieldCount = 0;
+		NLOHMANN_DEFINE_TYPE_INTRUSIVE(StructSignature, fieldCount, fieldTypes);
 	};
 
 	struct EnumSignature
 	{
 		DataType backingType;
 		std::unordered_map<std::string, std::string> cases;
+		NLOHMANN_DEFINE_TYPE_INTRUSIVE(EnumSignature, backingType, cases)
 	};
 
 	std::unordered_map<std::string, StructSignature> m_structSignatures;

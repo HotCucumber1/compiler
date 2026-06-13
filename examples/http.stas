@@ -1,14 +1,14 @@
-import "../bin/stl/http.stas"
+import "../bin/stl/http.stasm"
 
 
-HttpRequest req1 = new HttpRequest<Idle>()
+let HttpRequest req1 = new HttpRequest<Idle>()
     .init()
     .url("http://httpbin.org/post")
     .header("Content-Type: application/json")
     .body("{ \"title\": \"TSOP is awesome\" }")
     .method("POST");
 
-HttpRequest req2 = new HttpRequest<Idle>()
+let HttpRequest req2 = new HttpRequest<Idle>()
     .init()
     .url("http://httpbin.org/post")
     .header("Content-Type: application/json")

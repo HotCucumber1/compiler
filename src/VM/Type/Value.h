@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../../../lib/json.hpp"
 #include "Object.h"
 
 #include <functional>

@@ -4,6 +4,7 @@ struct Params
 {
 	bool printSchema = false;
 	bool dumpSchema = false;
+	bool buildModule = false;
 	std::string dumpFilename;
 	std::string sourceFilePath;
 };
@@ -16,6 +17,7 @@ int main(const int argc, char* argv[])
 	{
 		const auto [printSchema,
 			dumpSchema,
+			buildModule,
 			dumpFilename,
 			sourceFilePath]
 			= ParseParams(argc, argv);
@@ -25,6 +27,7 @@ int main(const int argc, char* argv[])
 			{
 				printSchema,
 				dumpSchema,
+				buildModule,
 				dumpFilename,
 			},
 			false,
@@ -55,6 +58,7 @@ Params ParseParams(const int argc, char* argv[])
 {
 	bool printSchema = false;
 	bool dumpSchema = false;
+	bool buildModule = false;
 	std::string dumpFilename;
 	std::string sourceFilePath;
 
@@ -65,6 +69,10 @@ Params ParseParams(const int argc, char* argv[])
 		if (arg == "--print-schema")
 		{
 			printSchema = true;
+		}
+		else if (arg == "--build-module")
+		{
+			buildModule = true;
 		}
 		else if (arg == "--dump-schema")
 		{
@@ -96,12 +104,14 @@ Params ParseParams(const int argc, char* argv[])
 			"Использование: " + std::string(argv[0]) + " [флаги] <source_file.my_lang>\n"
 													   "Доступные флаги:\n"
 													   "  --print-schema             Вывести схему конечного автомата в консоль\n"
+													   "  --build-module             Скомпилировать файл как модуль (.stasm и .stasbc)\n"
 													   "  --dump-schema <file.md>    Сохранить схему в формате Mermaid (.md)\n");
 	}
 
 	return {
 		printSchema,
 		dumpSchema,
+		buildModule,
 		dumpFilename,
 		sourceFilePath,
 	};

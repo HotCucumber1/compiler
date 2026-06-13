@@ -1,7 +1,10 @@
 #include "CodeGenerator.h"
+
+#include <fstream>
 #include <ranges>
 
 #include "OpCode.h"
+#include "Type/Value.h"
 
 bool IsEmptyExpression(const std::shared_ptr<AstNode>& node);
 std::string GenerateLabel(const std::string& prefix);
@@ -410,8 +413,8 @@ void CodeGenerator::Visit(FunctionDeclNode& node)
 	PushCode(static_cast<uint8_t>(OpCode::OP_RETURN));
 	ResolveJmp();
 
-	auto funcName = String(node.name);
-	auto functionObj = std::make_shared<Function>(&funcName, node.parameters.size());
+	auto funcName = new String(node.name);
+	auto functionObj = std::make_shared<Function>(funcName, node.parameters.size());
 	functionObj->chunk = std::move(m_chunk);
 
 	m_chunk = std::move(globalChunk);
@@ -615,6 +618,30 @@ void CodeGenerator::Visit(ReturnNode& node)
 
 void CodeGenerator::Visit(ImportNode& node)
 {
+	if (node.filePath.ends_with(".stasm"))
+	{
+		std::ifstream in(node.filePath);
+		if (!in.is_open())
+		{
+			throw std::runtime_error("CodeGen Error: Could not open module metadata: " + node.filePath);
+		}
+
+		nlohmann::json jsonData;
+		in >> jsonData;
+		auto structs = jsonData["structs"];
+		for (auto it = structs.begin(); it != structs.end(); ++it)
+		{
+			std::string structName = it.key();
+			std::vector<std::string> fieldNames;
+
+			auto fieldTypes = it.value()["fieldTypes"];
+			for (auto fIt = fieldTypes.begin(); fIt != fieldTypes.end(); ++fIt)
+			{
+				fieldNames.push_back(fIt.key());
+			}
+			m_structs[structName] = fieldNames;
+		}
+	}
 }
 
 void CodeGenerator::Visit(SchemaFuncNode& node)
@@ -699,9 +726,9 @@ void CodeGenerator::Visit(MethodDeclNode& node)
 	ResolveJmp();
 
 	const auto mangledName = m_currentImplSchema + "_" + m_currentImplState + "_" + node.name;
-	auto funcName = String(mangledName);
+	auto funcName = new String(mangledName);
 
-	auto functionObj = std::make_shared<Function>(&funcName, node.parameters.size() + 1);
+	auto functionObj = std::make_shared<Function>(funcName, node.parameters.size() + 1);
 	functionObj->chunk = std::move(m_chunk);
 
 	m_chunk = std::move(globalChunk);
@@ -913,6 +940,35 @@ void CodeGenerator::PushTempAddr()
 {
 	PushCode(0xFF);
 	PushCode(0xFF);
+}
+
+void CodeGenerator::ExportModuleBytecode(const std::string& filepath) const
+{
+	const nlohmann::json jsonData = m_chunk;
+
+	std::ofstream out(filepath);
+	if (!out.is_open())
+	{
+		throw std::runtime_error("Could not open file for writing bytecode: " + filepath);
+	}
+	out << jsonData.dump();
+}
+
+std::unique_ptr<Chunk> CodeGenerator::ImportModuleBytecode(const std::string& filepath)
+{
+	std::ifstream in(filepath);
+	if (!in.is_open())
+	{
+		throw std::runtime_error("Could not open bytecode file: " + filepath);
+	}
+
+	nlohmann::json j;
+	in >> j;
+
+	auto chunk = std::make_unique<Chunk>();
+	j.get_to(*chunk);
+
+	return chunk;
 }
 
 std::string GenerateLabel(const std::string& prefix)

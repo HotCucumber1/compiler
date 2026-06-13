@@ -1,6 +1,7 @@
 #include "SemanticAnalyzer.h"
 #include "../ErrorHandler/ErrorHandler.h"
 
+#include <fstream>
 #include <ranges>
 #include <unordered_set>
 
@@ -764,6 +765,10 @@ void SemanticAnalyzer::Visit(ReturnNode& node)
 
 void SemanticAnalyzer::Visit(ImportNode& node)
 {
+	if (node.filePath.ends_with(".stasm"))
+	{
+		ImportModuleMetadata(node.filePath);
+	}
 }
 
 void SemanticAnalyzer::Visit(SchemaFuncNode& node)
@@ -1255,6 +1260,51 @@ void SemanticAnalyzer::RegisterNativeLib()
 	m_functions["json_escape"] = { DataType::STRING, 0, "", false };
 
 	m_functions["ai_parse_response"] = { DataType::STRING, 0, "", false };
+}
+
+void SemanticAnalyzer::ExportModuleMetadata(const std::string& filepath) const
+{
+	nlohmann::json jsonData;
+
+	jsonData["functions"] = m_functions;
+	jsonData["structs"] = m_structSignatures;
+	jsonData["schemas"] = m_schemas;
+	jsonData["enums"] = m_enums;
+
+	std::ofstream out(filepath);
+	if (!out.is_open())
+	{
+		throw std::runtime_error("Could not open file for writing module: " + filepath);
+	}
+	out << jsonData.dump(4);
+}
+
+void SemanticAnalyzer::ImportModuleMetadata(const std::string& filepath)
+{
+	std::ifstream in(filepath);
+	if (!in.is_open())
+	{
+		throw std::runtime_error("Could not open module file: " + filepath);
+	}
+
+	nlohmann::json jsonData;
+	in >> jsonData;
+
+	auto funcs = jsonData["functions"]
+					 .get<std::unordered_map<std::string, SymbolInfo>>();
+	m_functions.insert(funcs.begin(), funcs.end());
+
+	auto structs = jsonData["structs"]
+					   .get<std::unordered_map<std::string, StructSignature>>();
+	m_structSignatures.insert(structs.begin(), structs.end());
+
+	auto schemas = jsonData["schemas"]
+					   .get<std::unordered_map<std::string, SchemaSignature>>();
+	m_schemas.insert(schemas.begin(), schemas.end());
+
+	auto enums = jsonData["enums"]
+					 .get<std::unordered_map<std::string, EnumSignature>>();
+	m_enums.insert(enums.begin(), enums.end());
 }
 
 bool IsTsopMatch(const std::string& left, const std::string& right)

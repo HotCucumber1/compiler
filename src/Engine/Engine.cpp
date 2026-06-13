@@ -77,7 +77,33 @@ void Engine::Compile()
 		consoleVisualizer.Generate(astRoot);
 	}
 
-	const auto chunk = GenerateCode(astRoot);
+	CodeGenerator generator;
+	const auto chunk = generator.Generate(astRoot);
+
+	if (m_flags.buildModule)
+	{
+		auto basePath = std::filesystem::path(m_exePath);
+
+		auto stasmPath = basePath;
+		stasmPath.replace_extension(".stasm");
+		analyser.ExportModuleMetadata(stasmPath);
+
+		auto stasbPath = basePath;
+		stasbPath.replace_extension(".stasbc");
+		generator.ExportModuleBytecode(stasbPath);
+
+		if (m_printLogs)
+		{
+			std::cout << "[5/5] Module successfully built!\n      Metadata: "
+					  << stasmPath
+					  << "\n      Bytecode: " << stasbPath << std::endl;
+		}
+		return;
+	}
+	if (m_printLogs)
+	{
+		std::cout << "[4/5] Bytecode generated." << std::endl;
+	}
 	RunVM(chunk);
 }
 
@@ -146,6 +172,13 @@ void Engine::ResolveImports(
 		const auto importPath = currentDirPath / importNode->filePath;
 		const auto importPathStr = std::filesystem::weakly_canonical(importPath).string();
 
+		if (importPathStr.ends_with(".stasm"))
+		{
+			importNode->filePath = importPathStr;
+			m_importedModules.push_back(importPathStr);
+			resolvedChildren.push_back(child);
+			continue;
+		}
 		if (std::ranges::find(importStack, importPathStr) != importStack.end())
 		{
 			std::string cycleTrace;
@@ -201,10 +234,18 @@ void Engine::RunVM(const std::unique_ptr<Chunk>& chunk) const
 {
 	if (m_printLogs)
 	{
-		std::cout << "[5/5] Starting Virtual Machine...\n"
-				  << std::endl;
+		std::cout << "[5/5] Starting Virtual Machine..." << std::endl;
 	}
+
 	VirtualMachine vm;
+	CodeGenerator generator;
+	for (const auto& modulePath : m_importedModules)
+	{
+		auto stasbPath = std::filesystem::path(modulePath);
+		stasbPath.replace_extension(".stasbc");
+		auto modChunk = generator.ImportModuleBytecode(stasbPath.string());
+		vm.Interpret(modChunk);
+	}
 	vm.Interpret(chunk);
 }
 
