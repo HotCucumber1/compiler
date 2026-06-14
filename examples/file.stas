@@ -1,9 +1,9 @@
 import "../bin/stl/file.stas"
 
 
-int start = time();
+let int start = time();
 
-File file = new File<Closed>("../test.txt");
+let File file = new File<Closed>("../test.txt");
 
 file = file
     .open()
@@ -18,7 +18,7 @@ file = file
     .save()
     .close();
 
-int endTime = time();
+let int endTime = time();
 
 print("");
 print("Total time (ns): ");

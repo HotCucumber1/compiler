@@ -7,4 +7,4 @@
 //b = "goodbue";
 //print(b);
 
-print(!false);
+print(not false);

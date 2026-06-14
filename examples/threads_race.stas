@@ -1,14 +1,14 @@
 import "../bin/stl/thread.stas"
 
-func spamPrint(int id, int count) : int {
+func spamPrint(int id, int count): int {
     for (int i = 0; i < count; i = i + 1) {
         print(id);
     }
     return 0;
 }
 
-Thread t1 = new Thread<Idle>();
-Thread t2 = new Thread<Idle>();
+let Thread t1 = new Thread<Idle>();
+let Thread t2 = new Thread<Idle>();
 
 t1 = t1.spawn(spamPrint, [11111, 100]);
 t2 = t2.spawn(spamPrint, [22222, 100]);

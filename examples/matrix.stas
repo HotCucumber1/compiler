@@ -1,13 +1,13 @@
 import "../bin/stl/thread.stas"
 
-int[] matrixA = [
+let int[] matrixA = [
     1,  2,  3,  4,
     5,  6,  7,  8,
     9,  10, 11, 12,
     13, 14, 15, 16
 ];
 
-int[] matrixB = [
+let int[] matrixB = [
     1, 0, 0, 0,
     0, 1, 0, 0,
     0, 0, 1, 0,
@@ -15,16 +15,16 @@ int[] matrixB = [
 ];
 
 
-func calcRow(int rowIndex) use (int[] matrixA, int[] matrixB) : int[] {
-    int[] rowResult = [0, 0, 0, 0];
-    int N = 4;
+func calcRow(int rowIndex) use (int[] matrixA, int[] matrixB): int[] {
+    let int[] rowResult = [0, 0, 0, 0];
+    const int N = 4;
 
     for (int col = 0; col < N; col = col + 1) {
-        int sum = 0;
+        let int sum = 0;
         
         for (int k = 0; k < N; k = k + 1) {
-            int a_val = matrixA[rowIndex * N + k];
-            int b_val = matrixB[k * N + col];
+            let int a_val = matrixA[rowIndex * N + k];
+            let int b_val = matrixB[k * N + col];
             
             sum = sum + (a_val * b_val);
         }
@@ -38,10 +38,10 @@ func calcRow(int rowIndex) use (int[] matrixA, int[] matrixB) : int[] {
 
 print("--- Matrix Multiplication Started ---");
 
-Thread t0 = new Thread<Idle>();
-Thread t1 = new Thread<Idle>();
-Thread t2 = new Thread<Idle>();
-Thread t3 = new Thread<Idle>();
+let Thread t0 = new Thread<Idle>();
+let Thread t1 = new Thread<Idle>();
+let Thread t2 = new Thread<Idle>();
+let Thread t3 = new Thread<Idle>();
 
 print("Spawning 4 workers...");
 

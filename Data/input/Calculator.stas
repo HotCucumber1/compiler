@@ -36,7 +36,7 @@ schema Calculator
         func execute() -> Result
     }
 
-    state Result(int value) {
+    state Result(float value) {
         func digit(int d) -> FirstNumber
         func clear() -> Ready
         func operator(MyOperator op) -> SecondNumber
@@ -105,11 +105,11 @@ impl Calculator<SecondNumberWithValue>
 impl Calculator<Compute>
 {
     public func execute() -> Calculator<Result> {
-        let int result = match (this.op) {
+        let float result = match (this.op) {
             MyOperator.Plus => this.first + this.second,
             MyOperator.Minus => this.first - this.second,
             MyOperator.Multiply => this.first * this.second,
-            MyOperator.Divide => 5,
+            MyOperator.Divide =>  this.first / this.second,
         };
         return new Calculator<Result>(result);
     }
@@ -134,7 +134,7 @@ impl Calculator<Result>
 let Calculator calc = new Calculator<Ready>()
     .digit(5)
     .digit(3)
-    .operator(MyOperator.Plus)
+    .operator(MyOperator.Divide)
     .digit(2)
     .digit(7)
     .equal()

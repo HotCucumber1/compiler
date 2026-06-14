@@ -339,13 +339,102 @@ void SemanticAnalyzer::Visit(IfNode& node)
 {
 	AcceptNode(node.condition);
 
+	auto symTableBefore = m_symbolTable;
+	auto tsopBefore = m_tsopVars;
+
 	EnterScope();
 	AcceptNode(node.thenBranch);
 	ExitScope();
 
-	EnterScope();
-	AcceptNode(node.elseBranch);
-	ExitScope();
+	auto symTableAfterThen = m_symbolTable;
+	auto tsopAfterThen = m_tsopVars;
+
+	m_symbolTable = symTableBefore;
+	m_tsopVars = tsopBefore;
+
+	if (node.elseBranch)
+	{
+		EnterScope();
+		AcceptNode(node.elseBranch);
+		ExitScope();
+
+		const auto symTableAfterElse = m_symbolTable;
+		const auto tsopAfterElse = m_tsopVars;
+
+		for (size_t i = 0; i < tsopAfterThen.size(); ++i)
+		{
+			for (const auto& [varName, tsopType] : tsopAfterThen[i])
+			{
+				if (tsopAfterElse[i].contains(varName))
+				{
+					const auto& elseTsopType = tsopAfterElse[i].at(varName);
+					if (tsopType.schema != elseTsopType.schema || tsopType.state != elseTsopType.state)
+					{
+						throw SemanticError(node.location,
+							"Typestate mismatch for variable '" + varName + "' after if-else branches. 'then' branch leaves it in state '" + tsopType.state + "', but 'else' branch leaves it in '" + elseTsopType.state + "'. Both branches must result in the exact same state.");
+					}
+				}
+			}
+		}
+		for (size_t i = 0; i < symTableAfterThen.size(); ++i)
+		{
+			for (const auto& [varName, symInfo] : symTableAfterThen[i])
+			{
+				if (symTableAfterElse[i].contains(varName))
+				{
+					const auto& elseSymInfo = symTableAfterElse[i].at(varName);
+					if (symInfo.structName != elseSymInfo.structName)
+					{
+						throw SemanticError(node.location, "Struct state mismatch for variable '" + varName + "' after if-else branches.");
+					}
+					if (symInfo.isMoved != elseSymInfo.isMoved)
+					{
+						throw SemanticError(node.location, "Move semantics mismatch for variable '" + varName + "'. It was moved (ownership transferred) in one branch but not the other.");
+					}
+				}
+			}
+		}
+
+		m_symbolTable = symTableAfterElse;
+		m_tsopVars = tsopAfterElse;
+	}
+	else
+	{
+		for (size_t i = 0; i < tsopBefore.size(); ++i)
+		{
+			for (const auto& [varName, tsopTypeBefore] : tsopBefore[i])
+			{
+				if (tsopAfterThen[i].contains(varName))
+				{
+					const auto& [schema, state] = tsopAfterThen[i].at(varName);
+					if (tsopTypeBefore.schema != schema || tsopTypeBefore.state != state)
+					{
+						throw SemanticError(node.location,
+							"Typestate mismatch for variable '" + varName + "'. An 'if' statement without an 'else' branch cannot permanently change the typestate of an outer variable.");
+					}
+				}
+			}
+		}
+
+		for (size_t i = 0; i < symTableBefore.size(); ++i)
+		{
+			for (const auto& [varName, symInfoBefore] : symTableBefore[i])
+			{
+				if (symTableAfterThen[i].contains(varName))
+				{
+					const auto& symInfoThen = symTableAfterThen[i].at(varName);
+					if (symInfoBefore.isMoved != symInfoThen.isMoved)
+					{
+						throw SemanticError(node.location,
+							"Variable '" + varName + "' was moved inside an 'if' without an 'else'. This leads to an ambiguous state at runtime.");
+					}
+				}
+			}
+		}
+
+		m_symbolTable = symTableBefore;
+		m_tsopVars = tsopBefore;
+	}
 }
 
 void SemanticAnalyzer::Visit(WhileNode& node)
@@ -1093,7 +1182,6 @@ void SemanticAnalyzer::Visit(MatchNode& node)
 	int returnDepth = 0;
 	bool isFirstCase = true;
 
-	// 2. Проверяем каждую ветку
 	for (const auto& matchCase : node.cases)
 	{
 		if (matchCase)
@@ -1120,9 +1208,26 @@ void SemanticAnalyzer::Visit(MatchNode& node)
 				}
 				else
 				{
-					if (matchCase->body->evaluatedType != returnType || matchCase->body->structName != returnStruct || matchCase->body->arrayDepth != returnDepth)
+					if (matchCase->body->arrayDepth != returnDepth)
 					{
-						throw SemanticError(matchCase->body->location, "All match cases must return the same exact type.");
+						throw SemanticError(matchCase->body->location, "Array depth mismatch between match cases.");
+					}
+					if (matchCase->body->evaluatedType == returnType)
+					{
+						if (returnType == DataType::INSTANCE && !IsTsopMatch(returnStruct, matchCase->body->structName))
+						{
+							throw SemanticError(matchCase->body->location, "Struct type mismatch between match cases.");
+						}
+					}
+					else if ((returnType == DataType::INT && matchCase->body->evaluatedType == DataType::FLOAT)
+						|| (returnType == DataType::FLOAT && matchCase->body->evaluatedType == DataType::INT))
+					{
+						returnType = DataType::FLOAT;
+						returnStruct = "";
+					}
+					else
+					{
+						throw SemanticError(matchCase->body->location, "Incompatible return types between match cases.");
 					}
 				}
 			}

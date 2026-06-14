@@ -1,6 +1,6 @@
 import "../bin/stl/sql.stas"
 
-Database db = new Database<Disconnected>("127.0.0.1", "test_user", "12345Q", "stasis_db");
+let Database db = new Database<Disconnected>("127.0.0.1", "test_user", "12345Q", "stasis_db");
 
 db = db
     .connect()

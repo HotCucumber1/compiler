@@ -1,8 +1,8 @@
-int[] arr1 = [1, 2];
+let int[] arr1 = [1, 2];
 arr1 = concat(arr1, [3, 4, 5]);
 
 
-int[][] arr2 = [[1, 2], [3, 4]];
+let int[][] arr2 = [[1, 2], [3, 4]];
 arr2 = append(arr2, [1, 2, 3, 4]);
 
 print(arr2);
