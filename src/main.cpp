@@ -44,7 +44,8 @@ int main(const int argc, char* argv[])
 		std::cerr << "\n[!] COMPILATION ERROR:\n"
 				  << "File: " << e.location.file << "\n"
 				  << "Line: " << e.location.line << ", Col: " << e.location.col << "\n"
-				  << "Message: " << e.what() << "\n";
+				  << "Message: \n"
+				  << e.what() << "\n";
 		return 1;
 	}
 	catch (const std::exception& e)
@@ -74,8 +75,8 @@ Params ParseParams(const int argc, char* argv[])
 			if (i + 1 >= argc)
 			{
 				throw std::runtime_error(
-					"Критическая ошибка: Флаг --build-module требует указания директории.\n"
-					"Использование: --build-module <path/to/output_dir>");
+					"Flag --build-module requires an output directory specification.\n"
+					"Usage: --build-module <path/to/output_dir>");
 			}
 			params.moduleOutputDir = argv[++i];
 			params.buildModule = true;
@@ -85,15 +86,15 @@ Params ParseParams(const int argc, char* argv[])
 			if (i + 1 >= argc)
 			{
 				throw std::runtime_error(
-					"Критическая ошибка: Флаг --dump-schema требует указания имени файла.\n"
-					"Использование: --dump-schema <filename.md>");
+					"Flag --dump-schema requires an output filename specification.\n"
+					"Usage: --dump-schema <filename.md>");
 			}
 			params.dumpFilename = argv[++i];
 
 			if (params.dumpFilename.length() < 3
 				|| params.dumpFilename.substr(params.dumpFilename.length() - 3) != ".md")
 			{
-				throw std::runtime_error("Ошибка валидации: Файл '" + params.dumpFilename + "' должен иметь расширение .md");
+				throw std::runtime_error("Validation error: File '" + params.dumpFilename + "' must have a .md extension.");
 			}
 			params.dumpSchema = true;
 		}
@@ -106,11 +107,11 @@ Params ParseParams(const int argc, char* argv[])
 	if (params.sourceFilePath.empty())
 	{
 		throw std::runtime_error(
-			"Использование: " + std::string(argv[0]) + " [флаги] <source_file.stas>\n"
-													   "Доступные флаги:\n"
-													   "  --print-schema                     Вывести схему конечного автомата в консоль\n"
-													   "  --dump-schema <file.md>            Сохранить схему в формате Mermaid (.md)\n"
-													   "  --build-module <output_dir>        Скомпилировать файл как модуль и сохранить в указанную директорию\n");
+			"Usage: " + std::string(argv[0]) + " [flags] <source_file.stas>\n"
+											   "Available flags:\n"
+											   "  --print-schema                     Print finite state machine schema to console\n"
+											   "  --dump-schema <file.md>            Save schema in Mermaid format (.md)\n"
+											   "  --build-module <output_dir>        Compile file as a module and save to specified directory\n");
 	}
 
 	return params;

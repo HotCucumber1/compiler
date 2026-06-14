@@ -62,14 +62,14 @@ void Engine::Compile()
 		std::ofstream outFile(m_flags.dumpFile);
 		if (!outFile.is_open())
 		{
-			throw std::runtime_error("Не удалось создать или открыть файл: " + m_flags.dumpFile);
+			throw std::runtime_error("Failed to create or open file: " + m_flags.dumpFile);
 		}
 
 		SchemaVisualizer visualizer(outFile);
 		visualizer.Generate(astRoot);
 
 		outFile.close();
-		std::cout << "Схема успешно экспортирована в файл: " << m_flags.dumpFile << std::endl;
+		std::cout << "Schema successfully exported to file: " << m_flags.dumpFile << std::endl;
 		return;
 	}
 	if (m_flags.printSchema)
@@ -245,12 +245,11 @@ void Engine::RunVM(const std::unique_ptr<Chunk>& chunk) const
 	}
 
 	VirtualMachine vm;
-	CodeGenerator generator;
 	for (const auto& modulePath : m_importedModules)
 	{
 		auto stasbPath = std::filesystem::path(modulePath);
 		stasbPath.replace_extension(".stasbc");
-		auto modChunk = generator.ImportModuleBytecode(stasbPath.string());
+		auto modChunk = CodeGenerator::ImportModuleBytecode(stasbPath.string());
 		vm.Interpret(modChunk);
 	}
 	vm.Interpret(chunk);
