@@ -1,0 +1,14 @@
+enum Role: string {
+    case Admin = "ADMIN"
+    case User = "USER"
+}
+
+struct Session {
+    bool isActive;
+    float uptime;
+    int[] flags;
+}
+
+let Session s = Session{true, -99.9, [1, 2, 3]};
+let string userRole = Role.Admin.value;
+print(s.uptime);

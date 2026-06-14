@@ -181,7 +181,7 @@ struct CommonNode final : AstNode
 struct BinaryOpNode final : AstNode
 {
 	std::shared_ptr<AstNode> left;
-	Token op; // TODO не факт, что токен
+	Token op;
 	std::shared_ptr<AstNode> right;
 
 	BinaryOpNode(

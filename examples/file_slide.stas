@@ -1,0 +1,22 @@
+schema File
+{
+    state Unopened(string path) {
+        func openRead() -> Readable
+        func openWrite() -> Writable
+    }
+    state Readable(int handle) {
+        func read(int bytes) -> Readable
+        func close() -> Closed
+    }
+    state Writable(int handle) {
+        func write(string data) -> Writable
+        func flush() -> Writable
+        func close() -> Closed
+    }
+    state Closed() {}
+}
+
+
+let File fileInit = new File<Unopened>("report.txt");
+let File fileReader = fileInit.openRead();
+fileReader.write("Hello");

@@ -70,11 +70,13 @@ void Engine::Compile()
 
 		outFile.close();
 		std::cout << "Схема успешно экспортирована в файл: " << m_flags.dumpFile << std::endl;
+		return;
 	}
 	if (m_flags.printSchema)
 	{
 		ConsoleSchemaVisualizer consoleVisualizer;
 		consoleVisualizer.Generate(astRoot);
+		return;
 	}
 
 	CodeGenerator generator;

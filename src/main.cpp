@@ -34,7 +34,7 @@ int main(const int argc, char* argv[])
 				moduleOutputDir,
 			},
 			false,
-			true);
+			false);
 		engine.Compile();
 
 		std::cout << "\nProgram finished." << std::endl;

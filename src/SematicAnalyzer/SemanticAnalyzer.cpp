@@ -608,8 +608,8 @@ void SemanticAnalyzer::Visit(MemberAccessNode& node)
 
 		if (m_nodeTypes.contains(node.object.get()))
 		{
-			const auto& tsopType = m_nodeTypes[node.object.get()];
-			structName = tsopType.schema + "_" + tsopType.state;
+			const auto& [schema, state] = m_nodeTypes[node.object.get()];
+			structName = schema + "_" + state;
 		}
 
 		if (m_structSignatures.contains(structName))
@@ -1000,7 +1000,7 @@ void SemanticAnalyzer::Visit(MethodCallNode& node)
 	const auto& [transitions, fieldCount] = m_schemas.at(schema).states.at(state);
 	if (!transitions.contains(node.methodName))
 	{
-		throw SemanticError(node.location, "Method '" + node.methodName + "' does not exist in state '" + schema + "<" + state + ">'.");
+		throw SemanticError(node.location, "Method '" + node.methodName + "' does not exist in state '" + schema + "_" + state + "'.");
 	}
 
 	const auto& [returnState, paramTypes, paramStructNames] = transitions.at(node.methodName);
