@@ -1,7 +1,6 @@
-import "../../bin/stl/math.stas"
 import "./lib.stas"
 
-int[] myArr = [1, 2, 3, 4, 5];
+let int[] myArr = [1, 2, 3, 4, 5];
 print(myArr[0]);
 
 
@@ -22,5 +21,3 @@ print(Add(1, 16));
 print(getArr()[0]);
 
 print(getNumbers());
-
-print(Pow(10, 2));

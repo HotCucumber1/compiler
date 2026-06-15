@@ -230,10 +230,7 @@ void VirtualMachine::OpReturn(ExecutionContext& ctx)
 	ctx.currentChunk = &callerFrame.function->chunk;
 	ctx.instructionPointer = callerFrame.instructionPointer;
 
-	if (!std::holds_alternative<std::monostate>(returnValue))
-	{
-		Push(ctx, returnValue);
-	}
+	Push(ctx, returnValue);
 }
 
 void VirtualMachine::OpAdd(ExecutionContext& ctx)

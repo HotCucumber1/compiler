@@ -1,7 +1,7 @@
-int x = 10;
-int b = 20;
-bool a = false;
-float c = 1.1;
+let int x = 10;
+let int b = 20;
+let bool a = false;
+let float c = 1.1;
 
 print(x + b);
 print(x < b);

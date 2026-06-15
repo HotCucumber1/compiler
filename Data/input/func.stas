@@ -1,6 +1,6 @@
-int b = 5;
+let int b = 5;
 
-string input = read();
+let string input = read();
 print(input);
 
 func HelloWorld(int a) use (int b, string input): void {

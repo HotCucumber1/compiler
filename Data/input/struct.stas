@@ -4,11 +4,11 @@ struct Hello
     float b;
 }
 
-Hello myStruct = Hello{1, 2};
+let Hello myStruct = Hello{1, 2};
 
 myStruct.b = 1;
 
-int a = 1;
+let int a = 1;
 
 print(myStruct.b < 12);
 
@@ -28,7 +28,7 @@ while ((myStruct.b < 12))
 }
 
 
-string qw = "qw";
-string he = "he";
+let string qw = "qw";
+let string he = "he";
 
 print(qw + he);

@@ -1,4 +1,4 @@
-enum MyOperator : string
+enum MyOperator: string
 {
     case Plus = "+"
     case Minus = "-"
@@ -8,7 +8,6 @@ enum MyOperator : string
 
 schema Calculator
 {
-    // коммент
     state Ready() {
         func digit(int d) -> FirstNumber
         func clear() -> Ready
