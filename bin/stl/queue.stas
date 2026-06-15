@@ -1,0 +1,37 @@
+schema Queue {
+    state Empty(string lastPopped) {
+        func enqueue(string val) -> OneItem
+    }
+
+    state OneItem(string lastPopped, string v1) {
+        func enqueue(string val) -> Full
+        func dequeue() -> Empty
+    }
+
+    state Full(string lastPopped, string v1, string v2) {
+        func dequeue() -> OneItem
+    }
+}
+
+
+impl Queue<Empty> {
+    public func enqueue(string val) -> Queue<OneItem> {
+        return new Queue<OneItem>(this.lastPopped, val);
+    }
+}
+
+impl Queue<OneItem> {
+    public func enqueue(string val) -> Queue<Full> {
+        return new Queue<Full>(this.lastPopped, this.v1, val);
+    }
+
+    public func dequeue() -> Queue<Empty> {
+        return new Queue<Empty>(this.v1);
+    }
+}
+
+impl Queue<Full> {
+    public func dequeue() -> Queue<OneItem> {
+        return new Queue<OneItem>(this.v1, this.v2);
+    }
+}

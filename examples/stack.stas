@@ -1,0 +1,14 @@
+import "../bin/stl/modules/stack.stasm"
+
+let Stack s = new Stack<Empty>(0);
+
+s = s.push(10);
+s = s.push(20);
+
+// s = s.push(30);
+
+s = s.pop();
+print(s.lastPopped);
+
+s = s.pop();
+print(s.lastPopped);

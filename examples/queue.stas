@@ -1,0 +1,14 @@
+import "../bin/stl/modules/queue.stasm"
+
+let Queue q = new Queue<Empty>("none");
+
+q = q.enqueue("Alice");
+q = q.enqueue("Bob");
+
+q = q.dequeue();
+print(q.lastPopped);
+
+q = q.dequeue();
+print(q.lastPopped);
+
+// q = q.dequeue();
