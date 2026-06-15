@@ -1,0 +1,8 @@
+let int factor = 10;
+
+func multiply(int val) use (int factor): int {
+    return val * factor;
+}
+
+let int temp = 5;
+print(multiply(temp));

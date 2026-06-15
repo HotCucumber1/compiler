@@ -577,6 +577,11 @@ void SemanticAnalyzer::Visit(FunctionDeclNode& node)
 	const auto previousSignature = m_currentFunctionSignature;
 	m_currentFunctionSignature = { node.returnType, node.arrayDepth, node.structName, false };
 
+	auto globalSymbolTable = std::move(m_symbolTable);
+	auto globalTsopVars = std::move(m_tsopVars);
+	m_symbolTable.clear();
+	m_tsopVars.clear();
+
 	EnterScope();
 
 	for (const auto& capNode : node.captures)
@@ -607,6 +612,9 @@ void SemanticAnalyzer::Visit(FunctionDeclNode& node)
 
 	AcceptNode(node.body);
 	ExitScope();
+
+	m_symbolTable = std::move(globalSymbolTable);
+	m_tsopVars = std::move(globalTsopVars);
 	m_currentFunctionSignature = previousSignature;
 }
 
