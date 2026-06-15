@@ -90,3 +90,5 @@ impl ServerRequest<Parsed>
         return new ServerRequest<Answered>();
     }
 }
+
+impl ServerRequest<Answered> {}

@@ -73,3 +73,5 @@ impl HttpRequest<Pending>
         return new HttpRequest<Response>(status, resp);
     }
 }
+
+impl HttpRequest<Response> {}

@@ -10,12 +10,29 @@ bool IsTsopMatch(const std::string& left, const std::string& right);
 void SemanticAnalyzer::Analyze(const std::shared_ptr<AstNode>& root)
 {
 	m_symbolTable.clear();
+	m_localSchemas.clear();
+	m_implementedStates.clear();
 
 	RegisterNativeLib();
 
 	EnterScope();
 	AcceptNode(root);
 	ExitScope();
+
+	for (const auto& schemaName : m_localSchemas)
+	{
+		const auto& [states] = m_schemas.at(schemaName);
+		for (const auto& stateName : states | std::views::keys)
+		{
+			if (!m_implementedStates.contains(schemaName + "_" + stateName))
+			{
+				throw SemanticError(root
+						? root->location
+						: SourceLocation{},
+					"Implementation missing: State '" + stateName + "' in schema '" + schemaName + "' was declared but lacks an 'impl' block.");
+			}
+		}
+	}
 }
 
 void SemanticAnalyzer::Visit(TerminalNode& node)
@@ -887,6 +904,7 @@ void SemanticAnalyzer::Visit(SchemaDeclNode& node)
 	{
 		throw SemanticError(node.location, "Schema '" + node.name + "' is already defined.");
 	}
+	m_localSchemas.insert(node.name);
 
 	SchemaSignature schemaSig;
 	std::unordered_set<std::string> stateNames;
@@ -967,6 +985,13 @@ void SemanticAnalyzer::Visit(ImplDeclNode& node)
 	{
 		throw SemanticError(node.location, "State '" + node.stateName + "' does not exist in schema '" + node.schemaName + "'.");
 	}
+
+	const std::string stateKey = node.schemaName + "_" + node.stateName;
+	if (m_implementedStates.contains(stateKey))
+	{
+		throw SemanticError(node.location, "Duplicate implementation: 'impl' block for state '" + node.stateName + "' already exists.");
+	}
+	m_implementedStates.insert(stateKey);
 
 	EnterSchemaContext(node);
 

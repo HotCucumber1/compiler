@@ -3,6 +3,8 @@
 #include "../Common/DataType.h"
 #include "../Common/Node.h"
 
+#include <unordered_set>
+
 struct SymbolInfo
 {
 	DataType type;
@@ -158,6 +160,9 @@ private:
 
 	std::unordered_map<std::string, StructSignature> m_structSignatures;
 	std::unordered_map<std::string, EnumSignature> m_enums;
+
+	std::unordered_set<std::string> m_localSchemas;
+	std::unordered_set<std::string> m_implementedStates;
 
 	std::unordered_map<std::string, SchemaSignature> m_schemas;
 	std::vector<std::unordered_map<std::string, SymbolInfo>> m_symbolTable;

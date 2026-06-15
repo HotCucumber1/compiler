@@ -26,3 +26,5 @@ impl Thread<Running>
         return new Thread<Completed>(res);
     }
 }
+
+impl Thread<Completed> {}
