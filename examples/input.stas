@@ -1,0 +1,7 @@
+func PrintStringWithHello(string userInput): void {
+    print("Hello");
+    print(userInput);
+}
+
+let string input = read();
+PrintStringWithHello(input);

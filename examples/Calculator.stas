@@ -133,7 +133,7 @@ impl Calculator<Result>
 let Calculator calc = new Calculator<Ready>()
     .digit(5)
     .digit(3)
-    .operator(MyOperator.Divide)
+    .operator(MyOperator.Plus)
     .digit(2)
     .digit(7)
     .equal()
